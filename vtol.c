@@ -48,8 +48,27 @@ void compute_dx(
       in the body of this function.
     */
 
+   // ********
+   // Parameters
+   // ********
+   double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e, *c_D_p,
+    *M, *alpha_stall, *c_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; 
+
+   c_L_0 = p[0];
+   c_L_alpha = p[1];
+   c_L_q = p[2];
+   c_L_delta_e = p[3];
+   c_D_p = p[4];
+   M = p[5];
+   alpha_stall = p[6];
+   c_beta = p[7];
+   c_Y_p = p[8];
+   c_Y_r = p[9];
+   c_Y_delta_a = p[10];
+   c_Y_delta_r = p[11];
+
     // *******
-    // Retrieve state variables
+    // State and input
     // *******
     // State: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
     // v_body = u, v, w
@@ -71,17 +90,25 @@ void compute_dx(
     q2 = x[8];
     q3 = x[9];
 
-    double F_tot[3];
-    F_tot[0] = 0;
-    F_tot[1] = 0;
-    F_tot[2] = 0;
-    double Tau_tot[3];
-    Tau_tot[0] = 0;
-    Tau_tot[1] = 0;
-    Tau_tot[2] = 0;
+    // Input: [n_t1, n_t2, n_t3, n_t4, n_p, delta_a_sp, delta_r_sp, delta_e_sp]
+    double n_t1, n_t2, n_t3, n_t4, n_p;
+    n_t1 = u[0];
+    n_t2 = u[1];
+    n_t3 = u[2];
+    n_t4 = u[3];
+    n_p = u[4];
 
+    double delta_a_sp, delta_r_sp, delta_e_sp; // TODO: Replace with A-tail, instead of rudder and elevator?
+    delta_a_sp = u[5];
+    delta_e_sp = u[6];
+    delta_r_sp = u[7];
+
+    // **********
     // Parameters
+    // **********
+
     double m = 12; // kg
+    double g = 9.81; // m/s**2
     double lam1, lam2, lam3, lam4, lam5, lam6, lam7, lam8, Jy;
     lam1 = 0.1;
     lam2 = 0.1;
@@ -92,6 +119,90 @@ void compute_dx(
     lam7 = 0.1;
     lam8 = 0.1;
     Jy = 0.1;
+
+    // ******
+    // Forces 
+    // ******
+
+    // Calculate AoA and SSA, assuming no wind
+    double V = sqrt(pow(vel_u,2) + pow(vel_v,2) + pow(vel_w,2));
+    double alpha = atan(vel_w / vel_u);
+    double beta = atan(vel_v / V);
+
+    // Gravitational force
+    double F_g[3];
+    F_g[0] = 2 * ( q1 * q3 + q0 * q2);
+    F_g[1] = 2 * (-q0 * q1 + q2 * q3);
+    F_g[2] = pow(q0, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
+
+    // Propeller forces
+    // TODO: Replace these parameters!
+    double rho = 0.1; 
+    double F_t1, F_t2, F_t3, F_t4, F_p;
+    const double prop_diam_top = 0.15;
+    const double prop_diam_pusher = 0.15;
+    const double const_top = rho * pow(prop_diam_top, 4); // TODO: This should not be computed at every iteration
+    const double const_pusher = rho * pow(prop_diam_pusher, 4); // TODO: This should not be computed at every iteration
+    double c_T_top = 0.2; 
+    double c_T_pusher = 0.2;
+
+    F_t1 = const_top * c_T_top * pow(n_t1, 2);
+    F_t2 = const_top * c_T_top * pow(n_t2, 2);
+    F_t3 = const_top * c_T_top * pow(n_t3, 2);
+    F_t4 = const_top * c_T_top * pow(n_t4, 2);
+    F_p = const_pusher * c_T_pusher * pow(n_p, 2);
+
+    double F_T[3];
+    F_T[0] = F_p;
+    F_T[1] = 0;
+    F_T[2] = F_t1 + F_t2 + F_t3 + F_t4;
+
+    // Aerodynamic forces
+    double S = 0.75; // TODO: Change
+    double chord = 0.5;
+    double b = 2.4; // wingspan
+    const double half_rho_S = 0.5 * rho * S;
+    // Blending function between linear lift model and flat plate lift model
+    double delta = (1 + exp(-1 * M[0] * (alpha - alpha_stall[0])) + exp(M[0] * (alpha + alpha_stall[0])))
+      / ((1 + exp(-1 * M[0] * (alpha - alpha_stall[0]))) * (1 + exp(M[0] * (alpha - alpha_stall[0]))));
+    
+    double sgn_alpha = alpha > 0 ? 1 : -1;
+    double c_L_linear = c_L_0[0] + c_L_alpha[0] * alpha;
+    double c_L_flat_plate = 2 * sgn_alpha * sin(alpha) * pow(sin(alpha), 2) * cos(alpha);
+    double c_L = (1 - delta) * c_L_linear + delta * c_L_flat_plate;
+
+    double F_lift = half_rho_S * pow(V, 2) * (
+      c_L
+      + c_L_q[0] * (chord / (2 * V)) * ang_q
+      + c_L_delta_e[0] * delta_e_sp
+      );
+    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
+
+    double c_D = c_D_p[0] + pow(c_L_linear, 2);
+    double F_drag = half_rho_S * pow(V, 2) * c_D;
+
+    double F_aero[3];
+    F_aero[0] = -cos(alpha) * F_drag + sin(alpha) * F_lift;
+    F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
+
+    double c_Y = c_beta[0] * beta
+      + c_Y_p[0] * (b / (2 * V)) * ang_p + c_Y_r[0] * (b / (2 * V)) * ang_r
+      + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
+    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
+    F_aero[1] = half_rho_S * pow(V, 2) * c_Y;
+
+    // Sum all forces
+    double F_tot[3];
+    F_tot[0] = F_g[0] + F_T[0] + F_aero[0];
+    F_tot[1] = F_g[1] + F_T[1] + F_aero[1];
+    F_tot[2] = F_g[2] + F_T[2] + F_aero[2];
+
+    // ******
+    // Moments
+    // ******
+
+    double Tau_tot[3];
+    // TODO: Implement moments
 
     // *******
     // Dynamics
@@ -126,11 +237,6 @@ void compute_dx(
     dx[7] = q1_dot;
     dx[8] = q2_dot;
     dx[9] = q3_dot;
-
-    // NOTE: From template: How to extract parameters
-    double *tau, *k; /* Estimated model parameters. */
-    tau = p[0];
-    k   = p[1];
 }
 
 /* Output equations. */
