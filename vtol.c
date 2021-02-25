@@ -53,16 +53,16 @@ void compute_dx(
     // *******
     // State: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
     // v_body = u, v, w
-    double u, v, w;
-    u = x[0];
-    v = x[1];
-    w = x[2];
+    double vel_u, vel_v, vel_w;
+    vel_u = x[0];
+    vel_v = x[1];
+    vel_w = x[2];
 
     // ang_v_body = p, q, r
-    double p, q, r;
-    p = x[3];
-    q = x[4];
-    r = x[5];
+    double ang_p, ang_q, ang_r;
+    ang_p = x[3];
+    ang_q = x[4];
+    ang_r = x[5];
 
     // q_attitude = q0, q1, q2, q3
     double q0, q1, q2, q3;
@@ -71,34 +71,56 @@ void compute_dx(
     q2 = x[8];
     q3 = x[9];
 
+    double F_tot[3];
+    F_tot[0] = 0;
+    F_tot[1] = 0;
+    F_tot[2] = 0;
+    double Tau_tot[3];
+    Tau_tot[0] = 0;
+    Tau_tot[1] = 0;
+    Tau_tot[2] = 0;
+
+    // Parameters
+    double m = 12; // kg
+    double lam1, lam2, lam3, lam4, lam5, lam6, lam7, lam8, Jy;
+    lam1 = 0.1;
+    lam2 = 0.1;
+    lam3 = 0.1;
+    lam4 = 0.1;
+    lam5 = 0.1;
+    lam6 = 0.1;
+    lam7 = 0.1;
+    lam8 = 0.1;
+    Jy = 0.1;
+
     // *******
     // Dynamics
     // *******
-    double u_dot, v_dot, w_dot;
-    u_dot = (1/m) * F_tot[0] - (q*w - r*v);
-    v_dot = (1/m) * F_tot[1] - (r*u - p*w);
-    w_dot = (1/m) * F_tot[2] - (p*v - q*u);
+    double vel_u_dot, vel_v_dot, vel_w_dot;
+    vel_u_dot = (1/m) * F_tot[0] - (ang_q*vel_w - ang_r*vel_v);
+    vel_v_dot = (1/m) * F_tot[1] - (ang_r*vel_u - ang_p*vel_w);
+    vel_w_dot = (1/m) * F_tot[2] - (ang_p*vel_v - ang_q*vel_u);
 
-    dx[0] = u_dot;
-    dx[1] = v_dot;
-    dx[2] = w_dot;
+    dx[0] = vel_u_dot;
+    dx[1] = vel_v_dot;
+    dx[2] = vel_w_dot;
 
     // TODO: Compute lam constants
     // Lam constants defined from inertia matrix to reduce computations
-    double p_dot, q_dot, r_dot;
-    p_dot = (lam1 * p * q - lam2 * q * r) + (lam3 * Tau_tot[0] + lam4 * Tau_tot[2]);
-    q_dot = (lam5 * p * r - lam6 * (p * p - r * r)) + ((1/Jy) * Tau_tot[1]);
-    r_dot = (lam7 * p * q - lam1 * q * r) + (lam4 * Tau_tot[0] + lam8 * Tau_tot[2]);
+    double ang_p_dot, ang_q_dot, ang_r_dot;
+    ang_p_dot = (lam1 * ang_p * ang_q - lam2 * ang_q * ang_r) + (lam3 * Tau_tot[0] + lam4 * Tau_tot[2]);
+    ang_q_dot = (lam5 * ang_p * ang_r - lam6 * (ang_p * ang_p - ang_r * ang_r)) + ((1/Jy) * Tau_tot[1]);
+    ang_r_dot = (lam7 * ang_p * ang_q - lam1 * ang_q * ang_r) + (lam4 * Tau_tot[0] + lam8 * Tau_tot[2]);
 
-    dx[3] = p_dot;
-    dx[4] = q_dot;
-    dx[5] = r_dot;
+    dx[3] = ang_p_dot;
+    dx[4] = ang_q_dot;
+    dx[5] = ang_r_dot;
 
     double q0_dot, q1_dot, q2_dot, q3_dot;
-    q0_dot = 0.5 * (-q1 * p - q2 * q - q3 * r);
-    q1_dot = 0.5 * ( q0 * p - q3 * q + q2 * r);
-    q2_dot = 0.5 * ( q3 * p + q0 * q - q1 * r);
-    q3_dot = 0.5 * (-q2 * p + q1 * q + q0 * r);
+    q0_dot = 0.5 * (-q1 * ang_p - q2 * ang_q - q3 * ang_r);
+    q1_dot = 0.5 * ( q0 * ang_p - q3 * ang_q + q2 * ang_r);
+    q2_dot = 0.5 * ( q3 * ang_p + q0 * ang_q - q1 * ang_r);
+    q3_dot = 0.5 * (-q2 * ang_p + q1 * ang_q + q0 * ang_r);
 
     dx[6] = q0_dot;
     dx[7] = q1_dot;
