@@ -53,23 +53,44 @@ void compute_dx(
     // ********
    
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    double *M, *alpha_stall; // Blending function
-    double *c_D_p; // Drag parameters
-    double *c_beta; // Sideslip
-    double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
-
     c_L_0 = p[0];
     c_L_alpha = p[1];
     c_L_q = p[2];
     c_L_delta_e = p[3];
-    c_D_p = p[4];
-    M = p[5];
-    alpha_stall = p[6];
-    c_beta = p[7];
+
+    double *M, *alpha_stall; // Blending function
+    M = p[4];
+    alpha_stall = p[5];
+
+    double *c_D_p; // Drag parameters
+    c_D_p = p[6];
+
+    double *c_Y_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
+    c_Y_beta = p[7];
     c_Y_p = p[8];
     c_Y_r = p[9];
     c_Y_delta_a = p[10];
     c_Y_delta_r = p[11];
+
+    double *c_l_beta, *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r; // Aerodynamic moment around x axis
+    c_l_beta = p[12];
+    c_l_p = p[13];
+    c_l_r = p[13];
+    c_l_delta_a = p[14];
+    c_l_delta_r = p[15];
+
+    double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
+    c_m_0 = p[16];
+    c_m_alpha = p[17];
+    c_m_q = p[18];
+    c_m_delta_e = p[19];
+
+    double *c_n_beta, *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r; // Aerodynamic moment around z axis
+    c_n_beta = p[20];
+    c_n_p = p[21];
+    c_n_r = p[22];
+    c_n_delta_a = p[23];
+    c_n_delta_r = p[24];
 
     // ********
     // Constants: Need to be set as constants in matlab script: nlgr.Parameters(i).Fixed = true;
@@ -81,13 +102,13 @@ void compute_dx(
     double *c_F_top, *c_F_pusher; // Motor thrust constants
     double *c_Q_top, *c_Q_pusher; // Motor moment constants
 
-    rho = p[12];
-    prop_diam_top = p[13];
-    prop_diam_pusher = p[14];
-    c_F_top = p[15];
-    c_F_pusher = p[16];
-    c_Q_top = p[17];
-    c_Q_pusher = p[18];
+    rho = p[25];
+    prop_diam_top = p[26];
+    prop_diam_pusher = p[27];
+    c_F_top = p[28];
+    c_F_pusher = p[29];
+    c_Q_top = p[30];
+    c_Q_pusher = p[31];
 
     // Airframe
     double *m; // Mass
@@ -101,16 +122,16 @@ void compute_dx(
     double *r_t4; // Position of motor 4
     double *g; // Gravitational constant
 
-    m = p[19];
-    S = p[20];
-    chord = p[21];
-    b = p[22];
-    lam = p[23]; // Vector of 9 elements
-    r_t1 = p[24]; // Vector of 3 elements
-    r_t2 = p[25]; // Vector of 3 elements
-    r_t3 = p[26]; // Vector of 3 elements
-    r_t4 = p[27]; // Vector of 3 elements
-    g = p[28];
+    m = p[32];
+    S = p[33];
+    chord = p[34];
+    b = p[35];
+    lam = p[36]; // Vector of 9 elements
+    r_t1 = p[37]; // Vector of 3 elements
+    r_t2 = p[38]; // Vector of 3 elements
+    r_t3 = p[39]; // Vector of 3 elements
+    r_t4 = p[40]; // Vector of 3 elements
+    g = p[41];
 
     // *******
     // State and input
@@ -205,7 +226,7 @@ void compute_dx(
     F_aero[0] = -cos(alpha) * F_drag + sin(alpha) * F_lift;
     F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
 
-    double c_Y = c_beta[0] * beta
+    double c_Y = c_Y_beta[0] * beta
       + c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
       + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
     // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
@@ -242,9 +263,8 @@ void compute_dx(
     // TODO: Get inertia of propellers if gyroscopic moment is needed
 
     // Propeller moments from thrust
-    double Tau_T1[3], Tau_T2[3], Tau_T3[3], Tau_T4[3];
-
     // Note that cross product is greatly reduced due to the propeller forces only acting along neg z-axis
+    double Tau_T1[3], Tau_T2[3], Tau_T3[3], Tau_T4[3];
     Tau_T1[0] = - r_t1[1] * F_t1;
     Tau_T1[1] =   r_t1[0] * F_t1;
     Tau_T1[2] = 0;
@@ -266,12 +286,36 @@ void compute_dx(
     Tau_T[1] = Tau_T1[1] + Tau_T2[1] + Tau_T3[1] + Tau_T4[1];
     Tau_T[2] = Tau_T1[2] + Tau_T2[2] + Tau_T3[2] + Tau_T4[2];
 
+    // Aerodynamic moments
+    double c_l = c_l_beta[0] * beta
+      + c_l_p[0] * (b[0] / (2 * V)) * ang_p
+      + c_l_r[0] * (b[0] / (2 * V)) * ang_r
+      + c_l_delta_a[0] * delta_a_sp
+      + c_l_delta_r[0] * delta_r_sp;
 
-    // Sum all forces
+    double c_m = c_m_0[0]
+      + c_m_alpha[0] * alpha 
+      + c_m_q[0] * ang_q
+      + c_m_delta_e[0] * delta_e_sp; 
+
+    double c_n = c_n_beta[0] * beta
+      + c_n_p[0] * (b[0] / (2 * V)) * ang_p
+      + c_n_r[0] * (b[0] / (2 * V)) * ang_r
+      + c_n_delta_a[0] * delta_a_sp
+      + c_n_delta_r[0] * delta_r_sp;
+
+
+    double Tau_aero[3];
+    Tau_aero[0] = half_rho_S * pow(V, 2) * b[0] * c_l;
+    Tau_aero[1] = half_rho_S * pow(V, 2) * chord[0] * c_m;
+    Tau_aero[2] = half_rho_S * pow(V, 2) * b[0] * c_n;
+
+
+    // Sum all moments 
     double Tau_tot[3]; // TODO: Remember to add gyroscopic moment here if needed
-    Tau_tot[0] = Tau_Q[0] + Tau_T[0];
-    Tau_tot[1] = Tau_Q[1] + Tau_T[1];
-    Tau_tot[2] = Tau_Q[2] + Tau_T[2];
+    Tau_tot[0] = Tau_aero[0] + Tau_Q[0] + Tau_T[0];
+    Tau_tot[1] = Tau_aero[1] + Tau_Q[1] + Tau_T[1];
+    Tau_tot[2] = Tau_aero[2] + Tau_Q[2] + Tau_T[2];
 
     // *******
     // Dynamics
