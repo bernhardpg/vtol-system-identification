@@ -304,12 +304,10 @@ void compute_dx(
       + c_n_delta_a[0] * delta_a_sp
       + c_n_delta_r[0] * delta_r_sp;
 
-
     double Tau_aero[3];
     Tau_aero[0] = half_rho_S * pow(V, 2) * b[0] * c_l;
     Tau_aero[1] = half_rho_S * pow(V, 2) * chord[0] * c_m;
     Tau_aero[2] = half_rho_S * pow(V, 2) * b[0] * c_n;
-
 
     // Sum all moments 
     double Tau_tot[3]; // TODO: Remember to add gyroscopic moment here if needed
