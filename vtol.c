@@ -48,29 +48,64 @@ void compute_dx(
       in the body of this function.
     */
 
-   // ********
-   // Parameters
-   // ********
-   double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e, *c_D_p,
-    *M, *alpha_stall, *c_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; 
+    // ********
+    // Parameters
+    // ********
+   
+    double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
+    double *M, *alpha_stall; // Blending function
+    double *c_D_p; // Drag parameters
+    double *c_beta; // Sideslip
+    double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
 
-   c_L_0 = p[0];
-   c_L_alpha = p[1];
-   c_L_q = p[2];
-   c_L_delta_e = p[3];
-   c_D_p = p[4];
-   M = p[5];
-   alpha_stall = p[6];
-   c_beta = p[7];
-   c_Y_p = p[8];
-   c_Y_r = p[9];
-   c_Y_delta_a = p[10];
-   c_Y_delta_r = p[11];
+    c_L_0 = p[0];
+    c_L_alpha = p[1];
+    c_L_q = p[2];
+    c_L_delta_e = p[3];
+    c_D_p = p[4];
+    M = p[5];
+    alpha_stall = p[6];
+    c_beta = p[7];
+    c_Y_p = p[8];
+    c_Y_r = p[9];
+    c_Y_delta_a = p[10];
+    c_Y_delta_r = p[11];
+
+    // ********
+    // Constants: Need to be set as constants in matlab script: nlgr.Parameters(i).Fixed = true;
+    // ********
+
+    // Propellers and motors
+    double *rho; // Air density
+    double *prop_diam_top, *prop_diam_pusher; // Propeller diameters
+    double *c_T_top, *c_T_pusher; // Motor thrust constants
+
+    rho = p[12];
+    prop_diam_top = p[13];
+    prop_diam_pusher = p[14];
+    c_T_top = p[15];
+    c_T_pusher = p[16];
+
+    // Airframe
+    double *m; // Mass
+    double *S; // Surface area
+    double *chord; // Mean chord length
+    double *b; // Wingspan
+    double *lam; // -767 intermediate constants calculated from inertia matrix
+    double *g; // Gravitational constant
+
+    m = p[17];
+    S = p[18];
+    chord = p[19];
+    b = p[20];
+    lam = p[21]; // Vector of 9 elements
+    g = p[22];
 
     // *******
     // State and input
     // *******
     // State: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
+
     // v_body = u, v, w
     double vel_u, vel_v, vel_w;
     vel_u = x[0];
@@ -103,23 +138,6 @@ void compute_dx(
     delta_e_sp = u[6];
     delta_r_sp = u[7];
 
-    // **********
-    // Parameters
-    // **********
-
-    double m = 12; // kg
-    double g = 9.81; // m/s**2
-    double lam1, lam2, lam3, lam4, lam5, lam6, lam7, lam8, Jy;
-    lam1 = 0.1;
-    lam2 = 0.1;
-    lam3 = 0.1;
-    lam4 = 0.1;
-    lam5 = 0.1;
-    lam6 = 0.1;
-    lam7 = 0.1;
-    lam8 = 0.1;
-    Jy = 0.1;
-
     // ******
     // Forces 
     // ******
@@ -136,21 +154,14 @@ void compute_dx(
     F_g[2] = pow(q0, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
 
     // Propeller forces
-    // TODO: Replace these parameters!
-    double rho = 0.1; 
+    double const_top = rho[0] * pow(prop_diam_top[0], 4); // TODO: This should not be computed at every iteration
+    double const_pusher = rho[0] * pow(prop_diam_pusher[0], 4); // TODO: This should not be computed at every iteration
     double F_t1, F_t2, F_t3, F_t4, F_p;
-    const double prop_diam_top = 0.15;
-    const double prop_diam_pusher = 0.15;
-    const double const_top = rho * pow(prop_diam_top, 4); // TODO: This should not be computed at every iteration
-    const double const_pusher = rho * pow(prop_diam_pusher, 4); // TODO: This should not be computed at every iteration
-    double c_T_top = 0.2; 
-    double c_T_pusher = 0.2;
-
-    F_t1 = const_top * c_T_top * pow(n_t1, 2);
-    F_t2 = const_top * c_T_top * pow(n_t2, 2);
-    F_t3 = const_top * c_T_top * pow(n_t3, 2);
-    F_t4 = const_top * c_T_top * pow(n_t4, 2);
-    F_p = const_pusher * c_T_pusher * pow(n_p, 2);
+    F_t1 = const_top * c_T_top[0] * pow(n_t1, 2);
+    F_t2 = const_top * c_T_top[0] * pow(n_t2, 2);
+    F_t3 = const_top * c_T_top[0] * pow(n_t3, 2);
+    F_t4 = const_top * c_T_top[0] * pow(n_t4, 2);
+    F_p = const_pusher * c_T_pusher[0] * pow(n_p, 2);
 
     double F_T[3];
     F_T[0] = F_p;
@@ -158,10 +169,7 @@ void compute_dx(
     F_T[2] = F_t1 + F_t2 + F_t3 + F_t4;
 
     // Aerodynamic forces
-    double S = 0.75; // TODO: Change
-    double chord = 0.5;
-    double b = 2.4; // wingspan
-    const double half_rho_S = 0.5 * rho * S;
+    double half_rho_S = 0.5 * rho[0] * S[0];
     // Blending function between linear lift model and flat plate lift model
     double delta = (1 + exp(-1 * M[0] * (alpha - alpha_stall[0])) + exp(M[0] * (alpha + alpha_stall[0])))
       / ((1 + exp(-1 * M[0] * (alpha - alpha_stall[0]))) * (1 + exp(M[0] * (alpha - alpha_stall[0]))));
@@ -173,20 +181,21 @@ void compute_dx(
 
     double F_lift = half_rho_S * pow(V, 2) * (
       c_L
-      + c_L_q[0] * (chord / (2 * V)) * ang_q
+      + c_L_q[0] * (chord[0] / (2 * V)) * ang_q
       + c_L_delta_e[0] * delta_e_sp
       );
-    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
+    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed by adding control surface dynamics.
 
     double c_D = c_D_p[0] + pow(c_L_linear, 2);
     double F_drag = half_rho_S * pow(V, 2) * c_D;
 
     double F_aero[3];
+    // Rotate from stability frame to body frame
     F_aero[0] = -cos(alpha) * F_drag + sin(alpha) * F_lift;
     F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
 
     double c_Y = c_beta[0] * beta
-      + c_Y_p[0] * (b / (2 * V)) * ang_p + c_Y_r[0] * (b / (2 * V)) * ang_r
+      + c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
       + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
     // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
     F_aero[1] = half_rho_S * pow(V, 2) * c_Y;
@@ -208,20 +217,18 @@ void compute_dx(
     // Dynamics
     // *******
     double vel_u_dot, vel_v_dot, vel_w_dot;
-    vel_u_dot = (1/m) * F_tot[0] - (ang_q*vel_w - ang_r*vel_v);
-    vel_v_dot = (1/m) * F_tot[1] - (ang_r*vel_u - ang_p*vel_w);
-    vel_w_dot = (1/m) * F_tot[2] - (ang_p*vel_v - ang_q*vel_u);
+    vel_u_dot = (1/m[0]) * F_tot[0] - (ang_q*vel_w - ang_r*vel_v);
+    vel_v_dot = (1/m[0]) * F_tot[1] - (ang_r*vel_u - ang_p*vel_w);
+    vel_w_dot = (1/m[0]) * F_tot[2] - (ang_p*vel_v - ang_q*vel_u);
 
     dx[0] = vel_u_dot;
     dx[1] = vel_v_dot;
     dx[2] = vel_w_dot;
 
-    // TODO: Compute lam constants
-    // Lam constants defined from inertia matrix to reduce computations
     double ang_p_dot, ang_q_dot, ang_r_dot;
-    ang_p_dot = (lam1 * ang_p * ang_q - lam2 * ang_q * ang_r) + (lam3 * Tau_tot[0] + lam4 * Tau_tot[2]);
-    ang_q_dot = (lam5 * ang_p * ang_r - lam6 * (ang_p * ang_p - ang_r * ang_r)) + ((1/Jy) * Tau_tot[1]);
-    ang_r_dot = (lam7 * ang_p * ang_q - lam1 * ang_q * ang_r) + (lam4 * Tau_tot[0] + lam8 * Tau_tot[2]);
+    ang_p_dot = (lam[0] * ang_p * ang_q - lam[1] * ang_q * ang_r) + (lam[2] * Tau_tot[0] + lam[3] * Tau_tot[2]);
+    ang_q_dot = (lam[4] * ang_p * ang_r - lam[5] * (ang_p * ang_p - ang_r * ang_r)) + ((1/lam[8]) * Tau_tot[1]);
+    ang_r_dot = (lam[6] * ang_p * ang_q - lam[0] * ang_q * ang_r) + (lam[3] * Tau_tot[0] + lam[7] * Tau_tot[2]);
 
     dx[3] = ang_p_dot;
     dx[4] = ang_q_dot;
