@@ -78,13 +78,16 @@ void compute_dx(
     // Propellers and motors
     double *rho; // Air density
     double *prop_diam_top, *prop_diam_pusher; // Propeller diameters
-    double *c_T_top, *c_T_pusher; // Motor thrust constants
+    double *c_F_top, *c_F_pusher; // Motor thrust constants
+    double *c_Q_top, *c_Q_pusher; // Motor moment constants
 
     rho = p[12];
     prop_diam_top = p[13];
     prop_diam_pusher = p[14];
-    c_T_top = p[15];
-    c_T_pusher = p[16];
+    c_F_top = p[15];
+    c_F_pusher = p[16];
+    c_Q_top = p[17];
+    c_Q_pusher = p[18];
 
     // Airframe
     double *m; // Mass
@@ -92,14 +95,22 @@ void compute_dx(
     double *chord; // Mean chord length
     double *b; // Wingspan
     double *lam; // -767 intermediate constants calculated from inertia matrix
+    double *r_t1; // Position of motor 1
+    double *r_t2; // Position of motor 2
+    double *r_t3; // Position of motor 3
+    double *r_t4; // Position of motor 4
     double *g; // Gravitational constant
 
-    m = p[17];
-    S = p[18];
-    chord = p[19];
-    b = p[20];
-    lam = p[21]; // Vector of 9 elements
-    g = p[22];
+    m = p[19];
+    S = p[20];
+    chord = p[21];
+    b = p[22];
+    lam = p[23]; // Vector of 9 elements
+    r_t1 = p[24]; // Vector of 3 elements
+    r_t2 = p[25]; // Vector of 3 elements
+    r_t3 = p[26]; // Vector of 3 elements
+    r_t4 = p[27]; // Vector of 3 elements
+    g = p[28];
 
     // *******
     // State and input
@@ -154,14 +165,14 @@ void compute_dx(
     F_g[2] = pow(q0, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
 
     // Propeller forces
-    double const_top = rho[0] * pow(prop_diam_top[0], 4); // TODO: This should not be computed at every iteration
-    double const_pusher = rho[0] * pow(prop_diam_pusher[0], 4); // TODO: This should not be computed at every iteration
+    double const_top_force = rho[0] * pow(prop_diam_top[0], 4); // TODO: This should not be computed at every iteration
+    double const_pusher_force = rho[0] * pow(prop_diam_pusher[0], 4); // TODO: This should not be computed at every iteration
     double F_t1, F_t2, F_t3, F_t4, F_p;
-    F_t1 = const_top * c_T_top[0] * pow(n_t1, 2);
-    F_t2 = const_top * c_T_top[0] * pow(n_t2, 2);
-    F_t3 = const_top * c_T_top[0] * pow(n_t3, 2);
-    F_t4 = const_top * c_T_top[0] * pow(n_t4, 2);
-    F_p = const_pusher * c_T_pusher[0] * pow(n_p, 2);
+    F_t1 = const_top_force * c_F_top[0] * pow(n_t1, 2);
+    F_t2 = const_top_force * c_F_top[0] * pow(n_t2, 2);
+    F_t3 = const_top_force * c_F_top[0] * pow(n_t3, 2);
+    F_t4 = const_top_force * c_F_top[0] * pow(n_t4, 2);
+    F_p = const_pusher_force * c_F_pusher[0] * pow(n_p, 2);
 
     double F_T[3];
     F_T[0] = F_p;
@@ -210,8 +221,57 @@ void compute_dx(
     // Moments
     // ******
 
-    double Tau_tot[3];
-    // TODO: Implement moments
+    // Propeller moments
+    double const_top_moment = rho[0] * pow(prop_diam_top[0], 5); // TODO: This should not be computed at every iteration
+    double const_pusher_moment = rho[0] * pow(prop_diam_pusher[0], 5); // TODO: This should not be computed at every iteration
+    double Q_t1, Q_t2, Q_t3, Q_t4, Q_p;
+    Q_t1 = const_top_moment * c_Q_top[0] * pow(n_t1, 2);
+    Q_t2 = const_top_moment * c_Q_top[0] * pow(n_t2, 2);
+    Q_t3 = const_top_moment * c_Q_top[0] * pow(n_t3, 2);
+    Q_t4 = const_top_moment * c_Q_top[0] * pow(n_t4, 2);
+    //Q_p = const_pusher_moment * c_Q_pusher[0] * pow(n_p, 2); // TODO: Add if needed
+
+    double Tau_Q[3];
+    //Tau_Q[0] = Q_p; // TODO: Add propeller moment from pusher if needed
+    Tau_Q[0] = 0;
+    Tau_Q[1] = 0;
+    Tau_Q[2] = - Q_t1 - Q_t2 + Q_t3 + Q_t4;
+
+    // Gyroscopic moment
+    // TODO: Add gyroscopic moment if needed
+    // TODO: Get inertia of propellers if gyroscopic moment is needed
+
+    // Propeller moments from thrust
+    double Tau_T1[3], Tau_T2[3], Tau_T3[3], Tau_T4[3];
+
+    // Note that cross product is greatly reduced due to the propeller forces only acting along neg z-axis
+    Tau_T1[0] = - r_t1[1] * F_t1;
+    Tau_T1[1] =   r_t1[0] * F_t1;
+    Tau_T1[2] = 0;
+
+    Tau_T2[0] = - r_t2[1] * F_t2;
+    Tau_T2[2] =   r_t2[0] * F_t2;
+    Tau_T2[2] = 0;
+
+    Tau_T3[0] = - r_t3[1] * F_t3;
+    Tau_T3[1] =   r_t3[0] * F_t3;
+    Tau_T3[2] = 0;
+
+    Tau_T4[0] = - r_t4[1] * F_t4;
+    Tau_T4[1] =   r_t4[0] * F_t4;
+    Tau_T4[2] = 0;
+
+    double Tau_T[3];
+    Tau_T[0] = Tau_T1[0] + Tau_T2[0] + Tau_T3[0] + Tau_T4[0];
+    Tau_T[1] = Tau_T1[1] + Tau_T2[1] + Tau_T3[1] + Tau_T4[1];
+    Tau_T[2] = Tau_T1[2] + Tau_T2[2] + Tau_T3[2] + Tau_T4[2];
+
+
+    // Sum all forces
+    double Tau_tot[3]; // TODO: Remember to add gyroscopic moment here if needed
+    Tau_tot[0] = Tau_Q[0] + Tau_T[0];
+    Tau_tot[1] = Tau_Q[1] + Tau_T[1];
+    Tau_tot[2] = Tau_Q[2] + Tau_T[2];
 
     // *******
     // Dynamics
