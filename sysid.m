@@ -88,6 +88,7 @@ end
 p = angular_velocity.xyz_0_;
 q = angular_velocity.xyz_1_;
 r = angular_velocity.xyz_2_;
+w_B = [p q r];
 t_ang_vel = angular_velocity.timestamp / 1e6;
 
 if 0
@@ -120,6 +121,8 @@ for i=1:length(R_BN)
    v_B(i,:) = (R_BN(:,:,i) * v_N(i,:)')';
 end
 
+% q_NB is the quat we are looking for for our state vector
+
 % Gives the same result, indicating that quatrotate() does not perform a
 % simple quaternion product: q (x) v (x) q_inv
 %v_B = quatrotate(q_NB, v_N);
@@ -149,6 +152,7 @@ u_roll_fw = actuator_controls_fw.control_0_;
 u_pitch_fw = actuator_controls_fw.control_1_;
 u_yaw_fw = actuator_controls_fw.control_2_;
 u_throttle_fw = actuator_controls_fw.control_3_;
+u_fw = [u_roll_fw u_pitch_fw u_yaw_fw u_throttle_fw];
 
 % Todo: convert inputs to actual deflection angle and RPM
 
@@ -176,4 +180,42 @@ plot(t_rc, sysid_switch); hold on;
 plot(sysid_times, 1000, 'r*');
 
 
-%% 
+%% Plot states at input switch
+maneuver_before = 1; % seconds
+maneuver_duration = 5; % seconds
+dt = 1 / 100; % 100 hz
+
+for i = 1:10
+    start_time = sysid_times(i) - maneuver_before;
+    t = start_time:dt:start_time + maneuver_duration;
+    
+    % States
+    q_NB_interpolated = interp1q(t_ekf, q_NB, t');
+    eul = quat2eul(q_NB_interpolated);
+    v_B_interpolated = interp1q(t_ekf, v_B, t');
+    w_B_interpolated = interp1q(t_ang_vel, w_B, t');
+    
+    figure
+    subplot(4,1,1);
+    plot(t, eul);
+    legend('yaw','pitch','roll');
+    title("attitude")
+    
+    subplot(4,1,2);
+    plot(t, w_B_interpolated);
+    legend('w_x','w_y','w_z');
+    title("ang vel body")
+    
+    subplot(4,1,3);
+    plot(t, v_B_interpolated);
+    legend('v_x','v_y','v_z');
+    title("vel body")
+    
+    % Inputs
+    u_fw_interpolated = interp1q(t_u_fw, u_fw, t');
+       
+    subplot(4,1,4);
+    plot(t, u_fw_interpolated);
+    legend('delta_a','delta_e','delta_r', 'T_fw');
+    title("inputs")
+end
