@@ -2,7 +2,7 @@ clc; clear all; close all;
 
 % File locations
 log_location = "logs/";
-log_file = "altitude_mode_rc_flight.ulog";
+log_file = "day_2";
 temp_csv_files = 'temp/';
 
 % Convert ulog to csv files in temp/ folder
@@ -12,64 +12,168 @@ temp_csv_files = 'temp/';
 % disp(commandOut);
 
 
-%% Get output measurements from EKF2
+%% Load required log files
+ekf_data = readtable(temp_csv_files + log_file + '_' + "estimator_status_0" + ".csv");
+angular_velocity = readtable(temp_csv_files + log_file + '_' + "vehicle_angular_velocity_0" + ".csv");
+actuator_controls_mr = readtable(temp_csv_files + log_file + '_' + "actuator_controls_0_0" + ".csv");
+actuator_controls_fw = readtable(temp_csv_files + log_file + '_' + "actuator_controls_1_0" + ".csv");
+input_rc = readtable(temp_csv_files + log_file + '_' + "input_rc_0" + ".csv");
+
+
+%% Extract data from ekf2
+
+t_ekf = ekf_data.timestamp / 1e6;
+
+% q_NB = unit quaternion describing vector rotation from NED to Body. i.e.
+% describes transformation from Body to NED frame.
+% Note: This is the same as the output_predictor quaternion. Something is
+% wrong with documentation
+
+q0 = ekf_data.states_0_;
+q1 = ekf_data.states_1_;
+q2 = ekf_data.states_2_;
+q3 = ekf_data.states_3_;
+
+q_NB = [q0 q1 q2 q3];
+eul = quat2eul(q_NB);
+
+if 0
+    figure
+    subplot(3,1,1)
+    plot(t_ekf, eul(:,1))
+    title("roll")
+    subplot(3,1,2)
+    plot(t_ekf, eul(:,2))
+    title("pitch")
+    subplot(3,1,3)
+    plot(t_ekf, eul(:,3))
+    title("yaw")
+    sgtitle("vehicle attitude")
+end
+
+v_n = ekf_data.states_4_;
+v_e = ekf_data.states_5_;
+v_d = ekf_data.states_6_;
+
+v_N = [v_n v_e v_d];
+
+p_n = ekf_data.states_7_;
+p_e = ekf_data.states_8_;
+p_d = ekf_data.states_9_;
+
+% Plot position
+if 0
+    plot3(p_n, p_e, -p_d);
+end
+
+% Plot wind data
+if 0
+    w_n = ekf_data.states_22_;
+    w_e = ekf_data.states_23_;
+
+    wind = readtable(temp_csv_files + log_file + '_' + "wind_estimate_0" + ".csv");
+    w_n = wind.windspeed_north;
+    w_e = wind.windspeed_east;
+    t = wind.timestamp / 1e6;
+
+    subplot(2,1,1);
+    plot(t, w_n);
+    subplot(2,1,2);
+    plot(t, w_e);
+end
+
+%% Extract angular velocities from output predictor
+
+% Angular velocity around body axes
+p = angular_velocity.xyz_0_;
+q = angular_velocity.xyz_1_;
+r = angular_velocity.xyz_2_;
+t_ang_vel = angular_velocity.timestamp / 1e6;
+
+if 0
+    subplot(3,1,1)
+    plot(t_ang_vel, p);
+    title("p");
+    subplot(3,1,2)
+    plot(t_ang_vel, q);
+    title("q");
+    subplot(3,1,3)
+    plot(t_ang_vel, r);
+    title("r");
+    sgtitle("Angular velocities [rad/s]")
+end
+
+%% Convert data to correct frames
+% Desired data:
 %   State: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
 %   Outputs: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
 
-% Get state estimates from output predictor part of EKF2
-attitude = readtable(temp_csv_files + log_file + '_' + "vehicle_attitude_0" + ".csv");
-N_attitude = length(attitude.timestamp);
-
-% attitude.timestamp(3) - attitude.timestamp(2)
-% attitude.timestamp(4) - attitude.timestamp(3)
-% attitude.timestamp(5) - attitude.timestamp(4)
-% attitude.timestamp(6) - attitude.timestamp(5)
-% attitude.timestamp(7) - attitude.timestamp(6)
-freq_attitude = 1 / ((attitude.timestamp(7) - attitude.timestamp(6)) * 1e-6)
-
-% Note: rotation from body frame to NED frame
-q0_n_to_b = attitude.q_0_;
-q1_n_to_b = attitude.q_1_;
-q2_n_to_b = attitude.q_2_;
-q3_n_to_b = attitude.q_3_;
-
-q_n_to_b = [q0_n_to_b q1_n_to_b q2_n_to_b q3_n_to_b];
-     
-% Quat rotation from b to ned
-q = [q0_n_to_b -q1_n_to_b -q2_n_to_b -q3_n_to_b];
-
-local_position = readtable(temp_csv_files + log_file + '_' + "vehicle_local_position_0" + ".csv");
-N_local_position = length(local_position.timestamp);
-local_position.timestamp(3) - local_position.timestamp(2)
-local_position.timestamp(4) - local_position.timestamp(3)
-local_position.timestamp(5) - local_position.timestamp(4)
-local_position.timestamp(6) - local_position.timestamp(5)
-local_position.timestamp(7) - local_position.timestamp(6)
-freq_local_position = 1 / ((local_position.timestamp(7) - local_position.timestamp(6)) * 1e-6)
-
-% Note: NED frame velocity
-vel_u = local_position.vx;
-vel_v = local_position.vy;
-vel_w = local_position.vz;
-vel_ned = [vel_u vel_v vel_w];
-
-vel = zeros(1, N_attitude);
-for t = 1:N_attitude
-    %vel_ned = [vel_u(t) vel_v(t) vel_w(t)];
-    %vel_body = quatrotate(q(t,:), vel_ned)
-    
+% This is rotated with rotation matrices only for improved readability,
+% as both the PX4 docs is ambiguous in describing q, and quatrotate() is
+% pretty ambigious too.
+q_BN = quatinv(q_NB);
+R_BN = quat2rotm(q_BN);
+v_B = zeros(length(v_N), 3);
+for i=1:length(R_BN)
+   % Notice how the Rotation matrix has to be inverted here to get the
+   % right result, indicating that q is in fact q_NB and not q_BN.
+   v_B(i,:) = (R_BN(:,:,i) * v_N(i,:)')';
 end
 
-angular_velocity = readtable(temp_csv_files + log_file + '_' + "vehicle_angular_velocity_0" + ".csv");
-N_angular_velocity = length(angular_velocity.timestamp);
-freq_ang_vel = 1 / ((angular_velocity.timestamp(7) - angular_velocity.timestamp(6)) * 1e-6)
-% Angular velocities in body frame
-ang_p = angular_velocity.xyz_0_;
-ang_q = angular_velocity.xyz_1_;
-ang_r = angular_velocity.xyz_2_;
+% Gives the same result, indicating that quatrotate() does not perform a
+% simple quaternion product: q (x) v (x) q_inv
+%v_B = quatrotate(q_NB, v_N);
 
-ekf_data = readtable(temp_csv_files + log_file + '_' + "estimator_status_0" + ".csv");
-freq_ekf_data = 1 / ((ekf_data.timestamp(7) - ekf_data.timestamp(6)) * 1e-6)
+if 0
+    subplot(3,1,1)
+    plot(t_ekf, v_B(:,1))
+    title("v_x")
+    subplot(3,1,2)
+    plot(t_ekf, v_B(:,2))
+    title("v_y")
+    subplot(3,1,3)
+    plot(t_ekf, v_B(:,3))
+    title("v_z")
+    sgtitle("Body velocities")
+end
 
-sensor_combined = readtable(temp_csv_files + log_file + '_' + "sensor_combined_0" + ".csv");
-freq_sensor_combined = 1 / ((sensor_combined.timestamp(7) - sensor_combined.timestamp(6)) * 1e-6)
+%% Extract input data
+t_u_mr = actuator_controls_mr.timestamp / 1e6;
+u_roll_mr = actuator_controls_mr.control_0_;
+u_pitch_mr = actuator_controls_mr.control_1_;
+u_yaw_mr = actuator_controls_mr.control_2_;
+u_throttle_mr = actuator_controls_mr.control_3_;
+
+t_u_fw = actuator_controls_fw.timestamp / 1e6;
+u_roll_fw = actuator_controls_fw.control_0_;
+u_pitch_fw = actuator_controls_fw.control_1_;
+u_yaw_fw = actuator_controls_fw.control_2_;
+u_throttle_fw = actuator_controls_fw.control_3_;
+
+% Todo: convert inputs to actual deflection angle and RPM
+
+%% Extract times when sysid switch is flipped
+sysid_switch = input_rc.values_6_;
+t_rc = input_rc.timestamp / 1e6;
+
+sysid_times = zeros(100,1);
+sysid_maneuver_num = 1;
+sysid_found = false;
+for i = 1:length(t_rc)
+  % Add time if found a new rising edge
+  if sysid_switch(i) > 1900 && not(sysid_found)
+      sysid_times(sysid_maneuver_num) = t_rc(i);
+      sysid_found = true;
+      sysid_maneuver_num = sysid_maneuver_num + 1;
+  end
+  % If found a falling edge, start looking again
+  if sysid_found && sysid_switch(i) < 1900
+     sysid_found = false; 
+  end
+end
+
+plot(t_rc, sysid_switch); hold on;
+plot(sysid_times, 1000, 'r*');
+
+
+%% 
