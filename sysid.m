@@ -181,11 +181,11 @@ plot(sysid_times, 1000, 'r*');
 
 
 %% Plot states at input switch
-maneuver_before = 1; % seconds
-maneuver_duration = 5; % seconds
+maneuver_before = 2; % seconds
+maneuver_duration = 8; % seconds
 dt = 1 / 100; % 100 hz
 
-for i = 1:10
+for i = 30:31
     start_time = sysid_times(i) - maneuver_before;
     t = start_time:dt:start_time + maneuver_duration;
     
@@ -197,7 +197,7 @@ for i = 1:10
     
     figure
     subplot(4,1,1);
-    plot(t, eul);
+    plot(t, rad2deg(eul));
     legend('yaw','pitch','roll');
     title("attitude")
     
@@ -218,4 +218,9 @@ for i = 1:10
     plot(t, u_fw_interpolated);
     legend('delta_a','delta_e','delta_r', 'T_fw');
     title("inputs")
+    
+    AoA = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
+    figure
+    plot(t, AoA)
+    title("Angle of Attack")
 end
