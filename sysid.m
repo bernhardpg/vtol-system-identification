@@ -18,6 +18,7 @@ angular_velocity = readtable(temp_csv_files + log_file + '_' + "vehicle_angular_
 actuator_controls_mr = readtable(temp_csv_files + log_file + '_' + "actuator_controls_0_0" + ".csv");
 actuator_controls_fw = readtable(temp_csv_files + log_file + '_' + "actuator_controls_1_0" + ".csv");
 input_rc = readtable(temp_csv_files + log_file + '_' + "input_rc_0" + ".csv");
+sensor_combined = readtable(temp_csv_files + log_file + '_' + "sensor_combined_0" + ".csv");
 
 
 %% Extract data from ekf2
@@ -140,6 +141,11 @@ if 0
     sgtitle("Body velocities")
 end
 
+%% Calculate Angle of Attack
+
+AoA = rad2deg(atan2(v_B(:,3),v_B(:,1)));
+
+
 %% Extract input data
 t_u_mr = actuator_controls_mr.timestamp / 1e6;
 u_roll_mr = actuator_controls_mr.control_0_;
@@ -155,6 +161,127 @@ u_throttle_fw = actuator_controls_fw.control_3_;
 u_fw = [u_roll_fw u_pitch_fw u_yaw_fw u_throttle_fw];
 
 % Todo: convert inputs to actual deflection angle and RPM
+
+%% Extract acceleration data
+t_acc = sensor_combined.timestamp / 1e6;
+acc_B = [sensor_combined.accelerometer_m_s2_0_ sensor_combined.accelerometer_m_s2_1_ sensor_combined.accelerometer_m_s2_2_];
+
+F_z = acc_B(:,3);
+F_x = acc_B(:,1);
+ 
+%% Find times for static curves
+
+static_sysid_times = zeros(100,1);
+static_sysid_maneuver_num = 1;
+static_sysid_found = false;
+for i = 1:length(t_u_fw)
+  % Add time if found a new rising edge
+  if u_pitch_fw(i) >= 1 && not(static_sysid_found)
+      static_sysid_times(static_sysid_maneuver_num) = t_u_fw(i);
+      static_sysid_found = true;
+      static_sysid_maneuver_num = static_sysid_maneuver_num + 1;
+  end
+  % If found a falling edge, start looking again
+  if static_sysid_found && u_pitch_fw(i) < 1
+     static_sysid_found = false; 
+  end
+end
+
+
+if 0
+    plot(t_u_fw, u_pitch_fw); hold on;
+    plot(static_sysid_times, 0, 'r*');
+end
+
+%% Plot static curves
+maneuver_before = 10; % seconds
+maneuver_duration = 20; % seconds
+dt = 1 / 100; % 100 hz
+
+m = 5.6+3*1.27+2*0.951;
+g = 9.81;
+rho = 1.225;
+V = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
+
+for i = 5:10
+    start_time = static_sysid_times(i) - maneuver_before;
+    t = start_time:dt:start_time + maneuver_duration;
+    
+    % States
+    q_NB_interpolated = interp1q(t_ekf, q_NB, t');
+    eul = quat2eul(q_NB_interpolated);
+    V_interpolated = interp1q(t_ekf, V, t');
+    w_B_interpolated = interp1q(t_ang_vel, w_B, t');
+    
+    % Total airspeed
+    v_B_interpolated = interp1q(t_ekf, v_B, t');
+    
+    % Acceleration
+    a_B_interpolated = interp1q(t_acc, acc_B, t');
+    L_B_interpolated = interp1q(t_acc, L_B, t');
+    
+    % Angle of attack
+    AoA_interpolated = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
+    
+    % Construct regressors
+    dynamic_pressure = 0.5 * rho * V_interpolated.^2;
+    c_L_measured = L_B_interpolated ./ dynamic_pressure;
+    phi = [ones(length(AoA_interpolated),1) AoA_interpolated]';
+    
+    % Least Squares Estimation
+    P = (phi * phi')^-1;
+    theta = P * phi * c_L_measured;
+
+    % Extract coefficients
+    c_L_0 = theta(1);
+    c_L_alpha = theta(2);
+    
+    c_L_hat = c_L_0 + c_L_alpha * AoA_interpolated;
+    plot(AoA_interpolated, c_L_hat); hold on;
+    scatter(AoA_interpolated, c_L_measured); hold on;
+    xlabel("AoA")
+    ylabel("c_L")
+       
+    % Plotting
+    if 0
+        figure
+        subplot(6,1,1);
+        plot(t, rad2deg(eul(:,2:3)));
+        legend('pitch','roll');
+        title("attitude")
+
+        subplot(6,1,2);
+        plot(t, w_B_interpolated);
+        legend('w_x','w_y','w_z');
+        title("ang vel body")
+
+        subplot(6,1,3);
+        plot(t, V_interpolated);
+        legend('V');
+        title("Airspeed")
+
+        % Inputs
+        u_fw_interpolated = interp1q(t_u_fw, u_fw, t');
+
+        subplot(6,1,4);
+        plot(t, u_fw_interpolated);
+        legend('delta_a','delta_e','delta_r', 'T_fw');
+        title("inputs")
+
+        subplot(6,1,5);
+        plot(t, AoA_interpolated)
+        title("Angle of Attack")
+
+        subplot(6,1,6);
+        plot(t, L_B_interpolated);
+        legend('L');
+        title("Lift force")
+    end
+    
+end
+
+
+
 
 %% Extract times when sysid switch is flipped
 sysid_switch = input_rc.values_6_;
@@ -176,16 +303,17 @@ for i = 1:length(t_rc)
   end
 end
 
-plot(t_rc, sysid_switch); hold on;
-plot(sysid_times, 1000, 'r*');
-
+if 0
+    plot(t_rc, sysid_switch); hold on;
+    plot(sysid_times, 1000, 'r*');
+end
 
 %% Plot states at input switch
 maneuver_before = 2; % seconds
 maneuver_duration = 8; % seconds
 dt = 1 / 100; % 100 hz
 
-for i = 30:31
+for i = 30:30
     start_time = sysid_times(i) - maneuver_before;
     t = start_time:dt:start_time + maneuver_duration;
     
@@ -219,8 +347,8 @@ for i = 30:31
     legend('delta_a','delta_e','delta_r', 'T_fw');
     title("inputs")
     
-    AoA = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
+    AoA_intepolated = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
     figure
-    plot(t, AoA)
+    plot(t, AoA_intepolated)
     title("Angle of Attack")
 end
