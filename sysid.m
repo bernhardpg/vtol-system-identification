@@ -29,14 +29,6 @@ t_end = ekf_data.timestamp(end) / 1e6;
 t = t0:dt:t_end;
 N = length(t);
 
-%% Model parameters
-
-m = 5.6+3*1.27+2*0.951; % kg
-g = 9.81; % m/s^2
-rho = 1.225; % kg / m^3
-b = 2.5;
-S = 0.75; % TODO: not exact
-AR = b^2 / S;
 
 %% Extract data from ekf2
 
@@ -128,7 +120,96 @@ u_fw_raw = [u_roll_fw u_pitch_fw u_yaw_fw u_throttle_fw];
 
 u_fw = interp1q(t_u_fw, u_fw_raw, t');
 
+
+%% Extract times when sysid switch is flipped
+sysid_switch = input_rc.values_6_;
+t_rc = input_rc.timestamp / 1e6;
+
+sysid_times = zeros(100,1);
+sysid_maneuver_num = 1;
+sysid_found = false;
+for i = 1:length(t_rc)
+  % Add time if found a new rising edge
+  if sysid_switch(i) > 1900 && not(sysid_found)
+      sysid_times(sysid_maneuver_num) = t_rc(i);
+      sysid_found = true;
+      sysid_maneuver_num = sysid_maneuver_num + 1;
+  end
+  % If found a falling edge, start looking again
+  if sysid_found && sysid_switch(i) < 1900
+     sysid_found = false; 
+  end
+end
+
+if 0
+    plot(t_rc, sysid_switch); hold on;
+    plot(sysid_times, 1000, 'r*');
+end
+
+%% Plot states at input switch
+indices_before_maneuver = 2; % seconds
+indices_after_maneuver_start = 8; % seconds
+dt = 1 / 100; % 100 hz
+
+for i = 30:30
+    start_index = sysid_times(i) - indices_before_maneuver;
+    t = start_index:dt:start_index + indices_after_maneuver_start;
+    
+    % States
+    q_NB_interpolated = interp1q(t_ekf, q_NB, t');
+    eul = quat2eul(q_NB_interpolated);
+    v_B_interpolated = interp1q(t_ekf, v_B, t');
+    w_B_interpolated = interp1q(t_ang_vel, w_B, t');
+    
+    figure
+    subplot(4,1,1);
+    plot(t, rad2deg(eul));
+    legend('yaw','pitch','roll');
+    title("attitude")
+    
+    subplot(4,1,2);
+    plot(t, w_B_interpolated);
+    legend('w_x','w_y','w_z');
+    title("ang vel body")
+    
+    subplot(4,1,3);
+    plot(t, v_B_interpolated);
+    legend('v_x','v_y','v_z');
+    title("vel body")
+    
+    % Inputs
+    u_fw_interpolated = interp1q(t_u_fw, u_fw, t');
+       
+    subplot(4,1,4);
+    plot(t, u_fw_interpolated);
+    legend('delta_a','delta_e','delta_r', 'T_fw');
+    title("inputs")
+    
+    AoA_intepolated = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
+    figure
+    plot(t, AoA_intepolated)
+    title("Angle of Attack")
+end
+
+
+
+
+%% STATIC CURVES
+%%%%%%%%
+
+%% Model parameters
+
+% TODO fix these
+m = 5.6+3*1.27+2*0.951; % kg 
+
+g = 9.81; % m/s^2
+rho = 1.225; % kg / m^3
+b = 2.5;
+S = 0.75; % TODO: not exact
+AR = b^2 / S;
+
 %% Extract aerodynamic forces
+
 t_acc = sensor_combined.timestamp / 1e6;
 acc_B_raw = [sensor_combined.accelerometer_m_s2_0_ sensor_combined.accelerometer_m_s2_1_ sensor_combined.accelerometer_m_s2_2_];
 acc_B = interp1q(t_ekf, acc_B_raw, t');
@@ -185,6 +266,7 @@ maneuver_N = maneuver_end_index - maneuver_start_index + 1;
 % 9 is useless
 % 10: good 4, 1
 % 10: good, -2 5
+
 for i = 5:5
     maneuver_start_index = static_sysid_indices(i) - indices_before_maneuver;
     maneuver_end_index = static_sysid_indices(i) + indices_after_maneuver_start;
@@ -267,72 +349,3 @@ end
 
 
 
-%% Extract times when sysid switch is flipped
-sysid_switch = input_rc.values_6_;
-t_rc = input_rc.timestamp / 1e6;
-
-sysid_times = zeros(100,1);
-sysid_maneuver_num = 1;
-sysid_found = false;
-for i = 1:length(t_rc)
-  % Add time if found a new rising edge
-  if sysid_switch(i) > 1900 && not(sysid_found)
-      sysid_times(sysid_maneuver_num) = t_rc(i);
-      sysid_found = true;
-      sysid_maneuver_num = sysid_maneuver_num + 1;
-  end
-  % If found a falling edge, start looking again
-  if sysid_found && sysid_switch(i) < 1900
-     sysid_found = false; 
-  end
-end
-
-if 0
-    plot(t_rc, sysid_switch); hold on;
-    plot(sysid_times, 1000, 'r*');
-end
-
-%% Plot states at input switch
-indices_before_maneuver = 2; % seconds
-indices_after_maneuver_start = 8; % seconds
-dt = 1 / 100; % 100 hz
-
-for i = 30:30
-    start_index = sysid_times(i) - indices_before_maneuver;
-    t = start_index:dt:start_index + indices_after_maneuver_start;
-    
-    % States
-    q_NB_interpolated = interp1q(t_ekf, q_NB, t');
-    eul = quat2eul(q_NB_interpolated);
-    v_B_interpolated = interp1q(t_ekf, v_B, t');
-    w_B_interpolated = interp1q(t_ang_vel, w_B, t');
-    
-    figure
-    subplot(4,1,1);
-    plot(t, rad2deg(eul));
-    legend('yaw','pitch','roll');
-    title("attitude")
-    
-    subplot(4,1,2);
-    plot(t, w_B_interpolated);
-    legend('w_x','w_y','w_z');
-    title("ang vel body")
-    
-    subplot(4,1,3);
-    plot(t, v_B_interpolated);
-    legend('v_x','v_y','v_z');
-    title("vel body")
-    
-    % Inputs
-    u_fw_interpolated = interp1q(t_u_fw, u_fw, t');
-       
-    subplot(4,1,4);
-    plot(t, u_fw_interpolated);
-    legend('delta_a','delta_e','delta_r', 'T_fw');
-    title("inputs")
-    
-    AoA_intepolated = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
-    figure
-    plot(t, AoA_intepolated)
-    title("Angle of Attack")
-end
