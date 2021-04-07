@@ -73,9 +73,9 @@ q = angular_velocity.xyz_1_;
 r = angular_velocity.xyz_2_;
 w_B_raw = [p q r];
 
-w_B = interp1q(t_ekf, w_B_raw, t');
+w_B = interp1q(t_ang_vel, w_B_raw, t');
 
-%% Convert data to correct frames
+%% Convert velocity to correct frames
 
 % This is rotated with rotation matrices only for improved readability,
 % as both the PX4 docs is ambiguous in describing q, and quatrotate() is
@@ -122,75 +122,164 @@ u_fw = interp1q(t_u_fw, u_fw_raw, t');
 
 
 %% Extract times when sysid switch is flipped
-sysid_switch = input_rc.values_6_;
+% Extract RC sysid switch log
+sysid_rc_switch_raw = input_rc.values_6_;
 t_rc = input_rc.timestamp / 1e6;
+sysid_rc_switch = interp1q(t_rc, sysid_rc_switch_raw, t');
+RC_TRESHOLD = 1900;
 
-sysid_times = zeros(100,1);
-sysid_maneuver_num = 1;
-sysid_found = false;
-for i = 1:length(t_rc)
+% Find times when switch was switched
+MAX_SYSID_MANEUVERS = 100;
+dynamic_sysid_indices = zeros(MAX_SYSID_MANEUVERS,1);
+dynamic_sysid_maneuver_num = 1;
+dynamic_sysid_found = false;
+for i = 1:N
   % Add time if found a new rising edge
-  if sysid_switch(i) > 1900 && not(sysid_found)
-      sysid_times(sysid_maneuver_num) = t_rc(i);
-      sysid_found = true;
-      sysid_maneuver_num = sysid_maneuver_num + 1;
+  if sysid_rc_switch(i) >= RC_TRESHOLD && not(dynamic_sysid_found)
+      dynamic_sysid_indices(dynamic_sysid_maneuver_num) = i;
+      dynamic_sysid_found = true;
+      dynamic_sysid_maneuver_num = dynamic_sysid_maneuver_num + 1;
   end
   % If found a falling edge, start looking again
-  if sysid_found && sysid_switch(i) < 1900
-     sysid_found = false; 
+  if dynamic_sysid_found && sysid_rc_switch(i) < RC_TRESHOLD
+     dynamic_sysid_found = false; 
   end
 end
 
 if 0
-    plot(t_rc, sysid_switch); hold on;
+    plot(t, sysid_rc_switch); hold on;
     plot(sysid_times, 1000, 'r*');
 end
 
-%% Plot states at input switch
-indices_before_maneuver = 2; % seconds
-indices_after_maneuver_start = 8; % seconds
-dt = 1 / 100; % 100 hz
+%% Aggregate data
+time_before_maneuver = 1.5; %s
+time_after_maneuver = 5.5; %s
+indices_before_maneuver = time_before_maneuver / dt;
+indices_after_maneuver_start = time_after_maneuver / dt;
+maneuver_length_in_indices = indices_after_maneuver_start + indices_before_maneuver + 1;
 
-for i = 30:30
-    start_index = sysid_times(i) - indices_before_maneuver;
-    t = start_index:dt:start_index + indices_after_maneuver_start;
+maneuvers_to_aggregate = 3:24;
+
+num_total_good_maneuvers = length(maneuvers_to_aggregate);
+num_training_maneuvers = ceil(num_total_good_maneuvers * 0.7);
+num_test_maneuvers = floor(num_total_good_maneuvers * 0.3);
+
+training_set_length = maneuver_length_in_indices * num_training_maneuvers;
+test_set_length = maneuver_length_in_indices * num_test_maneuvers;
+
+% state = [att ang_vel_B vel_B] = [q0 q1 q2 q3 p q r u v w]
+training_state = zeros(training_set_length, 10);
+test_state = zeros(test_set_length, 10);
+% input = [top_rpm_1 top_rpm_2 top_rpm_3 top_rpm_4 pusher_rpm aileron elevator rudder]
+%       = [nt1 nt2 nt3 nt4 np delta_a delta_e delta_r]
+training_input = zeros(training_set_length, 8);
+test_input = zeros(test_set_length, 8);
+
+% % indices:
+% TODO move this information elsewhere
+% Roll:
+% Some of these have some thrust increase which might make it harder.
+% 
+% 24: good
+% 23: good
+% 22: good
+% 21: good
+% 20: good.
+% 19: Good.
+% 18: Good
+% 17: good
+% 16: good
+% 15: good
+% 14: good
+% 13: good
+% 12: good
+% 11: good
+% 10: good
+% 9: good
+% 8: good
+% 7: good
+% 6: good
+% 5: good
+% 4: good
+% 3: good
+% 2: useless
+% 1: shaky
+
+num_aggregated_maneuvers = 0;
+num_aggregated_training_maneuvers = 0;
+num_aggregated_test_maneuvers = 0;
+for i = maneuvers_to_aggregate
+    maneuver_start_index = dynamic_sysid_indices(i) - indices_before_maneuver;
+    maneuver_end_index = dynamic_sysid_indices(i) + indices_after_maneuver_start;
+
+    % Save data chunk to training and test sets
+    maneuver_state = [
+        q_NB(maneuver_start_index:maneuver_end_index,:) ...
+        w_B(maneuver_start_index:maneuver_end_index,:) ...
+        v_B(maneuver_start_index:maneuver_end_index,:) ...
+        ];
+    maneuver_input = [
+        u_mr(maneuver_start_index:maneuver_end_index,:) ...% TODO translate these from moments and thrust to individual motor rpms.
+        u_fw(maneuver_start_index:maneuver_end_index,:) ...% TODO same here ...
+        ];
     
-    % States
-    q_NB_interpolated = interp1q(t_ekf, q_NB, t');
-    eul = quat2eul(q_NB_interpolated);
-    v_B_interpolated = interp1q(t_ekf, v_B, t');
-    w_B_interpolated = interp1q(t_ang_vel, w_B, t');
+    % TODO consider shuffling the data randomly??
+    % Take the first N maneuvers as training data
+    if num_aggregated_training_maneuvers < num_training_maneuvers
+        curr_index_training = num_aggregated_training_maneuvers * maneuver_length_in_indices + 1;
+        training_state(...
+            curr_index_training:curr_index_training + maneuver_length_in_indices - 1 ...
+            ,:) = maneuver_state;
+        training_input(...
+            curr_index_training:curr_index_training + maneuver_length_in_indices - 1 ...
+            ,:) = maneuver_input;
+        
+        num_aggregated_training_maneuvers = num_aggregated_training_maneuvers + 1;
+    % Take the rest as test data  
+    else
+        curr_index_test = num_aggregated_test_maneuvers * maneuver_length_in_indices + 1;
+        test_state(...
+            curr_index_test:curr_index_test + maneuver_length_in_indices - 1 ...
+            ,:) = maneuver_state;
+        test_input(...
+            curr_index_test:curr_index_test + maneuver_length_in_indices - 1 ...
+            ,:) = maneuver_input;
+        
+        num_aggregated_test_maneuvers = num_aggregated_test_maneuvers + 1;
+    end
     
-    figure
-    subplot(4,1,1);
-    plot(t, rad2deg(eul));
-    legend('yaw','pitch','roll');
-    title("attitude")
-    
-    subplot(4,1,2);
-    plot(t, w_B_interpolated);
-    legend('w_x','w_y','w_z');
-    title("ang vel body")
-    
-    subplot(4,1,3);
-    plot(t, v_B_interpolated);
-    legend('v_x','v_y','v_z');
-    title("vel body")
-    
-    % Inputs
-    u_fw_interpolated = interp1q(t_u_fw, u_fw, t');
-       
-    subplot(4,1,4);
-    plot(t, u_fw_interpolated);
-    legend('delta_a','delta_e','delta_r', 'T_fw');
-    title("inputs")
-    
-    AoA_intepolated = rad2deg(atan2(v_B_interpolated(:,3),v_B_interpolated(:,1)));
-    figure
-    plot(t, AoA_intepolated)
-    title("Angle of Attack")
+    % plot data
+    if 0
+        t_maneuver = t(maneuver_start_index:maneuver_end_index);
+        
+        figure
+        subplot(5,1,1);
+        plot(t_maneuver, rad2deg(eul(maneuver_start_index:maneuver_end_index,:)));
+        legend('yaw','pitch','roll');
+        title("attitude")
+
+        subplot(5,1,2);
+        plot(t_maneuver, w_B(maneuver_start_index:maneuver_end_index,:));
+        legend('p','q','r');
+        ylim([-3 3])
+        title("ang vel body")
+
+        subplot(5,1,3);
+        plot(t_maneuver, v_B(maneuver_start_index:maneuver_end_index,:));
+        legend('u','v','w');
+        title("vel body")
+
+        subplot(5,1,4);
+        plot(t_maneuver, u_fw(maneuver_start_index:maneuver_end_index,:));
+        legend('delta_a','delta_e','delta_r', 'T_fw');
+        title("inputs")
+    end
 end
 
+writematrix(training_state, 'aggregated_data/training_state.csv');
+writematrix(training_input, 'aggregated_data/training_input.csv');
+writematrix(test_state, 'aggregated_data/test_state.csv');
+writematrix(test_input, 'aggregated_data/test_input.csv');
 
 
 
@@ -256,7 +345,6 @@ end
 %% Plot static curves
 indices_before_maneuver = -2 / dt;
 indices_after_maneuver_start = 5 / dt;
-maneuver_N = maneuver_end_index - maneuver_start_index + 1;
 
 % 5: good 6, 2
 % 5: good -12, 16. Some SD card error. However, the thrust is here.
@@ -270,11 +358,12 @@ maneuver_N = maneuver_end_index - maneuver_start_index + 1;
 for i = 5:5
     maneuver_start_index = static_sysid_indices(i) - indices_before_maneuver;
     maneuver_end_index = static_sysid_indices(i) + indices_after_maneuver_start;
+    maneuver_length_in_indices = maneuver_end_index - maneuver_start_index + 1;
     t_maneuver = t(maneuver_start_index:maneuver_end_index);
     
     % Lift coefficient
     % Construct regressors
-    phi = [ones(maneuver_N,1) AoA(maneuver_start_index:maneuver_end_index)]';
+    phi = [ones(maneuver_length_in_indices,1) AoA(maneuver_start_index:maneuver_end_index)]';
     % Least Squares Estimation
     P = (phi * phi')^-1;
     theta = P * phi * c_L(maneuver_start_index:maneuver_end_index);
@@ -286,7 +375,7 @@ for i = 5:5
     
     % Drag coefficient
     % LSE
-    phi = [ones(maneuver_N,1) c_L_hat.^2 / (AR * pi)]';
+    phi = [ones(maneuver_length_in_indices,1) c_L_hat.^2 / (AR * pi)]';
     P = (phi * phi')^-1;
     theta = P * phi * c_D(maneuver_start_index:maneuver_end_index);
     c_D_p = theta(1);
