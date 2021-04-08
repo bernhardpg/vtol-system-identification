@@ -281,8 +281,6 @@ writematrix(training_input, 'aggregated_data/training_input.csv');
 writematrix(test_state, 'aggregated_data/test_state.csv');
 writematrix(test_input, 'aggregated_data/test_input.csv');
 
-
-
 %% STATIC CURVES
 %%%%%%%%
 
