@@ -31,7 +31,7 @@
 #include "math.h"
 
 /* Specify the number of outputs here. */
-#define NY 2 // TODO: Get this right
+#define NY 10
 
 /* State equations. */
 void compute_dx(
@@ -51,7 +51,7 @@ void compute_dx(
     // ********
     // Parameters
     // ********
-   
+
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
     c_L_0 = p[0];
     c_L_alpha = p[1];
@@ -136,26 +136,26 @@ void compute_dx(
     // *******
     // State and input
     // *******
-    // State: [v_body, ang_v_body, q_attitude, flap_deflection, flap_ang_vel]
-
-    // v_body = u, v, w
-    double vel_u, vel_v, vel_w;
-    vel_u = x[0];
-    vel_v = x[1];
-    vel_w = x[2];
-
-    // ang_v_body = p, q, r
-    double ang_p, ang_q, ang_r;
-    ang_p = x[3];
-    ang_q = x[4];
-    ang_r = x[5];
+    // State: [q_attitude, ang_v_body, vel_body]
 
     // q_attitude = q0, q1, q2, q3
     double q0, q1, q2, q3;
-    q0 = x[6];
-    q1 = x[7];
-    q2 = x[8];
-    q3 = x[9];
+    q0 = x[0];
+    q1 = x[1];
+    q2 = x[2];
+    q3 = x[3];
+
+    // ang_v_body = p, q, r
+    double ang_p, ang_q, ang_r;
+    ang_p = x[4];
+    ang_q = x[5];
+    ang_r = x[6];
+
+    // v_body = u, v, w
+    double vel_u, vel_v, vel_w;
+    vel_u = x[7];
+    vel_v = x[8];
+    vel_w = x[9];
 
     // Input: [n_t1, n_t2, n_t3, n_t4, n_p, delta_a_sp, delta_r_sp, delta_e_sp]
     double n_t1, n_t2, n_t3, n_t4, n_p;
@@ -165,7 +165,7 @@ void compute_dx(
     n_t4 = u[3];
     n_p = u[4];
 
-    double delta_a_sp, delta_r_sp, delta_e_sp; // TODO: Replace with A-tail, instead of rudder and elevator?
+    double delta_a_sp, delta_r_sp, delta_e_sp;
     delta_a_sp = u[5];
     delta_e_sp = u[6];
     delta_r_sp = u[7];
@@ -205,7 +205,7 @@ void compute_dx(
     // Blending function between linear lift model and flat plate lift model
     double delta = (1 + exp(-1 * M[0] * (alpha - alpha_stall[0])) + exp(M[0] * (alpha + alpha_stall[0])))
       / ((1 + exp(-1 * M[0] * (alpha - alpha_stall[0]))) * (1 + exp(M[0] * (alpha - alpha_stall[0]))));
-    
+
     double sgn_alpha = alpha > 0 ? 1 : -1;
     double c_L_linear = c_L_0[0] + c_L_alpha[0] * alpha;
     double c_L_flat_plate = 2 * sgn_alpha * sin(alpha) * pow(sin(alpha), 2) * cos(alpha);
@@ -216,7 +216,7 @@ void compute_dx(
       + c_L_q[0] * (chord[0] / (2 * V)) * ang_q
       + c_L_delta_e[0] * delta_e_sp
       );
-    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed by adding control surface dynamics.
+    // Here we are assuming IMMEDIATE control surface response. This could be changed by adding control surface dynamics.
 
     double c_D = c_D_p[0] + pow(c_L_linear, 2);
     double F_drag = half_rho_S * pow(V, 2) * c_D;
@@ -258,10 +258,6 @@ void compute_dx(
     Tau_Q[1] = 0;
     Tau_Q[2] = - Q_t1 - Q_t2 + Q_t3 + Q_t4;
 
-    // Gyroscopic moment
-    // TODO: Add gyroscopic moment if needed
-    // TODO: Get inertia of propellers if gyroscopic moment is needed
-
     // Propeller moments from thrust
     // Note that cross product is greatly reduced due to the propeller forces only acting along neg z-axis
     double Tau_T1[3], Tau_T2[3], Tau_T3[3], Tau_T4[3];
@@ -294,9 +290,9 @@ void compute_dx(
       + c_l_delta_r[0] * delta_r_sp;
 
     double c_m = c_m_0[0]
-      + c_m_alpha[0] * alpha 
+      + c_m_alpha[0] * alpha
       + c_m_q[0] * ang_q
-      + c_m_delta_e[0] * delta_e_sp; 
+      + c_m_delta_e[0] * delta_e_sp;
 
     double c_n = c_n_beta[0] * beta
       + c_n_p[0] * (b[0] / (2 * V)) * ang_p
@@ -310,7 +306,7 @@ void compute_dx(
     Tau_aero[2] = half_rho_S * pow(V, 2) * b[0] * c_n;
 
     // Sum all moments 
-    double Tau_tot[3]; // TODO: Remember to add gyroscopic moment here if needed
+    double Tau_tot[3];
     Tau_tot[0] = Tau_aero[0] + Tau_Q[0] + Tau_T[0];
     Tau_tot[1] = Tau_aero[1] + Tau_Q[1] + Tau_T[1];
     Tau_tot[2] = Tau_aero[2] + Tau_Q[2] + Tau_T[2];
@@ -318,34 +314,34 @@ void compute_dx(
     // *******
     // Dynamics
     // *******
-    double vel_u_dot, vel_v_dot, vel_w_dot;
-    vel_u_dot = (1/m[0]) * F_tot[0] - (ang_q*vel_w - ang_r*vel_v);
-    vel_v_dot = (1/m[0]) * F_tot[1] - (ang_r*vel_u - ang_p*vel_w);
-    vel_w_dot = (1/m[0]) * F_tot[2] - (ang_p*vel_v - ang_q*vel_u);
-
-    dx[0] = vel_u_dot;
-    dx[1] = vel_v_dot;
-    dx[2] = vel_w_dot;
-
-    double ang_p_dot, ang_q_dot, ang_r_dot;
-    ang_p_dot = (lam[0] * ang_p * ang_q - lam[1] * ang_q * ang_r) + (lam[2] * Tau_tot[0] + lam[3] * Tau_tot[2]);
-    ang_q_dot = (lam[4] * ang_p * ang_r - lam[5] * (ang_p * ang_p - ang_r * ang_r)) + ((1/lam[8]) * Tau_tot[1]);
-    ang_r_dot = (lam[6] * ang_p * ang_q - lam[0] * ang_q * ang_r) + (lam[3] * Tau_tot[0] + lam[7] * Tau_tot[2]);
-
-    dx[3] = ang_p_dot;
-    dx[4] = ang_q_dot;
-    dx[5] = ang_r_dot;
-
     double q0_dot, q1_dot, q2_dot, q3_dot;
     q0_dot = 0.5 * (-q1 * ang_p - q2 * ang_q - q3 * ang_r);
     q1_dot = 0.5 * ( q0 * ang_p - q3 * ang_q + q2 * ang_r);
     q2_dot = 0.5 * ( q3 * ang_p + q0 * ang_q - q1 * ang_r);
     q3_dot = 0.5 * (-q2 * ang_p + q1 * ang_q + q0 * ang_r);
 
-    dx[6] = q0_dot;
-    dx[7] = q1_dot;
-    dx[8] = q2_dot;
-    dx[9] = q3_dot;
+    dx[0] = q0_dot;
+    dx[1] = q1_dot;
+    dx[2] = q2_dot;
+    dx[3] = q3_dot;
+
+    double ang_p_dot, ang_q_dot, ang_r_dot;
+    ang_p_dot = (lam[0] * ang_p * ang_q - lam[1] * ang_q * ang_r) + (lam[2] * Tau_tot[0] + lam[3] * Tau_tot[2]);
+    ang_q_dot = (lam[4] * ang_p * ang_r - lam[5] * (ang_p * ang_p - ang_r * ang_r)) + ((1/lam[8]) * Tau_tot[1]);
+    ang_r_dot = (lam[6] * ang_p * ang_q - lam[0] * ang_q * ang_r) + (lam[3] * Tau_tot[0] + lam[7] * Tau_tot[2]);
+
+    dx[4] = ang_p_dot;
+    dx[5] = ang_q_dot;
+    dx[6] = ang_r_dot;
+
+    double vel_u_dot, vel_v_dot, vel_w_dot;
+    vel_u_dot = (1/m[0]) * F_tot[0] - (ang_q*vel_w - ang_r*vel_v);
+    vel_v_dot = (1/m[0]) * F_tot[1] - (ang_r*vel_u - ang_p*vel_w);
+    vel_w_dot = (1/m[0]) * F_tot[2] - (ang_p*vel_v - ang_q*vel_u);
+
+    dx[7] = vel_u_dot;
+    dx[8] = vel_v_dot;
+    dx[9] = vel_w_dot;
 }
 
 /* Output equations. */
@@ -362,18 +358,27 @@ void compute_y(
       Define the output equation y = h(t, x, u, p[0],..., p[np-1], auvar)
       in the body of this function.
     */
-    
+
     /*
       Accessing the contents of auxvar: see the discussion in compute_dx.
     */
-    
+
     /* Example code from ODE function for DCMOTOR example
       used in idnlgreydemo1 (dcmotor_c.c) follows.
     */
-    
-    y[0] = x[0]; /* y[0]: Angular position. */
-    y[1] = x[1]; /* y[1]: Angular velocity. */
+
+    y[0] = x[0];
+    y[1] = x[1];
+    y[2] = x[2];
+    y[3] = x[3];
+    y[4] = x[4];
+    y[5] = x[5];
+    y[6] = x[6];
+    y[7] = x[7];
+    y[8] = x[8];
+    y[9] = x[9];
 }
+
 
 
 
