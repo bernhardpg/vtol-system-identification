@@ -170,7 +170,7 @@ test_set_length = maneuver_length_in_indices * num_test_maneuvers;
 % state = [att ang_vel_B vel_B] = [q0 q1 q2 q3 p q r u v w]
 training_state = zeros(training_set_length, 10);
 test_state = zeros(test_set_length, 10);
-% input = [top_rpm_1 top_rpm_2 top_rpm_3 top_rpm_4 pusher_rpm aileron elevator rudder]
+% input = [top_rpm_1 top_rpm_2 top_rpm_3 top_rpm_4 aileron elevator rudder pusher_rpm]
 %       = [nt1 nt2 nt3 nt4 np delta_a delta_e delta_r]
 training_input = zeros(training_set_length, 8);
 test_input = zeros(test_set_length, 8);

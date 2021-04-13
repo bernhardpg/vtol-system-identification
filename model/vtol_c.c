@@ -49,89 +49,90 @@ void compute_dx(
     */
 
     // ********
-    // Parameters
+    // Constants
     // ********
 
-    double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[0];
-    c_L_alpha = p[1];
-    c_L_q = p[2];
-    c_L_delta_e = p[3];
+		// Physical constants
+    double *rho; // Air density
+    double *g; // Gravitational constant
 
-    double *M, *alpha_stall; // Blending function
-    M = p[4];
-    alpha_stall = p[5];
-
-    double *c_D_p; // Drag parameters
-    c_D_p = p[6];
-
-    double *c_Y_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
-    c_Y_beta = p[7];
-    c_Y_p = p[8];
-    c_Y_r = p[9];
-    c_Y_delta_a = p[10];
-    c_Y_delta_r = p[11];
-
-    double *c_l_beta, *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r; // Aerodynamic moment around x axis
-    c_l_beta = p[12];
-    c_l_p = p[13];
-    c_l_r = p[13];
-    c_l_delta_a = p[14];
-    c_l_delta_r = p[15];
-
-    double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[16];
-    c_m_alpha = p[17];
-    c_m_q = p[18];
-    c_m_delta_e = p[19];
-
-    double *c_n_beta, *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r; // Aerodynamic moment around z axis
-    c_n_beta = p[20];
-    c_n_p = p[21];
-    c_n_r = p[22];
-    c_n_delta_a = p[23];
-    c_n_delta_r = p[24];
-
-    // ********
-    // Constants: Need to be set as constants in matlab script: nlgr.Parameters(i).Fixed = true;
-    // ********
+    rho = p[0];
+		g = p[1];
 
     // Propellers and motors
-    double *rho; // Air density
     double *prop_diam_top, *prop_diam_pusher; // Propeller diameters
     double *c_F_top, *c_F_pusher; // Motor thrust constants
     double *c_Q_top, *c_Q_pusher; // Motor moment constants
 
-    rho = p[25];
-    prop_diam_top = p[26];
-    prop_diam_pusher = p[27];
-    c_F_top = p[28];
-    c_F_pusher = p[29];
-    c_Q_top = p[30];
-    c_Q_pusher = p[31];
+    prop_diam_top = p[2];
+    prop_diam_pusher = p[3];
+    c_F_top = p[4];
+    c_F_pusher = p[5];
+    c_Q_top = p[6];
+    c_Q_pusher = p[7];
 
     // Airframe
     double *m; // Mass
     double *S; // Surface area
     double *chord; // Mean chord length
     double *b; // Wingspan
-    double *lam; // -767 intermediate constants calculated from inertia matrix
+    double *lam; // Intermediate constants calculated from inertia matrix
     double *r_t1; // Position of motor 1
     double *r_t2; // Position of motor 2
     double *r_t3; // Position of motor 3
     double *r_t4; // Position of motor 4
-    double *g; // Gravitational constant
 
-    m = p[32];
-    S = p[33];
-    chord = p[34];
-    b = p[35];
-    lam = p[36]; // Vector of 9 elements
-    r_t1 = p[37]; // Vector of 3 elements
-    r_t2 = p[38]; // Vector of 3 elements
-    r_t3 = p[39]; // Vector of 3 elements
-    r_t4 = p[40]; // Vector of 3 elements
-    g = p[41];
+    m = p[8];
+    S = p[9];
+    chord = p[10];
+    b = p[11];
+    lam = p[12]; // Vector of 9 elements
+    r_t1 = p[13]; // Vector of 3 elements
+    r_t2 = p[14]; // Vector of 3 elements
+    r_t3 = p[15]; // Vector of 3 elements
+    r_t4 = p[16]; // Vector of 3 elements
+
+    // ********
+    // Parameters
+    // ********
+
+    double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
+    c_L_0 = p[17];
+    c_L_alpha = p[18];
+    c_L_q = p[19];
+    c_L_delta_e = p[20];
+
+    double *M, *alpha_stall; // Blending function
+    M = p[21];
+    alpha_stall = p[22];
+
+    double *c_D_p; // Drag parameters
+    c_D_p = p[23];
+
+    double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
+    c_Y_p = p[24];
+    c_Y_r = p[25];
+    c_Y_delta_a = p[26];
+    c_Y_delta_r = p[27];
+
+    double *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r; // Aerodynamic moment around x axis
+    c_l_p = p[28];
+    c_l_r = p[29];
+    c_l_delta_a = p[30];
+    c_l_delta_r = p[31];
+
+    double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
+    c_m_0 = p[32];
+    c_m_alpha = p[33];
+    c_m_q = p[34];
+    c_m_delta_e = p[35];
+
+    double *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r; // Aerodynamic moment around z axis
+    c_n_p = p[36];
+    c_n_r = p[37];
+    c_n_delta_a = p[38];
+    c_n_delta_r = p[39];
+
 
     // *******
     // State and input
@@ -157,27 +158,26 @@ void compute_dx(
     vel_v = x[8];
     vel_w = x[9];
 
-    // Input: [n_t1, n_t2, n_t3, n_t4, n_p, delta_a_sp, delta_r_sp, delta_e_sp]
-    double n_t1, n_t2, n_t3, n_t4, n_p;
+    // Input: [n_t1, n_t2, n_t3, n_t4, delta_a_sp, delta_r_sp, delta_e_sp, n_p]
+    double n_t1, n_t2, n_t3, n_t4;
     n_t1 = u[0];
     n_t2 = u[1];
     n_t3 = u[2];
     n_t4 = u[3];
-    n_p = u[4];
 
-    double delta_a_sp, delta_r_sp, delta_e_sp;
-    delta_a_sp = u[5];
-    delta_e_sp = u[6];
-    delta_r_sp = u[7];
+    double delta_a_sp, delta_r_sp, delta_e_sp, n_p;
+    delta_a_sp = u[4];
+    delta_e_sp = u[5];
+    delta_r_sp = u[6];
+    n_p = u[7];
 
     // ******
     // Forces 
     // ******
 
-    // Calculate AoA and SSA, assuming no wind
+    // Calculate AoA, assuming no wind
     double V = sqrt(pow(vel_u,2) + pow(vel_v,2) + pow(vel_w,2));
     double alpha = atan(vel_w / vel_u);
-    double beta = atan(vel_v / V);
 
     // Gravitational force
     double F_g[3];
@@ -216,7 +216,7 @@ void compute_dx(
       + c_L_q[0] * (chord[0] / (2 * V)) * ang_q
       + c_L_delta_e[0] * delta_e_sp
       );
-    // Here we are assuming IMMEDIATE control surface response. This could be changed by adding control surface dynamics.
+    // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
 
     double c_D = c_D_p[0] + pow(c_L_linear, 2);
     double F_drag = half_rho_S * pow(V, 2) * c_D;
@@ -226,10 +226,9 @@ void compute_dx(
     F_aero[0] = -cos(alpha) * F_drag + sin(alpha) * F_lift;
     F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
 
-    double c_Y = c_Y_beta[0] * beta
-      + c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
+    double c_Y = c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
       + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
-    // TODO: Here we are assuming IMMEDIATE control surface response. This should be changed.
+    // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
     F_aero[1] = half_rho_S * pow(V, 2) * c_Y;
 
     // Sum all forces
@@ -283,8 +282,7 @@ void compute_dx(
     Tau_T[2] = Tau_T1[2] + Tau_T2[2] + Tau_T3[2] + Tau_T4[2];
 
     // Aerodynamic moments
-    double c_l = c_l_beta[0] * beta
-      + c_l_p[0] * (b[0] / (2 * V)) * ang_p
+    double c_l = c_l_p[0] * (b[0] / (2 * V)) * ang_p
       + c_l_r[0] * (b[0] / (2 * V)) * ang_r
       + c_l_delta_a[0] * delta_a_sp
       + c_l_delta_r[0] * delta_r_sp;
@@ -294,8 +292,7 @@ void compute_dx(
       + c_m_q[0] * ang_q
       + c_m_delta_e[0] * delta_e_sp;
 
-    double c_n = c_n_beta[0] * beta
-      + c_n_p[0] * (b[0] / (2 * V)) * ang_p
+    double c_n = c_n_p[0] * (b[0] / (2 * V)) * ang_p
       + c_n_r[0] * (b[0] / (2 * V)) * ang_r
       + c_n_delta_a[0] * delta_a_sp
       + c_n_delta_r[0] * delta_r_sp;
