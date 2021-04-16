@@ -1,0 +1,12 @@
+clc; clear all; close all;
+
+dt = 1/200; % Frame rate
+
+% Read data
+data_down = readtable("down_test.csv");
+frame_number = data_down.Frame_number;
+angle_deg = data_down.Angle_deg_;
+
+
+
+plot(t, angle_deg);
