@@ -160,7 +160,7 @@ for i = 1:length(t_rc)
   end
 end
 
-if 1
+if 0
     plot(t_rc, sysid_rc_switch_raw); hold on;
     plot(sysid_times, 1000, 'r*');
 end
@@ -177,7 +177,8 @@ indices_after_maneuver_start = time_after_maneuver_start / dt;
 maneuver_length_in_indices = indices_after_maneuver_start + indices_before_maneuver + 1;
 
 % TODO change
-maneuvers_to_aggregate = [2 3 6 7 8 9 11 12 13 14 16 17 20];
+maneuvers_to_aggregate = [6];
+%maneuvers_to_aggregate = [6 7 8 9 11 12 13 14 16 17 20];
 
 data_set_length = maneuver_length_in_indices * length(maneuvers_to_aggregate);
 
@@ -188,6 +189,8 @@ accelerations = zeros(data_set_length, 3);
 input = zeros(data_set_length, 8);
 state = zeros(data_set_length, 10);
 
+curr_maneuver_aggregation_index = 1;
+num_aggregated_maneuvers = 0;
 for i = maneuvers_to_aggregate
     maneuver_start_index = sysid_indices(i) - indices_before_maneuver;
     maneuver_end_index = sysid_indices(i) + indices_after_maneuver_start;
@@ -202,14 +205,24 @@ for i = maneuvers_to_aggregate
         u_mr(maneuver_start_index:maneuver_end_index,:) ...% TODO translate these from moments and thrust to individual motor rpms.
         u_fw(maneuver_start_index:maneuver_end_index,:) ...% TODO same here ...
         ];
+    maneuver_accelerations = [
+        acc_x(maneuver_start_index:maneuver_end_index,:) ...
+        acc_y(maneuver_start_index:maneuver_end_index,:) ...
+        acc_z(maneuver_start_index:maneuver_end_index,:) ...
+        ];
     
-    curr_index = num_aggregated_training_maneuvers * maneuver_length_in_indices + 1;
+    curr_maneuver_aggregation_index = num_aggregated_maneuvers * maneuver_length_in_indices + 1;
     state(...
-        curr_index:curr_index + maneuver_length_in_indices - 1 ...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
         ,:) = maneuver_state;
     input(...
-        curr_index:curr_index + maneuver_length_in_indices - 1 ...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
         ,:) = maneuver_input;
+    accelerations(...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
+        ,:) = maneuver_accelerations;
+    
+    num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
     
     % plot data
     if 0
@@ -278,10 +291,8 @@ end
 
 %% Save to file
 
-writematrix(state, output_location + 'state.csv');
-writematrix(accelerations, output_location + 'accelerations.csv');
-writematrix(input, output_location + 'input.csv');
-
+output_data_in_table = table(state, input, accelerations);
+writetable(output_data_in_table, output_location + 'output.csv');
 
 
 %% Aggregate data as training and validation data
@@ -330,12 +341,12 @@ for i = maneuvers_to_aggregate
     % TODO consider shuffling the data randomly??
     % Take the first N maneuvers as training data
     if num_aggregated_training_maneuvers < num_training_maneuvers
-        curr_index = num_aggregated_training_maneuvers * maneuver_length_in_indices + 1;
+        curr_maneuver_aggregation_index = num_aggregated_training_maneuvers * maneuver_length_in_indices + 1;
         state(...
-            curr_index:curr_index + maneuver_length_in_indices - 1 ...
+            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
             ,:) = maneuver_state;
         input(...
-            curr_index:curr_index + maneuver_length_in_indices - 1 ...
+            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
             ,:) = maneuver_input;
         
         num_aggregated_training_maneuvers = num_aggregated_training_maneuvers + 1;

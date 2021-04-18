@@ -1,0 +1,23 @@
+Flight 2
+Static curves:
+1: bad. dropout.
+2. Good
+3. Good a bit early stop 
+4. ok, late start
+5: bad, bouncy, late start
+6: good, early stop 
+7: good
+8: good
+9: good
+10: bad. dropout
+20: good late start
+19: bad. Large vibrations
+18: bad. dropout
+17: good.
+16: good
+15: bad. Large vibrations.
+14: good? Bad vibrations?
+13:  Good
+12: Good
+11: Good
+
