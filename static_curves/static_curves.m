@@ -3,16 +3,25 @@ clc; clear all; close all;
 % File locations
 data_location = "static_curves/data/output.csv";
 
-kLENGTH_MANEUVER = readmatrix('static_curves/data/maneuver_length.csv');
+maneuver_length = readmatrix('static_curves/data/maneuver_length.csv');
 dt = readmatrix('static_curves/data/dt.csv');
+aggregated_maneuvers = readmatrix('static_curves/data/aggregated_maneuvers.csv');
 
 % Load data
 data = readtable(data_location);
 
-%% Read data
+%% Read estimated data
 state = [data.state_1 data.state_2 data.state_3 data.state_4 ...
          data.state_5 data.state_6 data.state_7 ...
          data.state_8 data.state_9 data.state_10];
+     
+num_maneuvers = length(state) / maneuver_length;
+     
+input = [data.input_1 data.input_2 data.input_3 data.input_4 ...
+         data.input_5 data.input_6 data.input_7 data.input_8];
+
+u_mr = input(:,1:4);
+u_fw = input(:,5:8);
      
 N = length(state);
 
@@ -22,7 +31,10 @@ v_B = state(:,8:10);
 u_mr = [data.input_5 data.input_6 data.input_7 data.input_8];
 u_fw = [data.input_5 data.input_6 data.input_7 data.input_8];
 
+%% Read raw acceleration data
+ 
 acc_B = [data.accelerations_1 data.accelerations_2 data.accelerations_3];
+
 
 %% Model parameters
 
@@ -90,54 +102,106 @@ c_D = D ./ dynamic_pressure;
 
 %% Plot
 figure
-subplot(4,1,1)
+subplot(5,1,1)
 plot(L);
 legend('Lift')
 
-subplot(4,1,2)
+subplot(5,1,2)
 plot(D)
 legend('Drag')
 
-subplot(4,1,3)
+subplot(5,1,3)
 plot(V)
 legend('airspeed')
 
-subplot(4,1,4)
+subplot(5,1,4)
 plot(AoA_deg)
 legend('AoA')
 
-
+subplot(5,1,5)
+plot(u_fw)
+legend('delta_a','delta_e', 'delta_r','delta_T')
 
 
 %% 
 figure
-subplot(4,1,1)
+subplot(5,1,1)
 plot(c_L);
 legend('c_L');
 
-subplot(4,1,2)
+subplot(5,1,2)
 plot(c_D)
 legend('c_D');
 
-subplot(4,1,3)
+subplot(5,1,3)
 plot(V)
 legend('airspeed');
 
-subplot(4,1,4)
+subplot(5,1,4)
 plot(AoA_deg)
 legend('AoA')
 
+subplot(5,1,5)
+plot(u_fw(:,1))
+legend('delta_a')%,'delta_e', 'delta_r','delta_T')
+
 %%
 figure
-subplot(2,2,1)
-scatter(AoA_deg, c_L);
-xlabel("AoA")
-ylabel("c_L")
+scatter3(AoA_deg, u_fw(:,2), c_L)
+xlabel('AoA')
+ylabel('delta e')
+zlabel('c_L')
 
-subplot(2,2,2)
-scatter(AoA_deg, c_D);
-xlabel("AoA")
-ylabel("c_D")
+figure
+scatter3(AoA_deg, u_fw(:,2), c_D)
+xlabel('AoA')
+ylabel('delta e')
+zlabel('c_D')
+
+%%
+
+% 2D plots
+for i = 1:num_maneuvers
+    start_index = 1 + maneuver_length * (i - 1);
+    end_index = start_index + maneuver_length - 1;
+    fig = figure;
+    %fig.Visible = 'off';
+    fig.Position = [100 100 1000 300];
+    subplot(1,2,1)
+    scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index));
+    xlabel("AoA")
+    ylabel("c_L")
+
+    subplot(1,2,2)
+    scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index));
+    xlabel("AoA")
+    ylabel("c_D")
+    
+    sgtitle("maneuver no " + aggregated_maneuvers(i));
+end
+
+% 3D plots
+for i = 1:num_maneuvers
+    start_index = 1 + maneuver_length * (i - 1);
+    end_index = start_index + maneuver_length - 1;
+    fig = figure;
+    %fig.Visible = 'off';
+    fig.Position = [100 100 1000 300];
+    subplot(1,2,1)
+    scatter3(AoA_deg(start_index:end_index), u_fw(start_index:end_index,2), c_L(start_index:end_index));
+    xlabel("AoA")
+    ylabel("delta e")
+    zlabel("c_L")
+
+    subplot(1,2,2)
+    scatter3(AoA_deg(start_index:end_index), u_fw(start_index:end_index,2), c_D(start_index:end_index));
+    xlabel("AoA")
+    ylabel("delta e")
+    zlabel("c_D")
+    
+    sgtitle("maneuver no " + aggregated_maneuvers(i));
+end
+
 
 
 %% Plot static curves
@@ -154,28 +218,28 @@ indices_after_maneuver_start = 0 / dt;
 % 10: good, -2 5
 
 for i = 2:2
-    maneuver_start_index = static_sysid_indices(i) - indices_before_maneuver;
+    start_index = static_sysid_indices(i) - indices_before_maneuver;
     maneuver_end_index = static_sysid_indices(i) + indices_after_maneuver_start;
-    maneuver_length_in_indices = maneuver_end_index - maneuver_start_index + 1;
-    t_maneuver = t(maneuver_start_index:maneuver_end_index);
+    maneuver_length_in_indices = maneuver_end_index - start_index + 1;
+    t_maneuver = t(start_index:maneuver_end_index);
     
     % Lift coefficient
     % Construct regressors
-    phi = [ones(maneuver_length_in_indices,1) AoA(maneuver_start_index:maneuver_end_index)]';
+    phi = [ones(maneuver_length_in_indices,1) AoA(start_index:maneuver_end_index)]';
     % Least Squares Estimation
     P = (phi * phi')^-1;
-    theta = P * phi * c_L(maneuver_start_index:maneuver_end_index);
+    theta = P * phi * c_L(start_index:maneuver_end_index);
     % Extract coefficients
     c_L_0 = theta(1);
     c_L_alpha = theta(2);
     
-    c_L_hat = c_L_0 + c_L_alpha * AoA(maneuver_start_index:maneuver_end_index);
+    c_L_hat = c_L_0 + c_L_alpha * AoA(start_index:maneuver_end_index);
     
     % Drag coefficient
     % LSE
     phi = [ones(maneuver_length_in_indices,1) c_L_hat.^2 / (AR * pi)]';
     P = (phi * phi')^-1;
-    theta = P * phi * c_D(maneuver_start_index:maneuver_end_index);
+    theta = P * phi * c_D(start_index:maneuver_end_index);
     c_D_p = theta(1);
     e = 1/theta(2); % Oswalds efficiency factor
     
@@ -184,53 +248,53 @@ for i = 2:2
     % Plotting
     figure
     subplot(7,1,1);
-    plot(t_maneuver, rad2deg(eul(maneuver_start_index:maneuver_end_index,2:3)));
+    plot(t_maneuver, rad2deg(eul(start_index:maneuver_end_index,2:3)));
     legend('pitch','roll');
     title("attitude")
 
     subplot(7,1,2);
-    plot(t_maneuver, w_B(maneuver_start_index:maneuver_end_index,:));
+    plot(t_maneuver, w_B(start_index:maneuver_end_index,:));
     legend('w_x','w_y','w_z');
     title("ang vel body")
 
     subplot(7,1,3);
-    plot(t_maneuver, v_B(maneuver_start_index:maneuver_end_index,:));
+    plot(t_maneuver, v_B(start_index:maneuver_end_index,:));
     legend('v_x', 'v_y', 'v_z');
     title("vel body")
 
     subplot(7,1,4);
-    plot(t_maneuver, u_fw(maneuver_start_index:maneuver_end_index,:));
+    plot(t_maneuver, u_fw(start_index:maneuver_end_index,:));
     legend('delta_a','delta_e','delta_r', 'T_fw');
     title("inputs")
 
     subplot(7,1,5);
-    plot(t_maneuver, AoA(maneuver_start_index:maneuver_end_index));
+    plot(t_maneuver, AoA(start_index:maneuver_end_index));
     title("Angle of Attack")
 
     subplot(7,1,6);
-    plot(t_maneuver, L(maneuver_start_index:maneuver_end_index));
+    plot(t_maneuver, L(start_index:maneuver_end_index));
     legend('L');
     title("Lift force")
     
     subplot(7,1,7);
-    plot(t_maneuver, D(maneuver_start_index:maneuver_end_index));
+    plot(t_maneuver, D(start_index:maneuver_end_index));
     legend('D');
     title("Drag force")
     
     figure
     subplot(2,1,1);
-    plot(AoA(maneuver_start_index:maneuver_end_index), c_L_hat); hold on;
-    scatter(AoA(maneuver_start_index:maneuver_end_index), c_L(maneuver_start_index:maneuver_end_index)); hold on;
+    plot(AoA(start_index:maneuver_end_index), c_L_hat); hold on;
+    scatter(AoA(start_index:maneuver_end_index), c_L(start_index:maneuver_end_index)); hold on;
     xlabel("AoA")
     ylabel("c_L")
-    ylim([0 max(c_L(maneuver_start_index:maneuver_end_index))*1.2])
+    ylim([0 max(c_L(start_index:maneuver_end_index))*1.2])
     
     subplot(2,1,2);
-    plot(AoA(maneuver_start_index:maneuver_end_index), c_D_hat); hold on;
-    scatter(AoA(maneuver_start_index:maneuver_end_index), c_D(maneuver_start_index:maneuver_end_index)); hold on;
+    plot(AoA(start_index:maneuver_end_index), c_D_hat); hold on;
+    scatter(AoA(start_index:maneuver_end_index), c_D(start_index:maneuver_end_index)); hold on;
     xlabel("AoA")
     ylabel("c_D")
-    ylim([min([0 c_D(maneuver_start_index:maneuver_end_index)']) max(c_D(maneuver_start_index:maneuver_end_index))*1.2])
+    ylim([min([0 c_D(start_index:maneuver_end_index)']) max(c_D(start_index:maneuver_end_index))*1.2])
 end
 
 
