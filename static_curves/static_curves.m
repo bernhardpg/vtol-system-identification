@@ -231,11 +231,49 @@ plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
+sgtitle(filename);
+filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
+saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
+
+
+%% Flat plate model fit
+sigma = blending_function(AoA_deg);
+Phi = [(1 - sigma)';
+       (1 - sigma)' .* AoA_deg'];
+Y = c_L - sigma .* lift_flat_plate(AoA_deg);
+P = inv(Phi * Phi');
+B = Phi * Y;
+
+theta = P * B;
+c_L0 = theta(1);
+c_Lalpha = theta(2);
+    
+
+%% Flat plate model
+
+% Test blending function
+%AoA_test = 0:0.01:12;
+%plot(AoA_test, blending_function(AoA_test));
+%plot(AoA_test, flat_plate(AoA_test / 180 * pi));
+sigma = blending_function(AoA_test);
+c_L_estimated = (1 - sigma) .* lift_linear(AoA_test) + sigma .* lift_flat_plate(AoA_test);
+
+fig = figure;
+fig.Position = [100 100 1000 300];
+subplot(1,2,1)
+plot(AoA_test, c_L_estimated); hold on
+scatter(AoA_deg, c_L);
+xlabel("AoA")
+ylabel("c_L")
+
+subplot(1,2,2)
+plot(AoA_test, c_D_estimated); hold on
+scatter(AoA_deg, c_D);
+xlabel("AoA")
+ylabel("c_D")
 filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 sgtitle(filename);
-
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
-sgtitle(filename);
+filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered) flat plate";
 saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
@@ -375,5 +413,22 @@ for i = 2:2
     ylabel("c_D")
     ylim([min([0 c_D(start_index:maneuver_end_index)']) max(c_D(start_index:maneuver_end_index))*1.2])
 end
+%%
 
+function [sigma] = blending_function(alpha)
+    alpha_stall = 13;
+    M = 1;
+    num = 1 + exp(-M * (alpha - alpha_stall)) + exp(M * (alpha + alpha_stall));
+    den = (1 + exp(-M * (alpha - alpha_stall))) .* (1 + exp(M * (alpha + alpha_stall)));
+    sigma = num ./ den;
+end
 
+function [c_L_linear] = lift_linear(alpha)
+    c_L0 = 0.6791;
+    c_Lalpha = 0.0277;
+    c_L_linear = c_L0 + c_Lalpha * alpha;
+end
+
+function [c_L_flatplate] = lift_flat_plate(alpha)
+    c_L_flatplate = 2 .* sign(alpha) .* sin(alpha / 180 * pi).^2 .* cos(alpha / 180 * pi);
+end
