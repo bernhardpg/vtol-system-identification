@@ -1,5 +1,6 @@
-Flight 2
-Static curves:
+### Flight 2
+## Static curves
+Maneuver_no, analysis 
 1: bad. dropout.
 2. Good
 3. Good a bit early stop 
@@ -21,3 +22,34 @@ Static curves:
 12: Good
 11: Good
 
+1: bad. dropout.
+2: good
+3: good
+4: good
+5: good
+6: good
+7: ok. a lot of roll. Some wind?
+8: good
+9: good
+10: dropout
+11: good
+12: good
+13: good
+14: good
+15: good
+16: ok, some wind and bad pitch?
+17: good
+18: dropout
+19: good
+20: good
+21: good
+22: good
+23: good
+24: good
+25: good
+26: good
+27: good
+28: dropout
+29: good
+30: good
+31: good 

@@ -1,3 +1,6 @@
+*.swp
+*.ulg
+#
 ### Mac
 *.DS_Store
 *.mexmaci64

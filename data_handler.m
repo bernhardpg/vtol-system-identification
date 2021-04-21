@@ -101,7 +101,7 @@ end
 
 t_acc = sensor_combined.timestamp / 1e6;
 acc_B_raw = [sensor_combined.accelerometer_m_s2_0_ sensor_combined.accelerometer_m_s2_1_ sensor_combined.accelerometer_m_s2_2_];
-acc_B = interp1q(t_ekf, acc_B_raw, t');
+acc_B = interp1q(t_acc, acc_B_raw, t');
 
 acc_x = acc_B(:,1);
 acc_y = acc_B(:,2);
@@ -170,16 +170,14 @@ sysid_indices = round(interp1(t,1:N,sysid_times));
 
 %% Aggregate data
 time_before_maneuver = 0.1; %s
-time_after_maneuver_start = 3.8; %s
+time_after_maneuver_start = 4; %s
 
 indices_before_maneuver = time_before_maneuver / dt;
 indices_after_maneuver_start = time_after_maneuver_start / dt;
 maneuver_length_in_indices = indices_after_maneuver_start + indices_before_maneuver + 1;
 
-% TODO change
-maneuvers_to_aggregate = [6];
-%maneuvers_to_aggregate = [6 7 8 9 11 12 13 14 16 17 20];
-
+%maneuvers_to_aggregate = 2;
+maneuvers_to_aggregate = [2:6 8:9 11:15 17 19:27 29:31];
 data_set_length = maneuver_length_in_indices * length(maneuvers_to_aggregate);
 
 % state structure: [att ang_vel_B vel_B] = [q0 q1 q2 q3 p q r u v w]
@@ -189,8 +187,12 @@ accelerations = zeros(data_set_length, 3);
 input = zeros(data_set_length, 8);
 state = zeros(data_set_length, 10);
 
+AIRSPEED_TRESHOLD_MIN = 18; % m/s
+AIRSPEED_TRESHOLD_MAX = 23; % m/s
+
 curr_maneuver_aggregation_index = 1;
 num_aggregated_maneuvers = 0;
+aggregated_maneuvers = zeros(100);
 for i = maneuvers_to_aggregate
     maneuver_start_index = sysid_indices(i) - indices_before_maneuver;
     maneuver_end_index = sysid_indices(i) + indices_after_maneuver_start;
@@ -210,6 +212,18 @@ for i = maneuvers_to_aggregate
         acc_y(maneuver_start_index:maneuver_end_index,:) ...
         acc_z(maneuver_start_index:maneuver_end_index,:) ...
         ];
+    v_B_maneuver = maneuver_state(:,8:10);
+    V_maneuver = sqrt(v_B_maneuver(:,1).^2 + v_B_maneuver(:,2).^2 + v_B_maneuver(:,3).^2);
+    
+    % Only add maneuvers that are above airspeed treshold
+    if (V_maneuver(1) < AIRSPEED_TRESHOLD_MIN)
+       display("skipping maneuver " + i + ": airspeed too low")
+       continue 
+    end
+    if (V_maneuver(1) > AIRSPEED_TRESHOLD_MAX)
+       display("skipping maneuver " + i + ": airspeed too high")
+       continue
+    end
     
     curr_maneuver_aggregation_index = num_aggregated_maneuvers * maneuver_length_in_indices + 1;
     state(...
@@ -223,6 +237,7 @@ for i = maneuvers_to_aggregate
         ,:) = maneuver_accelerations;
     
     num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
+    aggregated_maneuvers(num_aggregated_maneuvers) = i;
     
     % plot data
     if 0
@@ -254,47 +269,74 @@ for i = maneuvers_to_aggregate
     end
     
     % plot AoA, airspeed and pitch input
-    if 0
+    if 1
         t_maneuver = t(maneuver_start_index:maneuver_end_index);
         
-        figure
+        fig = figure('visible','off');
+        fig.Position = [100 100 1600 1000];
         
-        subplot(5,1,1);
+        eul_deg = rad2deg(eul);
+        
+        subplot(6,1,1);
         plot(t_maneuver, u_fw(maneuver_start_index:maneuver_end_index,:));
         legend('delta_a','delta_e','delta_r', 'T_fw');
         title("inputs")
 
-        subplot(5,1,2);
+        subplot(6,1,2);
         plot(t_maneuver, [AoA(maneuver_start_index:maneuver_end_index,:) eul_deg(maneuver_start_index:maneuver_end_index,2)]);
         legend('AoA', 'pitch');
         title("Angle of Attack")
+        
+        eul_deg = rad2deg(eul);
+        
+        subplot(6,1,3);
+        plot(t_maneuver, eul_deg(maneuver_start_index:maneuver_end_index,2:3));
+        legend('pitch','roll');
+        title("attitude")
 
-        subplot(5,1,3);
+        subplot(6,1,4);
         plot(t_maneuver, V(maneuver_start_index:maneuver_end_index,:));
-        legend('AoA');
+        legend('V_1');
         title("Airspeed (assuming no wind)")
 
-        subplot(5,1,4);
+        subplot(6,1,5);
         plot(t_maneuver, acc_x(maneuver_start_index:maneuver_end_index,:));
         legend('Acceleration');
         title("a_x")
 
-        subplot(5,1,5);
+        subplot(6,1,6);
         plot(t_maneuver, acc_z(maneuver_start_index:maneuver_end_index,:));
         legend('Acceleration');
         title("a_z")
         
-        sgtitle("maneuver no: " + i)
+        figure_title = "maneuver no: " + i;
+        sgtitle(figure_title)
+        %savefig('static_curves/data/maneuver_plots/' + figure_title + '.fig')
+        %saveas(fig, 'static_curves/data/maneuver_plots/' + figure_title, 'epsc')
     end
 end
 
+% Trim data
+state = state(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
+input = input(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
+accelerations = accelerations(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
+
+aggregated_maneuvers = aggregated_maneuvers(1:num_aggregated_maneuvers);
+display("aggregated " + num_aggregated_maneuvers + " maneuvers")
+disp(aggregated_maneuvers);
 
 %% Save to file
 
 output_data_in_table = table(state, input, accelerations);
 writetable(output_data_in_table, output_location + 'output.csv');
+writematrix(maneuver_length_in_indices, output_location + 'maneuver_length.csv');
+writematrix(dt, output_location + 'dt.csv');
 
 
+
+%%%%%%%%%
+%%%%%%%%
+%%%% OLD
 %% Aggregate data as training and validation data
 time_before_maneuver = 1.5; %s
 time_after_maneuver_start = 5.5; %s

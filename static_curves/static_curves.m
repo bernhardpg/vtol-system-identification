@@ -3,37 +3,36 @@ clc; clear all; close all;
 % File locations
 data_location = "static_curves/data/output.csv";
 
-kLENGTH_MANEUVER = 391; % Chose this when importing the data
+kLENGTH_MANEUVER = readmatrix('static_curves/data/maneuver_length.csv');
+dt = readmatrix('static_curves/data/dt.csv');
 
 % Load data
 data = readtable(data_location);
 
+%% Read data
 state = [data.state_1 data.state_2 data.state_3 data.state_4 ...
          data.state_5 data.state_6 data.state_7 ...
          data.state_8 data.state_9 data.state_10];
      
+N = length(state);
+
+q_NB = state(:,1:4);
 v_B = state(:,8:10);
 
 u_mr = [data.input_5 data.input_6 data.input_7 data.input_8];
 u_fw = [data.input_5 data.input_6 data.input_7 data.input_8];
 
-a_x = data.accelerations_1;
-a_y = data.accelerations_2;
-a_z = data.accelerations_3;
-
-%% STATIC CURVES
-%%%%%%%%
+acc_B = [data.accelerations_1 data.accelerations_2 data.accelerations_3];
 
 %% Model parameters
 
-% TODO fix these
+% TODO
 m = 5.6+3*1.27+2*0.951; % kg 
-
 g = 9.81; % m/s^2
-rho = 1.225; % kg / m^3
-b = 2.5;
-S = 0.75; % TODO: not exact
-AR = b^2 / S;
+
+% b = 2.5;
+% S = 0.75; % TODO: not exact
+% AR = b^2 / S;
 
 %% TODO
 % Calculate total airspeed
@@ -42,32 +41,104 @@ V = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
 
 % Calculate Angle of Attack
 
-AoA = rad2deg(atan2(v_B(:,3),v_B(:,1)));
+AoA_rad = atan2(v_B(:,3),v_B(:,1));
+AoA_deg = rad2deg(AoA_rad);
 
-%% Extract aerodynamic forces
+%% Rotate data
+% Create rotation matrices
+q_BN = quatinv(q_NB);
+R_BN = quat2rotm(q_BN);
 
-F_x = a_x / m;
-F_z = a_y / m;
+eul_rad = [zeros(size(AoA_rad)) AoA_rad zeros(size(AoA_rad))];
+R_SB = eul2rotm(eul_rad); % For some reason this gives a left-handed rotation
 
-N = length(state);
-
-L = zeros(N,1);
-D = zeros(N,1);
+% Calculate gravitational force in Stability frame
+Fg_N = [0; 0; m*g];
+Fg_S = zeros(N,3);
 
 for i = 1:N
-   alpha = deg2rad(AoA(i));
-   R_BS = [cos(alpha) -sin(alpha);
-           sin(alpha) cos(alpha)];
-   R_SB = inv(R_BS);
-   F_B = [F_x(i); F_z(i)]; % Body frame forces
-   F_S = R_SB * F_B; % Rotated to stability frame
-   D(i) = -F_S(1);
-   L(i) = -F_S(2);
+   R_SN_at_i = R_SB(:,:,i) .* R_BN(:,:,i);
+   Fg_S_at_i = R_SN_at_i * Fg_N;
+   Fg_S(i,:) = Fg_S_at_i;
 end
 
+% Transform acceleration from body frame to stability frame
+acc_S = zeros(size(acc_B));
+for i = 1:N
+    acc_S_at_i = R_SB(:,:,i) * acc_B(i,:)';
+    acc_S(i,:) = acc_S_at_i;
+end
+
+%% Extract aerodynamic forces
+% figure
+% plot(Fg_S(:,[1 3]))
+% legend('x','z')
+% 
+% figure
+% plot(m*acc_S(:,[1 3]))
+% legend('x','z')
+
+Fa_S = m * acc_S - Fg_S;
+D = -Fa_S(:,1);
+L = -Fa_S(:,3);
+
+%% Calculate coefficients
+rho = 1.225; % kg / m^3
 dynamic_pressure = 0.5 * rho * V.^2;
 c_L = L ./ dynamic_pressure;
 c_D = D ./ dynamic_pressure;
+
+%% Plot
+figure
+subplot(4,1,1)
+plot(L);
+legend('Lift')
+
+subplot(4,1,2)
+plot(D)
+legend('Drag')
+
+subplot(4,1,3)
+plot(V)
+legend('airspeed')
+
+subplot(4,1,4)
+plot(AoA_deg)
+legend('AoA')
+
+
+
+
+%% 
+figure
+subplot(4,1,1)
+plot(c_L);
+legend('c_L');
+
+subplot(4,1,2)
+plot(c_D)
+legend('c_D');
+
+subplot(4,1,3)
+plot(V)
+legend('airspeed');
+
+subplot(4,1,4)
+plot(AoA_deg)
+legend('AoA')
+
+%%
+figure
+subplot(2,2,1)
+scatter(AoA_deg, c_L);
+xlabel("AoA")
+ylabel("c_L")
+
+subplot(2,2,2)
+scatter(AoA_deg, c_D);
+xlabel("AoA")
+ylabel("c_D")
+
 
 %% Plot static curves
 indices_before_maneuver = 3.5 / dt;
