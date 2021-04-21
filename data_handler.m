@@ -84,8 +84,11 @@ w_B = interp1q(t_ang_vel, w_B_raw, t');
 % This is rotated with rotation matrices only for improved readability,
 % as both the PX4 docs is ambiguous in describing q, and quatrotate() is
 % pretty ambigious too.
+R_NB = quat2rotm(q_NB);
+
 q_BN = quatinv(q_NB);
 R_BN = quat2rotm(q_BN);
+
 v_B = zeros(N, 3);
 for i = 1:N
    % Notice how the Rotation matrix has to be inverted here to get the
@@ -141,7 +144,14 @@ if 0
 end
 
 acc_B = interp1q(t_acc, acc_B_raw, t');
-acc_B_filtered = interp1q(t_acc, acc_B_raw_filtered, t');
+acc_B_filtered = acc_B;
+%acc_B_filtered = interp1q(t_acc, acc_B_raw_filtered, t');
+
+% Calculate NED acceleration
+acc_N = zeros(size(acc_B));
+for i = 1:N
+   acc_N(i,:) = (R_NB(:,:,i) * acc_B_filtered(i,:)')';
+end
 
 %% Calculate intermediate values
 % Calculate total airspeed
@@ -180,13 +190,13 @@ RC_TRESHOLD = 1000;
 
 % Find times when switch was switched
 MAX_SYSID_MANEUVERS = 100;
-sysid_times = zeros(MAX_SYSID_MANEUVERS,1);
+rc_sysid_times = zeros(MAX_SYSID_MANEUVERS,1);
 sysid_maneuver_num = 1;
 sysid_found = false;
 for i = 1:length(t_rc)
   % Add time if found a new rising edge
   if sysid_rc_switch_raw(i) >= RC_TRESHOLD && not(sysid_found)
-      sysid_times(sysid_maneuver_num) = t_rc(i);
+      rc_sysid_times(sysid_maneuver_num) = t_rc(i);
       sysid_found = true;
       sysid_maneuver_num = sysid_maneuver_num + 1;
   end
@@ -198,22 +208,24 @@ end
 
 if 0
     plot(t_rc, sysid_rc_switch_raw); hold on;
-    plot(sysid_times, 1000, 'r*');
+    plot(rc_sysid_times, 1000, 'r*');
 end
 
 % Find corresponding indices in time vector
-sysid_indices = round(interp1(t,1:N,sysid_times));
+rc_sysid_indices = round(interp1(t,1:N,rc_sysid_times));
+
 
 %% Aggregate data
-time_before_maneuver = 0.1; %s
-time_after_maneuver_start = 4; %s
+time_before_maneuver = 1; %s
+time_after_maneuver_start = 3; %s
 
 indices_before_maneuver = time_before_maneuver / dt;
 indices_after_maneuver_start = time_after_maneuver_start / dt;
-maneuver_length_in_indices = indices_after_maneuver_start + indices_before_maneuver + 1;
+padding = 0.25 / dt;
+maneuver_length_in_indices = 200 - 2 * padding;
 
 %maneuvers_to_aggregate = 3;
-maneuvers_to_aggregate = [2:6 8:9 11:15 17 19:27 29:31];
+maneuvers_to_aggregate = [2:9 11:27 29:31];
 data_set_length = maneuver_length_in_indices * length(maneuvers_to_aggregate);
 
 % state structure: [att ang_vel_B vel_B] = [q0 q1 q2 q3 p q r u v w]
@@ -223,15 +235,25 @@ accelerations = zeros(data_set_length, 3);
 input = zeros(data_set_length, 8);
 state = zeros(data_set_length, 10);
 
-AIRSPEED_TRESHOLD_MIN = 19; % m/s
-AIRSPEED_TRESHOLD_MAX = 25; % m/s
+AIRSPEED_TRESHOLD_MIN = 21; % m/s
+AIRSPEED_TRESHOLD_MAX = 26; % m/s
 
 curr_maneuver_aggregation_index = 1;
 num_aggregated_maneuvers = 0;
 aggregated_maneuvers = zeros(100);
 for i = maneuvers_to_aggregate
-    maneuver_start_index = sysid_indices(i) - indices_before_maneuver;
-    maneuver_end_index = sysid_indices(i) + indices_after_maneuver_start;
+    maneuver_start_index = rc_sysid_indices(i) - indices_before_maneuver;
+    maneuver_end_index = rc_sysid_indices(i) + indices_after_maneuver_start;
+    % Move to correct start index
+    for j = 1:4/dt
+        [~, maneuver_top_index] = max(u_fw(maneuver_start_index:maneuver_end_index,2));
+        maneuver_top_index = maneuver_start_index + maneuver_top_index;
+    end
+    
+    t_maneuver = t(maneuver_start_index:maneuver_end_index);
+    
+    maneuver_start_index = maneuver_top_index - 2 / dt + padding;
+    maneuver_end_index = maneuver_top_index - padding; 
 
     % Save data chunk to training and test sets
     maneuver_state = [
@@ -253,7 +275,7 @@ for i = maneuvers_to_aggregate
 
     total_std = std_ang_rates(1) + std_ang_rates(3 ) + std_body_vel(2);
     
-    % Only add maneuvers that are above airspeed treshold
+    %Only add maneuvers that are above airspeed treshold
     if (V_maneuver(1) < AIRSPEED_TRESHOLD_MIN)
        display("skipping maneuver " + i + ": airspeed too low")
        continue 
@@ -262,20 +284,20 @@ for i = maneuvers_to_aggregate
        display("skipping maneuver " + i + ": airspeed too high")
        continue
     end
-    if (total_std > 0.5)
+    if (total_std > 0.7)
        display("skipping maneuver " + i + ": total std: " + total_std)
        continue
     end
     
     curr_maneuver_aggregation_index = num_aggregated_maneuvers * maneuver_length_in_indices + 1;
     state(...
-        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices ...
         ,:) = maneuver_state;
     input(...
-        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices ...
         ,:) = maneuver_input;
     accelerations(...
-        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices - 1 ...
+        curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices ...
         ,:) = maneuver_accelerations;
     
     num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
@@ -314,62 +336,66 @@ for i = maneuvers_to_aggregate
     if 1
         t_maneuver = t(maneuver_start_index:maneuver_end_index);
         
-        fig = figure;
+        fig = figure; 
         fig.Visible = 'off';
         fig.Position = [100 100 1600 1000];
         
         eul_deg = rad2deg(eul);
         
-        subplot(8,1,1);
+        subplot(9,1,1);
         plot(t_maneuver, u_fw(maneuver_start_index:maneuver_end_index,:));
         legend('delta_a','delta_e','delta_r', 'T_fw');
         title("inputs")
 
-        subplot(8,1,2);
+        subplot(9,1,2);
         plot(t_maneuver, [AoA(maneuver_start_index:maneuver_end_index,:) eul_deg(maneuver_start_index:maneuver_end_index,2)]);
         legend('AoA', 'pitch');
         title("Angle of Attack")
         
         eul_deg = rad2deg(eul);
         
-        subplot(8,1,3);
+        subplot(9,1,3);
         plot(t_maneuver, eul_deg(maneuver_start_index:maneuver_end_index,2:3));
         legend('pitch','roll');
         title("attitude")
 
-        subplot(8,1,4);
+        subplot(9,1,4);
         plot(t_maneuver, V(maneuver_start_index:maneuver_end_index,:));
         legend('V_1');
         title("Airspeed (assuming no wind)")
 
-        subplot(8,1,5);
+        subplot(9,1,5);
         plot(t_maneuver, acc_B(maneuver_start_index:maneuver_end_index,1)); hold on
         plot(t_maneuver, acc_B_filtered(maneuver_start_index:maneuver_end_index,1)); hold on
         plot(t_maneuver, bias_acc(maneuver_start_index:maneuver_end_index,1)); hold on
         legend('Acceleration', 'acc filtered', 'bias');
         title("a_x")
 
-        subplot(8,1,6);
+        subplot(9,1,6);
         plot(t_maneuver, acc_B(maneuver_start_index:maneuver_end_index,3)); hold on
         plot(t_maneuver, acc_B_filtered(maneuver_start_index:maneuver_end_index,3));
         plot(t_maneuver, bias_acc(maneuver_start_index:maneuver_end_index,3)); hold on
         legend('Acceleration', 'acc filtered', 'bias');
         title("a_z")
         
-        subplot(8,1,7);
+        subplot(9,1,7);
+        plot(t_maneuver, abs(acc_N(maneuver_start_index:maneuver_end_index,3)+9.81));
+        title("acc z compared to gravity")
+        
+        subplot(9,1,8);
         plot(t_maneuver, w_B(maneuver_start_index:maneuver_end_index,:))
         legend('p','q','r');
         ylim([-0.5 0.5])
         title("angular velocity")
         
-        subplot(8,1,8);
+        subplot(9,1,9);
         plot(t_maneuver, v_B(maneuver_start_index:maneuver_end_index,:))
         legend('u','v','w');
         ylim([-2 2])
         title("body velocity")
 
-        filename = "maneuver no: " + i;
-        figure_title = "maneuver no: " + i + " total std: " + total_std + ...
+        filename = "half maneuver no: " + i;
+        figure_title = "half maneuver no: " + i + " total std: " + total_std + ...
             ". std p: " + std_ang_rates(1) + ", std r: " + std_ang_rates(3 ) + ...
             ", std v: " + std_body_vel(2);
         sgtitle(figure_title)

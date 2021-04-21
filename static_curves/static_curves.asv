@@ -205,20 +205,19 @@ c_L0 = theta(1);
 c_Lalpha = theta(2);
     
 % Drag coefficient
-Phi = [ones(1,N);
-       (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
-P = inv(Phi * Phi');
-Y = c_D;
-B = Phi * Y;
-theta = P * B;
+Phi = [ones(1,N) (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
+P = (Phi * Phi')^-1;
+theta = P * Phi * c_D(start_index:maneuver_end_index);
 c_Dp = theta(1);
 e = 1/theta(2); % Oswalds efficiency factor
+
 
 AoA_test = min(AoA_deg):0.01:max(AoA_deg);
 c_L_estimated = c_L0 + c_Lalpha * AoA_test;
 c_D_estimated = c_Dp + c_L_estimated.^2 / (pi * e * AR);
 
 fig = figure;
+%fig.Visible = 'off';
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
 plot(AoA_test, c_L_estimated); hold on
@@ -227,16 +226,13 @@ xlabel("AoA")
 ylabel("c_L")
 
 subplot(1,2,2)
-plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
 filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 sgtitle(filename);
 
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
-sgtitle(filename);
-saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
+
 
 
 %% 3D plots
