@@ -24,6 +24,8 @@ actuator_controls_fw = readtable(csv_files_location + log_file + '_' + "actuator
 input_rc = readtable(csv_files_location + log_file + '_' + "input_rc_0" + ".csv");
 sensor_combined = readtable(csv_files_location + log_file + '_' + "sensor_combined_0" + ".csv");
 sensor_bias = readtable(csv_files_location + log_file + '_' + "estimator_sensor_bias_0" + ".csv");
+airspeed_data = readtable(csv_files_location + log_file + '_' + "airspeed_0" + ".csv");
+airspeed_validated_data = readtable(csv_files_location + log_file + '_' + "airspeed_validated_0" + ".csv");
 
 %% Data settings
 dt = 1 / 100;
@@ -144,8 +146,7 @@ if 0
 end
 
 acc_B = interp1q(t_acc, acc_B_raw, t');
-acc_B_filtered = acc_B;
-%acc_B_filtered = interp1q(t_acc, acc_B_raw_filtered, t');
+acc_B_filtered = interp1q(t_acc, acc_B_raw_filtered, t');
 
 % Calculate NED acceleration
 acc_N = zeros(size(acc_B));
@@ -153,12 +154,23 @@ for i = 1:N
    acc_N(i,:) = (R_NB(:,:,i) * acc_B_filtered(i,:)')';
 end
 
+%% Airspeed
+t_airspeed = airspeed_data.timestamp / 1e6;
+V_a_raw = airspeed_data.true_airspeed_m_s;
+V_a = interp1q(t_airspeed, V_a_raw, t');
+
+t_airspeed_validated = airspeed_validated_data.timestamp / 1e6;
+V_a_validated_raw = airspeed_validated_data.true_airspeed_m_s;
+V_a_validated = interp1q(t_airspeed_validated, V_a_validated_raw, t');
+
 %% Calculate intermediate values
 % Calculate total airspeed
 
 V = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
 
 % Calculate Angle of Attack
+
+%u = sqrt(V_a.^2 - v_B(:,3).^2);
 
 AoA = rad2deg(atan2(v_B(:,3),v_B(:,1)));
 
@@ -180,7 +192,6 @@ u_throttle_fw = actuator_controls_fw.control_3_;
 u_fw_raw = [u_roll_fw u_pitch_fw u_yaw_fw u_throttle_fw];
 
 u_fw = interp1q(t_u_fw, u_fw_raw, t');
-
 
 %% Extract times when sysid switch is flipped
 % Extract RC sysid switch log
@@ -224,8 +235,8 @@ indices_after_maneuver_start = time_after_maneuver_start / dt;
 padding = 0.25 / dt;
 maneuver_length_in_indices = 200 - 2 * padding;
 
-%maneuvers_to_aggregate = 3;
-maneuvers_to_aggregate = [2:9 11:27 29:31];
+maneuvers_to_aggregate = [3:7 12 13 17 24 25 29];
+%maneuvers_to_aggregate = [2:9 11:27 29:31]; % All maneuvers without dropout
 data_set_length = maneuver_length_in_indices * length(maneuvers_to_aggregate);
 
 % state structure: [att ang_vel_B vel_B] = [q0 q1 q2 q3 p q r u v w]
@@ -234,9 +245,10 @@ data_set_length = maneuver_length_in_indices * length(maneuvers_to_aggregate);
 accelerations = zeros(data_set_length, 3);
 input = zeros(data_set_length, 8);
 state = zeros(data_set_length, 10);
+airspeed = zeros(data_set_length, 1);
 
 AIRSPEED_TRESHOLD_MIN = 21; % m/s
-AIRSPEED_TRESHOLD_MAX = 26; % m/s
+AIRSPEED_TRESHOLD_MAX = 25; % m/s
 
 curr_maneuver_aggregation_index = 1;
 num_aggregated_maneuvers = 0;
@@ -252,7 +264,7 @@ for i = maneuvers_to_aggregate
     
     t_maneuver = t(maneuver_start_index:maneuver_end_index);
     
-    maneuver_start_index = maneuver_top_index - 2 / dt + padding;
+    maneuver_start_index = maneuver_top_index - 200 + padding;
     maneuver_end_index = maneuver_top_index - padding; 
 
     % Save data chunk to training and test sets
@@ -266,8 +278,10 @@ for i = maneuvers_to_aggregate
         u_fw(maneuver_start_index:maneuver_end_index,:) ...% TODO same here ...
         ];
     maneuver_accelerations = acc_B_filtered(maneuver_start_index:maneuver_end_index,:);
+    maneuver_airspeed = V_a(maneuver_start_index:maneuver_end_index);
+    
     v_B_maneuver = maneuver_state(:,8:10);
-    V_maneuver = sqrt(v_B_maneuver(:,1).^2 + v_B_maneuver(:,2).^2 + v_B_maneuver(:,3).^2);
+    V_maneuver = V_a(maneuver_start_index);
     
     % Calculate data cleanliness
     std_ang_rates = std(w_B(maneuver_start_index:maneuver_end_index,:));
@@ -299,6 +313,8 @@ for i = maneuvers_to_aggregate
     accelerations(...
         curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices ...
         ,:) = maneuver_accelerations;
+    airspeed(curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + maneuver_length_in_indices)...
+        = maneuver_airspeed;
     
     num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
     aggregated_maneuvers(num_aggregated_maneuvers) = i;
@@ -360,8 +376,10 @@ for i = maneuvers_to_aggregate
         title("attitude")
 
         subplot(9,1,4);
-        plot(t_maneuver, V(maneuver_start_index:maneuver_end_index,:));
-        legend('V_1');
+        plot(t_maneuver, V(maneuver_start_index:maneuver_end_index,:)); hold on
+        plot(t_maneuver, V_a(maneuver_start_index:maneuver_end_index,:)); hold on
+        plot(t_maneuver, V_a_validated(maneuver_start_index:maneuver_end_index,:)); hold on
+        legend('V','V_a','V_a_validated');
         title("Airspeed (assuming no wind)")
 
         subplot(9,1,5);
@@ -409,6 +427,7 @@ end
 state = state(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
 input = input(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
 accelerations = accelerations(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
+airspeed = airspeed(1:num_aggregated_maneuvers * maneuver_length_in_indices,:);
 
 aggregated_maneuvers = aggregated_maneuvers(1:num_aggregated_maneuvers);
 display("aggregated " + num_aggregated_maneuvers + " maneuvers")
@@ -417,10 +436,10 @@ disp(aggregated_maneuvers);
 %% Save to file
 output_data_in_table = table(state, input, accelerations);
 writetable(output_data_in_table, output_location + 'output.csv');
+writematrix(airspeed, output_location + 'airspeed.csv');
 writematrix(maneuver_length_in_indices, output_location + 'maneuver_length.csv');
 writematrix(dt, output_location + 'dt.csv');
 writematrix(aggregated_maneuvers, output_location + 'aggregated_maneuvers.csv');
-
 
 %%%%%%%%%
 %%%%%%%%

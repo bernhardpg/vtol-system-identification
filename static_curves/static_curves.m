@@ -36,6 +36,10 @@ u_fw = [data.input_5 data.input_6 data.input_7 data.input_8];
 acc_B = [data.accelerations_1 data.accelerations_2 data.accelerations_3];
 
 
+%% Read airspeed
+
+V_a = readmatrix('static_curves/data/airspeed.csv');
+
 %% Model parameters
 
 % TODO
@@ -53,8 +57,12 @@ V = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
 
 % Calculate Angle of Attack
 
+u = sqrt(V_a.^2 - v_B(:,3).^2);
+
 AoA_rad = atan2(v_B(:,3),v_B(:,1));
+AoA_rad_new = atan2(v_B(:,3),u);
 AoA_deg = rad2deg(AoA_rad);
+AoA_deg_new = rad2deg(AoA_rad_new);
 
 %% Rotate data
 % Create rotation matrices
@@ -96,12 +104,12 @@ L = -Fa_S(:,3);
 
 %% Calculate coefficients
 rho = 1.225; % kg / m^3
-dynamic_pressure = 0.5 * rho * V.^2;
+dynamic_pressure = 0.5 * rho * V_a.^2;
 c_L = L ./ dynamic_pressure;
 c_D = D ./ dynamic_pressure;
 
 %% Plot trajectories
-if 0
+if 1
     figure
     subplot(5,1,1)
     plot(L);
@@ -112,12 +120,14 @@ if 0
     legend('Drag')
 
     subplot(5,1,3)
-    plot(V)
-    legend('airspeed')
+    plot(V); hold on
+    plot(V_a); hold on
+    legend('V','V_a');
 
     subplot(5,1,4)
-    plot(AoA_deg)
-    legend('AoA')
+    plot(AoA_deg); hold on
+    plot(AoA_deg_new); hold on
+    legend('AoA','AoA new')
 
     subplot(5,1,5)
     plot(u_fw)
@@ -134,12 +144,14 @@ if 0
     legend('c_D');
 
     subplot(5,1,3)
-    plot(V)
-    legend('airspeed');
+    plot(V); hold on
+    plot(V_a); hold on
+    legend('V','V_a');
 
     subplot(5,1,4)
-    plot(AoA_deg)
-    legend('AoA')
+    plot(AoA_deg); hold on
+    plot(AoA_deg_new); hold on
+    legend('AoA','AoA new')
 
     subplot(5,1,5)
     plot(u_fw(:,1))
@@ -149,7 +161,7 @@ end
 %%
 
 % plot individual 2D plots
-if 0
+if 1
     for i = 1:num_maneuvers
         start_index = 1 + maneuver_length * (i - 1);
         end_index = start_index + maneuver_length - 1;
@@ -157,18 +169,23 @@ if 0
         %fig.Visible = 'off';
         fig.Position = [100 100 1000  300];
         subplot(1,2,1)
-        scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index));
+        scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index)); hold on
+        scatter(AoA_deg_new(start_index:end_index), c_L(start_index:end_index));
         xlabel("AoA")
         ylabel("c_L")
+        ylim([0.6 1.15])
 
         subplot(1,2,2)
-        scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index));
+        scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index)); hold on
+        scatter(AoA_deg_new(start_index:end_index), c_D(start_index:end_index));
         xlabel("AoA")
         ylabel("c_D")
+        ylim([0 0.1])
 
         sgtitle("maneuver no " + aggregated_maneuvers(i));
         filename = "scatter maneuver no " + aggregated_maneuvers(i);
         %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
+        1
     end
 end
 
@@ -177,14 +194,18 @@ fig = figure;
 %fig.Visible = 'off';
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
-scatter(AoA_deg, c_L);
+%scatter(AoA_deg, c_L); hold on
+scatter(AoA_deg_new, c_L);
 xlabel("AoA")
 ylabel("c_L")
+ylim([0 1.15])
 
 subplot(1,2,2)
-scatter(AoA_deg, c_D);
+%scatter(AoA_deg, c_D); hold on
+scatter(AoA_deg_new, c_D);
 xlabel("AoA")
 ylabel("c_D")
+ylim([0 0.2])
 filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 sgtitle(filename);
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
@@ -301,7 +322,7 @@ if 0
     end
 end
 
-if 0
+if 1
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
