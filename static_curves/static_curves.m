@@ -22,96 +22,8 @@ b = 2.5;
 S = 0.75; % TODO: not exact
 AR = b^2 / S;
 
-
-%% Plot trajectories
-if 1
-    figure
-    subplot(6,1,1)
-    plot(L);
-    legend('Lift')
-
-    subplot(6,1,2)
-    plot(D)
-    legend('Drag')
-
-    subplot(6,1,3)
-    plot(V); hold on
-    plot(V_a); hold on
-    legend('V','V_a');
-
-    subplot(6,1,4)
-    plot(AoA_deg); hold on
-    plot(AoA_deg_new); hold on
-    legend('AoA','AoA new')
-
-    subplot(6,1,5)
-    plot(u_fw)
-    legend('delta_a','delta_e', 'delta_r','delta_T')
-    
-    subplot(6,1,6)
-    plot([p q r])
-    legend('p','q','r')
-
-
-    figure
-    subplot(6,1,1)
-    plot(c_L);
-    legend('c_L');
-
-    subplot(6,1,2)
-    plot(c_D)
-    legend('c_D');
-
-    subplot(6,1,3)
-    plot(V); hold on
-    plot(V_a); hold on
-    legend('V','V_a');
-
-    subplot(6,1,4)
-    plot(AoA_deg); hold on
-    plot(AoA_deg_new); hold on
-    legend('AoA','AoA new')
-
-    subplot(6,1,5)
-    plot(u_fw(:,1))
-    legend('delta_a','delta_e', 'delta_r','delta_T');
-    
-    subplot(6,1,6)
-    plot([p q r])
-    legend('p','q','r')
-end
-
-%%
-
-% plot individual 2D plots
-if 1
-    for i = 1:num_maneuvers
-        start_index = 1 + maneuver_length * (i - 1);
-        end_index = start_index + maneuver_length - 1;
-        fig = figure;
-        %fig.Visible = 'off';
-        fig.Position = [100 100 1000  300];
-        subplot(1,2,1)
-        scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index));
-        xlabel("AoA")
-        ylabel("c_L")
-        ylim([0.7 1.2])
-
-        subplot(1,2,2)
-        scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index));
-        xlabel("AoA")
-        ylabel("c_D")
-        ylim([0.03 0.075])
-
-        sgtitle("maneuver no " + aggregated_maneuvers(i));
-        %filename = "scatter maneuver no " + aggregated_maneuvers(i);
-        %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
-    end
-end
-
-%% Scatter plot of all maneuvers
+% Scatter plot of all maneuvers
 fig = figure;
-%fig.Visible = 'off';
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
 scatter(AoA_deg, c_L);
@@ -133,7 +45,7 @@ ylim([0 0.2])
 %% Curve fitting
 N = length(AoA_deg);
 
-% Lift coefficient
+% Linear lift
 Phi = [ones(1,N);
        AoA_deg'];
 Y = c_L;
@@ -145,7 +57,7 @@ theta = P * B;
 c_L0 = theta(1);
 c_Lalpha = theta(2);
     
-% Drag coefficient
+% Quadratic drag
 Phi = [ones(1,N);
        AoA_deg'.^2];
 P = inv(Phi * Phi');
@@ -153,9 +65,9 @@ Y = c_D;
 B = Phi * Y;
 theta = P * B;
 c_Dp = theta(1);
-c_Dalpha = theta(2); % Oswalds efficiency factor
+c_Dalpha = theta(2);
 
-% % Drag coefficient
+% Using Oswald's efficiency factor
 % Phi = [ones(1,N);
 %        (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
 % P = inv(Phi * Phi');
@@ -182,12 +94,21 @@ plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
+
+disp("Linear model");
+disp("c_L = c_L0 + c_Lalpha * AoA");
+disp("c_L0 = " + c_L0);
+disp("c_Lalpha = " + c_Lalpha);
+disp("c_D = c_Dp + c_Dalpha * AoA.^2");
+disp("c_Dp = " + c_Dp);
+disp("c_Dalpha = " + c_Dalpha);
+
 %sgtitle(filename);
 %filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
-%% Flat plate model fit
+%%% Flat plate model fit
 % Guesstimate these
 alpha_stall = 14;
 M = 1;
@@ -204,7 +125,7 @@ c_L0 = theta(1);
 c_Lalpha = theta(2);
     
 
-%% Flat plate model
+% Flat plate model
 
 % Test blending function
 %AoA_test = 0:0.01:12;
@@ -221,19 +142,27 @@ plot(AoA_test, c_L_estimated); hold on
 scatter(AoA_deg, c_L);
 xlabel("AoA")
 ylabel("c_L")
-%ylim([0.5 1.1])
 
 subplot(1,2,2)
 plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
-%ylim([0.03 0.1])
 
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
-sgtitle(filename);
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered) flat plate";
-saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
+disp("")
+disp("Flat plate model")
+disp("Chosen values: alpha_stall = " + alpha_stall + ", M = " + M);
+disp("c_L = (1 - sigma) * (c_L0 + c_Lalpha * AoA) + (sigma) * c_L_flat_plate(AoA)");
+disp("c_L0 = " + c_L0);
+disp("c_Lalpha = " + c_Lalpha);
+disp("c_D = c_Dp + c_Dalpha * AoA.^2");
+disp("c_Dp = " + c_Dp);
+disp("c_Dalpha = " + c_Dalpha);
+
+% filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
+% sgtitle(filename);
+% filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered) flat plate";
+% saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
 %% 3D plots

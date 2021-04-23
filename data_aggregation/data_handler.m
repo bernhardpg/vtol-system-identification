@@ -6,6 +6,7 @@ csv_files_location = 'logs/csv/';
 csv_log_file_location = csv_files_location + log_file;
 
 % Output data
+save_output = false;
 output_location = "static_curves/data/";
 plot_output_location = "plots/maneuver_plots/";
 
@@ -158,15 +159,16 @@ display("aggregated " + num_aggregated_maneuvers + " maneuvers");
 disp(aggregated_maneuvers);
 
 % Save to files
-output_data_in_table = table(state_output, input_output);
-writetable(output_data_in_table, output_location + 'output.csv');
-writematrix(AoA_deg_output, output_location + 'AoA_deg.csv');
-writematrix(c_D_output, output_location + 'c_D.csv');
-writematrix(c_L_output, output_location + 'c_L.csv');
-writematrix(sweep_maneuver_length_in_indices, output_location + 'maneuver_length.csv');
-writematrix(dt, output_location + 'dt.csv');
-writematrix(aggregated_maneuvers, output_location + 'aggregated_maneuvers.csv');
-
+if save_output
+    output_data_in_table = table(state_output, input_output);
+    writetable(output_data_in_table, output_location + 'output.csv');
+    writematrix(AoA_deg_output, output_location + 'AoA_deg.csv');
+    writematrix(c_D_output, output_location + 'c_D.csv');
+    writematrix(c_L_output, output_location + 'c_L.csv');
+    writematrix(sweep_maneuver_length_in_indices, output_location + 'maneuver_length.csv');
+    writematrix(dt, output_location + 'dt.csv');
+    writematrix(aggregated_maneuvers, output_location + 'aggregated_maneuvers.csv');
+end
 
 %% Functions
 function [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt)
