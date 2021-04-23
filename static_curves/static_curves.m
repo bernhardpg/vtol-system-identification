@@ -20,6 +20,10 @@ num_maneuvers = length(state) / maneuver_length;
 input = [data.input_1 data.input_2 data.input_3 data.input_4 ...
          data.input_5 data.input_6 data.input_7 data.input_8];
 
+p = data.state_5;
+q = data.state_6;
+r = data.state_7;
+     
 u_mr = input(:,1:4);
 u_fw = input(:,5:8);
      
@@ -111,51 +115,59 @@ c_D = D ./ dynamic_pressure;
 %% Plot trajectories
 if 1
     figure
-    subplot(5,1,1)
+    subplot(6,1,1)
     plot(L);
     legend('Lift')
 
-    subplot(5,1,2)
+    subplot(6,1,2)
     plot(D)
     legend('Drag')
 
-    subplot(5,1,3)
+    subplot(6,1,3)
     plot(V); hold on
     plot(V_a); hold on
     legend('V','V_a');
 
-    subplot(5,1,4)
+    subplot(6,1,4)
     plot(AoA_deg); hold on
     plot(AoA_deg_new); hold on
     legend('AoA','AoA new')
 
-    subplot(5,1,5)
+    subplot(6,1,5)
     plot(u_fw)
     legend('delta_a','delta_e', 'delta_r','delta_T')
+    
+    subplot(6,1,6)
+    plot([p q r])
+    legend('p','q','r')
 
 
     figure
-    subplot(5,1,1)
+    subplot(6,1,1)
     plot(c_L);
     legend('c_L');
 
-    subplot(5,1,2)
+    subplot(6,1,2)
     plot(c_D)
     legend('c_D');
 
-    subplot(5,1,3)
+    subplot(6,1,3)
     plot(V); hold on
     plot(V_a); hold on
     legend('V','V_a');
 
-    subplot(5,1,4)
+    subplot(6,1,4)
     plot(AoA_deg); hold on
     plot(AoA_deg_new); hold on
     legend('AoA','AoA new')
 
-    subplot(5,1,5)
+    subplot(6,1,5)
     plot(u_fw(:,1))
     legend('delta_a','delta_e', 'delta_r','delta_T');
+    
+    subplot(6,1,6)
+    plot([p q r])
+    legend('p','q','r')
 end
 
 %%
@@ -326,15 +338,15 @@ if 1
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter3(AoA_deg, u_fw(:,2), c_L);
+    scatter3(AoA_deg, q, c_L);
     xlabel("AoA")
-    ylabel("delta e")
+    ylabel("q")
     zlabel("c_L")
 
     subplot(1,2,2)
-    scatter3(AoA_deg, u_fw(:,2), c_D);
+    scatter3(AoA_deg, q, c_D);
     xlabel("AoA")
-    ylabel("delta e")
+    ylabel("q")
     zlabel("c_D")
 end
 
