@@ -1,52 +1,20 @@
 clc; clear all; close all;
 
-% File locations
-data_location = "static_curves/data/output.csv";
-
+% Load data
+input_output_data = readtable('static_curves/data/output.csv');
+c_L = readmatrix('static_curves/data/c_L.csv');
+c_D = readmatrix('static_curves/data/c_D.csv');
+AoA_deg = readmatrix('static_curves/data/AoA_deg.csv');
 maneuver_length = readmatrix('static_curves/data/maneuver_length.csv');
 dt = readmatrix('static_curves/data/dt.csv');
 aggregated_maneuvers = readmatrix('static_curves/data/aggregated_maneuvers.csv');
+num_maneuvers = length(AoA_deg) / maneuver_length;
 
-% Load data
-data = readtable(data_location);
+q = input_output_data.state_output_6;
+delta_e = input_output_data.input_output_6;
+    
 
-%% Read estimated data
-state = [data.state_1 data.state_2 data.state_3 data.state_4 ...
-         data.state_5 data.state_6 data.state_7 ...
-         data.state_8 data.state_9 data.state_10];
-     
-num_maneuvers = length(state) / maneuver_length;
-     
-input = [data.input_1 data.input_2 data.input_3 data.input_4 ...
-         data.input_5 data.input_6 data.input_7 data.input_8];
-
-p = data.state_5;
-q = data.state_6;
-r = data.state_7;
-     
-u_mr = input(:,1:4);
-u_fw = input(:,5:8);
-     
-N = length(state);
-
-q_NB = state(:,1:4);
-v_B = state(:,8:10);
-
-u_mr = [data.input_5 data.input_6 data.input_7 data.input_8];
-u_fw = [data.input_5 data.input_6 data.input_7 data.input_8];
-
-%% Read raw acceleration data
- 
-acc_B = [data.accelerations_1 data.accelerations_2 data.accelerations_3];
-
-
-%% Read airspeed
-
-V_a = readmatrix('static_curves/data/airspeed.csv');
-
-%% Model parameters
-
-% TODO
+% Model parameters
 m = 5.6+3*1.27+2*0.951; % kg 
 g = 9.81; % m/s^2
 
@@ -54,63 +22,6 @@ b = 2.5;
 S = 0.75; % TODO: not exact
 AR = b^2 / S;
 
-%% TODO
-% Calculate total airspeed
-
-V = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
-
-% Calculate Angle of Attack
-
-u = sqrt(V_a.^2 - v_B(:,3).^2);
-
-AoA_rad = atan2(v_B(:,3),v_B(:,1));
-AoA_rad_new = atan2(v_B(:,3),u);
-AoA_deg = rad2deg(AoA_rad);
-AoA_deg_new = rad2deg(AoA_rad_new);
-
-%% Rotate data
-% Create rotation matrices
-q_BN = quatinv(q_NB);
-R_BN = quat2rotm(q_BN);
-
-eul_rad = [zeros(size(AoA_rad)) AoA_rad zeros(size(AoA_rad))];
-R_SB = eul2rotm(eul_rad); % For some reason this gives a left-handed rotation
-
-% Calculate gravitational force in Stability frame
-Fg_N = [0; 0; m*g];
-Fg_S = zeros(N,3);
-
-for i = 1:N
-   R_SN_at_i = R_SB(:,:,i) .* R_BN(:,:,i);
-   Fg_S_at_i = R_SN_at_i * Fg_N;
-   Fg_S(i,:) = Fg_S_at_i;
-end
-
-% Transform acceleration from body frame to stability frame
-acc_S = zeros(size(acc_B));
-for i = 1:N
-    acc_S_at_i = R_SB(:,:,i) * acc_B(i,:)';
-    acc_S(i,:) = acc_S_at_i;
-end
-
-%% Extract aerodynamic forces
-% figure
-% plot(Fg_S(:,[1 3]))
-% legend('x','z')
-% 
-% figure
-% plot(m*acc_S(:,[1 3]))
-% legend('x','z')
-
-Fa_S = m * acc_S - Fg_S;
-D = -Fa_S(:,1);
-L = -Fa_S(:,3);
-
-%% Calculate coefficients
-rho = 1.225; % kg / m^3
-dynamic_pressure = 0.5 * rho * V_a.^2;
-c_L = L ./ dynamic_pressure;
-c_D = D ./ dynamic_pressure;
 
 %% Plot trajectories
 if 1
@@ -181,23 +92,20 @@ if 1
         %fig.Visible = 'off';
         fig.Position = [100 100 1000  300];
         subplot(1,2,1)
-        scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index)); hold on
-        scatter(AoA_deg_new(start_index:end_index), c_L(start_index:end_index));
+        scatter(AoA_deg(start_index:end_index), c_L(start_index:end_index));
         xlabel("AoA")
         ylabel("c_L")
-        ylim([0.6 1.15])
+        ylim([0.7 1.2])
 
         subplot(1,2,2)
-        scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index)); hold on
-        scatter(AoA_deg_new(start_index:end_index), c_D(start_index:end_index));
+        scatter(AoA_deg(start_index:end_index), c_D(start_index:end_index));
         xlabel("AoA")
         ylabel("c_D")
-        ylim([0 0.1])
+        ylim([0.03 0.075])
 
         sgtitle("maneuver no " + aggregated_maneuvers(i));
-        filename = "scatter maneuver no " + aggregated_maneuvers(i);
+        %filename = "scatter maneuver no " + aggregated_maneuvers(i);
         %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
-        1
     end
 end
 
@@ -206,24 +114,24 @@ fig = figure;
 %fig.Visible = 'off';
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
-%scatter(AoA_deg, c_L); hold on
-scatter(AoA_deg_new, c_L);
+scatter(AoA_deg, c_L);
 xlabel("AoA")
 ylabel("c_L")
 ylim([0 1.15])
 
 subplot(1,2,2)
-%scatter(AoA_deg, c_D); hold on
-scatter(AoA_deg_new, c_D);
+scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
 ylim([0 0.2])
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
-sgtitle(filename);
+
+%sgtitle(filename);
+%filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
 %% Curve fitting
+N = length(AoA_deg);
 
 % Lift coefficient
 Phi = [ones(1,N);
@@ -239,17 +147,27 @@ c_Lalpha = theta(2);
     
 % Drag coefficient
 Phi = [ones(1,N);
-       (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
+       AoA_deg'.^2];
 P = inv(Phi * Phi');
 Y = c_D;
 B = Phi * Y;
 theta = P * B;
 c_Dp = theta(1);
-e = 1/theta(2); % Oswalds efficiency factor
+c_Dalpha = theta(2); % Oswalds efficiency factor
 
-AoA_test = min(AoA_deg):0.01:max(AoA_deg);
+% % Drag coefficient
+% Phi = [ones(1,N);
+%        (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
+% P = inv(Phi * Phi');
+% Y = c_D;
+% B = Phi * Y;
+% theta = P * B;
+% c_Dp = theta(1);
+% e = 1/theta(2); % Oswalds efficiency factor
+
+AoA_test = 2:0.01:11;
 c_L_estimated = c_L0 + c_Lalpha * AoA_test;
-c_D_estimated = c_Dp + c_L_estimated.^2 / (pi * e * AR);
+c_D_estimated = c_Dp + c_Dalpha * AoA_test.^2;
 
 fig = figure;
 fig.Position = [100 100 1000 300];
@@ -264,13 +182,17 @@ plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
-sgtitle(filename);
-filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
-saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
+%sgtitle(filename);
+%filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
+%saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
 %% Flat plate model fit
-sigma = blending_function(AoA_deg);
+% Guesstimate these
+alpha_stall = 14;
+M = 1;
+
+sigma = blending_function(alpha_stall, M, AoA_deg);
 Phi = [(1 - sigma)';
        (1 - sigma)' .* AoA_deg'];
 Y = c_L - sigma .* lift_flat_plate(AoA_deg);
@@ -288,8 +210,9 @@ c_Lalpha = theta(2);
 %AoA_test = 0:0.01:12;
 %plot(AoA_test, blending_function(AoA_test));
 %plot(AoA_test, flat_plate(AoA_test / 180 * pi));
-sigma = blending_function(AoA_test);
-c_L_estimated = (1 - sigma) .* lift_linear(AoA_test) + sigma .* lift_flat_plate(AoA_test);
+sigma = blending_function(alpha_stall, M, AoA_test);
+
+c_L_estimated = (1 - sigma) .* lift_linear(c_L0, c_Lalpha, AoA_test) + sigma .* lift_flat_plate(AoA_test);
 
 fig = figure;
 fig.Position = [100 100 1000 300];
@@ -298,12 +221,15 @@ plot(AoA_test, c_L_estimated); hold on
 scatter(AoA_deg, c_L);
 xlabel("AoA")
 ylabel("c_L")
+%ylim([0.5 1.1])
 
 subplot(1,2,2)
 plot(AoA_test, c_D_estimated); hold on
 scatter(AoA_deg, c_D);
 xlabel("AoA")
 ylabel("c_D")
+%ylim([0.03 0.1])
+
 filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 sgtitle(filename);
 filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered) flat plate";
@@ -338,13 +264,13 @@ if 1
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter3(AoA_deg, q, c_L);
+    scatter3(AoA_deg, delta_e, c_L);
     xlabel("AoA")
     ylabel("q")
     zlabel("c_L")
 
     subplot(1,2,2)
-    scatter3(AoA_deg, q, c_D);
+    scatter3(AoA_deg, delta_e, c_D);
     xlabel("AoA")
     ylabel("q")
     zlabel("c_D")
@@ -448,17 +374,13 @@ for i = 2:2
 end
 %%
 
-function [sigma] = blending_function(alpha)
-    alpha_stall = 13;
-    M = 1;
+function [sigma] = blending_function(alpha_stall, M, alpha)
     num = 1 + exp(-M * (alpha - alpha_stall)) + exp(M * (alpha + alpha_stall));
     den = (1 + exp(-M * (alpha - alpha_stall))) .* (1 + exp(M * (alpha + alpha_stall)));
     sigma = num ./ den;
 end
 
-function [c_L_linear] = lift_linear(alpha)
-    c_L0 = 0.6791;
-    c_Lalpha = 0.0277;
+function [c_L_linear] = lift_linear(c_L0, c_Lalpha, alpha)
     c_L_linear = c_L0 + c_Lalpha * alpha;
 end
 
