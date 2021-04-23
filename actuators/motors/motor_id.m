@@ -137,4 +137,28 @@ xlabel("n [rpm]");
 ylabel("Thrust [N]")
 title("Motor characteristics")
 
-% TODO: Calculate from 0-1 to rpm
+%%
+% Calculate input to PWM
+disp("pwm_to_rpm = " + theta(1) + " + " + theta(2) + " * pwm");
+
+% Follows the following format
+%    pwm = scale * input + offset
+min_pwm = 950; % From PX4 parameters
+max_pwm = 2000; % From PX4 parameters
+pusher_motor_input_to_pwm_scale = max_pwm - min_pwm;
+pusher_motor_input_to_pwm_offset = min_pwm;
+
+disp("[0,1] input to pwm [950,2000] = " + pusher_motor_input_to_pwm_offset + " + " + pusher_motor_input_to_pwm_scale + " * input");
+
+% Calculate PWM to RPM
+phi = [ones(1, length(esc_signal))
+       esc_signal'];
+y = rpm_mechanical;
+P = inv(phi * phi');
+B = phi * y;
+theta = P * B;
+
+esc_signal_test = 0:1:2000;
+rpm_estimated = theta(1) + theta(2) * esc_signal_test;
+%scatter(esc_signal, rpm_mechanical); hold on;
+%plot(esc_signal_test, rpm_estimated);

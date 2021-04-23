@@ -85,9 +85,9 @@ plot(input_test, angle_deg_est);
 legend("Data","Estimated: y = " + theta + "x")
 title(filename + ", RMSE: " + RMSE);
 
-disp("Ailerons:")
+disp("Aileron:")
 disp("y = " + theta(1) + "x + " + theta(2));
-
+aileron_input_to_aileron_deg = theta(1);
 
 
 %%
@@ -175,5 +175,16 @@ plot(input_test, angle_deg_est);
 legend("Data","Estimated: y = " + theta + "x")
 title(filename + ", RMSE: " + RMSE);
 
-disp("Elevators:")
+disp("Tail deflection from elevator input:")
 disp("y = " + theta(1) + "x + " + theta(2));
+elevator_input_to_tail_deg = theta(1);
+
+
+%% Extract actual values to model
+mixer_elevator_to_tail = 0.8; % From PX4 mixer file
+mixer_rudder_to_tail = 0.7; % From PX4 mixer file
+rudder_input_to_tail_deg = elevator_input_to_tail_deg / mixer_elevator_to_tail * mixer_rudder_to_tail;
+
+aileron_input_to_aileron_deg
+elevator_input_to_tail_deg
+rudder_input_to_tail_deg
