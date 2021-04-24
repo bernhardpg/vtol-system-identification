@@ -1,13 +1,13 @@
 clc; clear all; close all;
 
 % File location
-log_file = "2021_04_18_flight_2_static_curves_no_thrust_211_roll";
+static_curves_log_file = "2021_04_18_flight_2_static_curves_no_thrust_211_roll";
 csv_files_location = 'logs/csv/';
 csv_log_file_location = csv_files_location + log_file;
 
 % Output data
 save_output = false;
-output_location = "static_curves/data/";
+%output_location = "static_curves/data/";
 plot_output_location = "plots/maneuver_plots/";
 
 % Plotting options
@@ -18,8 +18,7 @@ save_plots = false;
 dt = 0.01;
 
 % Aircraft parameters
-m = 5.6+3*1.27+2*0.951; % kg
-g = 9.81; % m/s^2
+aircraft_properties
 
 % Read data
 [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt);
@@ -47,7 +46,7 @@ f_cutoff = 15;
 %maneuvers_to_aggregate = [2:9 11:27 29:31]; % All maneuvers without dropout
 %maneuvers_to_aggregate = 1:31; % All maneuvers without dropout
 %maneuvers_to_aggregate = [2:7 9 11:13 15 17 20:23 29:31];
-maneuvers_to_aggregate = [9 11:13 20:23 31];
+static_curves_maneuvers_to_aggregate = [9 11:13 20:23 31];
 
 % Process data
 [acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
@@ -59,7 +58,7 @@ AoA_rad = atan2(v_airspeed_B(:,3),v_airspeed_B(:,1));
 AoA_deg = rad2deg(AoA_rad);
 
 % Calculate lift and drag
-[L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, V_a_calculated, acc_B, m, g);
+[L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, V_a_calculated, acc_B, mass_kg, g);
 
 %%%
 % Aggregate data
@@ -71,19 +70,19 @@ total_sweep_maneuver_length = 2 * sweep_maneuver_period;
 sweep_maneuver_length_in_indices = round((total_sweep_maneuver_length - maneuver_trim_start - maneuver_trim_end) / dt);
 
 % Initialize empty output variables
-data_set_length = sweep_maneuver_length_in_indices * length(maneuvers_to_aggregate);
+data_set_length = sweep_maneuver_length_in_indices * length(static_curves_maneuvers_to_aggregate);
 lift_dra = zeros(data_set_length, 3);
 input_output = zeros(data_set_length, 8);
 state_output = zeros(data_set_length, 10);
 c_D_output = zeros(data_set_length, 1);
 c_L_output = zeros(data_set_length, 1);
-AoA_deg_output = zeros(data_set_length, 1);
+AoA_rad_output = zeros(data_set_length, 1);
 
 % Iterate through maneuvers
 curr_maneuver_aggregation_index = 1;
 num_aggregated_maneuvers = 0;
 aggregated_maneuvers = zeros(100);
-for i = maneuvers_to_aggregate
+for i = static_curves_maneuvers_to_aggregate
     % Find exact maneuver index interval
     maneuver_start_index = find_exact_start_index_sweep_maneuver(u_fw(:,2), sysid_indices(i), dt, sweep_maneuver_period);
     
@@ -138,9 +137,9 @@ for i = maneuvers_to_aggregate
     c_D_output(...
         curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
         ,:) = c_D_maneuver;
-    AoA_deg_output(...
+    AoA_rad_output(...
         curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-        ,:) = AoA_deg_maneuver;
+        ,:) = AoA_rad_maneuver;
     
     num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
     aggregated_maneuvers(num_aggregated_maneuvers) = i;
@@ -150,7 +149,7 @@ end
 % Trim data
 state_output = state_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
 input_output = input_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-AoA_deg_output = AoA_deg_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
+AoA_rad_output = AoA_rad_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
 c_D_output = c_D_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
 c_L_output = c_L_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
 
@@ -162,7 +161,7 @@ disp(aggregated_maneuvers);
 if save_output
     output_data_in_table = table(state_output, input_output);
     writetable(output_data_in_table, output_location + 'output.csv');
-    writematrix(AoA_deg_output, output_location + 'AoA_deg.csv');
+    writematrix(AoA_rad_output, output_location + 'AoA_rad.csv');
     writematrix(c_D_output, output_location + 'c_D.csv');
     writematrix(c_L_output, output_location + 'c_L.csv');
     writematrix(sweep_maneuver_length_in_indices, output_location + 'maneuver_length.csv');

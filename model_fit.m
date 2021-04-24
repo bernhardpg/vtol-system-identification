@@ -44,51 +44,15 @@ Order = [Ny Nu Nx];
 % Constants
 %%%%%
 
-% Physical constants
-rho = 1.225; % kg / m^3 (air density at sea level)
-g = 9.81; % m / s^2
-
-% Propellers and motors
-kINCH_TO_METER = 0.0254;
-prop_diam_top_in_inches = 16;
-prop_diam_top = prop_diam_top_in_inches * kINCH_TO_METER;
-prop_diam_pusher_in_inches = 15;
-prop_diam_pusher = prop_diam_pusher_in_inches * kINCH_TO_METER;
-c_T_top = 0;
-c_T_pusher = 2.3906e-05; % See motor_id.m for calculation off this
-c_Q_top = 0;
-c_Q_pusher = 0;
-
-% Airframe
-m = 13; % TODO update
-S = 0.75; % TODO update
-chord = 0.5; % TODO update
-b = 2.5; % wingspan
-lam = zeros(3); % TODO base this on moment of inertia
-r_t1 = [0; 0; 0];
-r_t2 = [0; 0; 0];
-r_t3 = [0; 0; 0];
-r_t4 = [0; 0; 0];
-
 %%%%%
 % Parameters
 %%%%%
+aircraft_properties;
+lift_drag_properties;
 
 % Lift parameters
-% Using linear lift model
-c_L_0 = 0.75196; % see static_curves.m
-c_L_alpha = 0.030057; % same
-
 c_L_q = 0;
 c_L_delta_e = 0;
-
-% Blending function
-% M = 0; Start with linear model
-% alpha_stall = 0;
-
-% Drag parameters
-c_D_p = 0.038148; % see static_curves.m
-c_D_alpha = 0.00024855; % same
 
 % Y-aerodynamic force
 c_Y_p = 0;
