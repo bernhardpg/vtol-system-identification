@@ -25,8 +25,12 @@ for i = 1:length(experiment_names)
     % Process data into usable formats
     t = frame_number * dt;
     % Find time constant
-    time_constant = interp1q(angle_deg, t, altitude_at_time_constant)
-
+    time_constant = interp1q(angle_deg, t, altitude_at_time_constant);
+    max_deflection = max(angle_deg);
+    disp(filename)
+    disp("time constant: " + time_constant);
+    disp("max deflection: " + max_deflection);
+    
     figure
     plot(t, angle_deg); hold on;
     plot(t, ones(size(t)) * altitude_at_time_constant); hold on;

@@ -1,5 +1,6 @@
 *.swp
 *.ulg
+logs/*
 #
 ### Mac
 *.DS_Store

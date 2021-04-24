@@ -2,17 +2,48 @@ clc; clear all; close all;
 
 % Continue following this guide: https://se.mathworks.com/help/ident/ug/industrial-three-degrees-of-freedom-robot-c-mex-file-modeling-of-mimo-system-using-vector-matrix-parameters.html
 
-% Import data
-y_train = readmatrix('training_state.csv');
-u_train = readmatrix('training_input.csv');
-y_test = readmatrix('test_state.csv');
-u_test = readmatrix('test_input.csv');
+% Model parameters
+aircraft_properties;
 
-dt = 1 / 100; % See data_handler.m
+% Import data
+input_output_data = readtable('dynamic_curves/data/output.csv');
+c_L = readmatrix('dynamic_curves/data/c_L.csv');
+c_D = readmatrix('dynamic_curves/data/c_D.csv');
+AoA_rad = readmatrix('dynamic_curves/data/AoA_rad.csv');
+AoA_deg = AoA_rad .* (180 / pi);
+maneuver_length = readmatrix('dynamic_curves/data/maneuver_length.csv');
+dt = readmatrix('dynamic_curves/data/dt.csv');
+aggregated_maneuvers = readmatrix('dynamic_curves/data/aggregated_maneuvers.csv');
+num_maneuvers = length(AoA_rad) / maneuver_length;
+
+q_NB = [input_output_data.state_output_1 input_output_data.state_output_2 input_output_data.state_output_3 input_output_data.state_output_4];
+w_B = [input_output_data.state_output_5 input_output_data.state_output_6 input_output_data.state_output_7];
+v_B = [input_output_data.state_output_8 input_output_data.state_output_9 input_output_data.state_output_10];
+
+%%
+eul = quat2eul(q_NB);
+eul_deg = rad2deg(eul);
+
+aileron_input = input_output_data.input_output_5;
+elevator_input = input_output_data.input_output_6;
+rudder_input = input_output_data.input_output_7;
+pusher_motor_input = input_output_data.input_output_8;
+
+
+%%
+
+rpm_pusher = calculate_rpm_pusher_motor(pusher_motor_input);
+[aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = calculate_control_surface_angles(aileron_input, elevator_input, rudder_input);
+u_fw = [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad rpm_pusher];
+u_mr = [input_output_data.input_output_1 input_output_data.input_output_2 input_output_data.input_output_3 input_output_data.input_output_4];
+
+% Prepare data for sysid
+state = [q_NB w_B v_B];
+input = [u_mr u_fw];
 
 %% Create sysid data object
 
-sysid_data = iddata(y_train, u_train, dt, 'Name', 'VTOL-roll');
+sysid_data = iddata(state, input, dt, 'Name', 'VTOL-roll');
 
 sysid_data.InputName = {'nt1', 'nt2', 'nt3', 'nt4',...
     'delta_a', 'delta_e', 'delta_r', 'np'};
@@ -26,7 +57,9 @@ sysid_data.Tstart = 0;
 sysid_data.TimeUnit = 's';
 
 figure('Name', [sysid_data.Name ': Aileron input -> Attitude output']);
-plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair (Voltage -> Angular position).
+plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair
+
+
 
 %% Create nonlinear grey box model
 
@@ -267,3 +300,4 @@ Ts = 0;
 
 nlgr = idnlgrey(FileName,Order,Parameters, InitialStates, Ts, ...
     'Name', 'VTOL_aircraft');
+
