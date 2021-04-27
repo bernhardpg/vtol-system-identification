@@ -10,24 +10,44 @@ mass_kg = mass_g * 1e-3;
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
-Lxx = 1025160985.28;
-Lxy = 36558.56;
-Lxz = 131913617.37;
-Lyx = 36558.56;
-Lyy = 12553415.26;
-Lyz = 32858.06;
-Lzx = 131913617.37;
-Lzy = 32858.06;
-Lzz = 2028820899.68;
+Jxx = 1025160985.28;
+Jxy = 36558.56;
+Jxz = 131913617.37;
+Jyx = 36558.56;
+Jyy = 12553415.26;
+Jyz = 32858.06;
+Jzx = 131913617.37;
+Jzy = 32858.06;
+Jzz = 2028820899.68;
 
-J_grams_sqmm = [Lxx Lxy Lxz;
-     Lyx Lyy Lyz
-     Lzx Lzy Lzz];
+J_grams_sqmm = [Jxx Jxy Jxz;
+     Jyx Jyy Jyz
+     Jzx Jzy Jzz];
 
 grams_sqmm_to_kg_sqm = 1e-3 * 1e-3^2;
 J = J_grams_sqmm * grams_sqmm_to_kg_sqm;
 
-lam = zeros(3); % TODO base this on moment of inertia
+% Redefine these (bad coding style)
+Jxx = J(1,1);
+Jxy = J(1,2);
+Jxz = J(1,3);
+Jyx = J(2,1);
+Jyy = J(2,2);
+Jyz = J(2,3);
+Jzx = J(3,1);
+Jzy = J(3,2);
+Jzz = J(3,3);
+
+lam_det = Jxx * Jzz - Jxz ^ 2;
+lam_1 = Jxz * (Jxx - Jyy + Jzz) / lam_det;
+lam_2 = (Jzz * (Jzz - Jyy) + Jxz ^ 2) / lam_det;
+lam_3 = Jzz / lam_det;
+lam_4 = Jxz / lam_det;
+lam_5 = (Jzz - Jxx) / Jyy;
+lam_6 = Jxz / Jyy;
+lam_7 = (Jxx * (Jxx - Jyy) + Jxz ^ 2) / lam_det;
+lam_8 = Jxx / lam_det;
+lam = [lam_1 lam_2 lam_3 lam_4 lam_5 lam_6 lam_7 lam_8];
 
 %%% Wings
 % Planform

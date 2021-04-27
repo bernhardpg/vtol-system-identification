@@ -7,9 +7,8 @@ csv_files_location = 'logs/csv/dynamic_curves_1/';
 csv_log_file_location = csv_files_location + dynamic_curves_log_file;
 
 % Output data
-save_output = true;
-output_location = "dynamic_curves/data/";
-plot_output_location = "plots/dynamic_maneuver_plots/";
+save_output_data = true;
+output_location = "dynamic_curves/longitudinal/";
 
 % Set common data time resolution
 dt = 0.01;
@@ -36,6 +35,8 @@ V_a_calculated = sqrt(v_airspeed_B(:,1).^2 + v_airspeed_B(:,2).^2 + v_airspeed_B
 % Plotting options
 show_plots = false;
 save_plots = false;
+plot_output_location = "plots/dynamic_maneuver_plots/";
+
 
 %%% Analyze and aggregate data
 % Data filtering
@@ -45,7 +46,8 @@ AIRSPEED_TRESHOLD_MAX = 25; % m/s
 % Cutoff frequency for acceleration data
 f_cutoff = 15;
 
-roll_maneuvers = [1 3:10 12:13 15:24];
+%roll_maneuvers = [1 3:10 12:13 15:24];
+roll_maneuvers = [26];
 dynamic_maneuvers_to_aggregate = roll_maneuvers;
 total_number_of_maneuvers = 67;
 
@@ -159,7 +161,7 @@ display("aggregated " + num_aggregated_maneuvers + " maneuvers");
 disp(aggregated_maneuvers);
 
 % Save to files
-if save_output
+if save_output_data
     output_data_in_table = table(state_output, input_output);
     writetable(output_data_in_table, output_location + 'output.csv');
     writematrix(AoA_rad_output, output_location + 'AoA_rad.csv');
@@ -618,32 +620,37 @@ function [] = plot_trajectory(maneuver_index, t, state, input, v_airspeed_B, max
         fig.Visible = 'off';
     end
     fig.Position = [100 100 1600 1000];
-    num_plots = 5; 
+    num_plots = 6; 
    
     subplot(num_plots,1,1);
     plot(t, eul_deg(:,2:3)); % Don't plot yaw
     legend('pitch','roll');
     title("attitude")
-
+    
     subplot(num_plots,1,2);
+    plot(t, eul_deg(:,1)); % Don't plot yaw
+    legend('yaw');
+    title("attitude")
+
+    subplot(num_plots,1,3);
     plot(t, w_B);
     legend('p','q','r');
     ylim([-max_ang_rate max_ang_rate])
     title("ang vel body")
 
-    subplot(num_plots,1,3);
+    subplot(num_plots,1,4);
     plot(t, v_B(:,1)); hold on
     plot(t, v_airspeed_B(:,1));
     legend('u','u_a');
     title("vel body")
     
-    subplot(num_plots,1,4);
+    subplot(num_plots,1,5);
     plot(t, v_B(:,2:3)); hold on;
     plot(t, v_airspeed_B(:,2:3));
     legend('v','w','v_a','w_a');
     title("vel body")
 
-    subplot(num_plots,1,5);
+    subplot(num_plots,1,6);
     plot(t, u_fw);
     legend('delta_a','delta_e','delta_r', 'T_fw');
     title("inputs")

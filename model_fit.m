@@ -6,14 +6,17 @@ clc; clear all; close all;
 aircraft_properties;
 
 % Import data
-input_output_data = readtable('dynamic_curves/data/output.csv');
-c_L = readmatrix('dynamic_curves/data/c_L.csv');
-c_D = readmatrix('dynamic_curves/data/c_D.csv');
-AoA_rad = readmatrix('dynamic_curves/data/AoA_rad.csv');
+% Data path
+data_path = "dynamic_curves/longitudinal/";
+
+input_output_data = readtable(data_path + 'output.csv');
+c_L = readmatrix(data_path + 'c_L.csv');
+c_D = readmatrix(data_path + 'c_D.csv');
+AoA_rad = readmatrix(data_path + 'AoA_rad.csv');
 AoA_deg = AoA_rad .* (180 / pi);
-maneuver_length = readmatrix('dynamic_curves/data/maneuver_length.csv');
-dt = readmatrix('dynamic_curves/data/dt.csv');
-aggregated_maneuvers = readmatrix('dynamic_curves/data/aggregated_maneuvers.csv');
+maneuver_length = readmatrix(data_path + 'maneuver_length.csv');
+dt = readmatrix(data_path + 'dt.csv');
+aggregated_maneuvers = readmatrix(data_path + 'aggregated_maneuvers.csv');
 num_maneuvers = length(AoA_rad) / maneuver_length;
 
 q_NB = [input_output_data.state_output_1 input_output_data.state_output_2 input_output_data.state_output_3 input_output_data.state_output_4];
@@ -41,33 +44,13 @@ u_mr = [input_output_data.input_output_1 input_output_data.input_output_2 input_
 state = [q_NB w_B v_B];
 input = [u_mr u_fw];
 
-%% Create sysid data object
-
-sysid_data = iddata(state, input, dt, 'Name', 'VTOL-roll');
-
-sysid_data.InputName = {'nt1', 'nt2', 'nt3', 'nt4',...
-    'delta_a', 'delta_e', 'delta_r', 'np'};
-sysid_data.InputUnit =  {'rpm', 'rpm', 'rpm', 'rpm', ...
-    'rpm', 'rad', 'rad', 'rad'};
-sysid_data.OutputName = {'q0', 'q1', 'q2', 'q3', ...
-    'p', 'q', 'r', 'u', 'v', 'w'};
-sysid_data.OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', ...
-    'm/s', 'm/s', 'm/s'};
-sysid_data.Tstart = 0;
-sysid_data.TimeUnit = 's';
-
-figure('Name', [sysid_data.Name ': Aileron input -> Attitude output']);
-plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair
-
-
-
 %% Create nonlinear grey box model
 
 %%%%%
 % Model parameters
 %%%%%
 
-FileName = 'vtol_c';
+FileName = 'vtol_linear_c';
 Nx = 10; % number of states
 Ny = 10; % number of outputs
 Nu = 8; % number of inputs
@@ -77,39 +60,55 @@ Order = [Ny Nu Nx];
 % Constants
 %%%%%
 
+% Import airframe constants
+aircraft_properties;
+
+m = mass_kg;
+S = planform_sqm;
+chord = mean_chord_length_m;
+b = wingspan_m;
+r_t1 = r_t1_B;
+r_t2 = r_t2_B;
+r_t3 = r_t3_B;
+r_t4 = r_t4_B;
+
 %%%%%
 % Parameters
 %%%%%
-aircraft_properties;
+
+rng(1); % Always same random numbers
+
+% Import initial guesses for static curves
 lift_drag_properties;
 
 % Lift parameters
-c_L_q = 0;
-c_L_delta_e = 0;
+eps = 0.1;
+c_L_q = rand_num_in_interval(-1, 1);
+c_L_delta_e = rand_num_in_interval(-1, 1);
 
 % Y-aerodynamic force
-c_Y_p = 0;
-c_Y_r = 0;
-c_Y_delta_a = 0;
-c_Y_delta_r = 0;
+c_Y_p = rand_num_in_interval(-eps, eps);
+c_Y_r = rand_num_in_interval(-eps, eps);
+c_Y_delta_a = rand_num_in_interval(-eps, eps);
+c_Y_delta_r = rand_num_in_interval(-eps, eps);
 
 % Aerodynamic moment around x axis
-c_l_p = 0;
-c_l_r = 0;
-c_l_delta_a = 0;
-c_l_delta_r = 0;
+c_l_p = rand_num_in_interval(-1, 0); % Dynamic damping derivative, should be negative
+c_l_r = rand_num_in_interval(-eps, eps); % Cross coupling
+c_l_delta_a = rand_num_in_interval(0, 1); % Control derivative, should be positive to follow PX4 convention
+c_l_delta_r = rand_num_in_interval(-eps, eps); % Cross-control derivative
 
 % Aerodynamic moment around y axis
-c_m_0 = 0;
-c_m_alpha = 0;
-c_m_q = 0;
-c_m_delta_e = 0;
+c_m_0 = rand_num_in_interval(-1, 1);
+c_m_alpha = rand_num_in_interval(-1, 0); % Spring coefficient. Should be negative for stable aircraft
+c_m_q = rand_num_in_interval(-1, 0); % Dynamic damping derivative. Should be negative
+c_m_delta_e = rand_num_in_interval(0, 1); % Control derivative. Should be positive to follow PX4 convention
 
 % Aerodynamic moment around z axis
-c_n_p = 0;
-c_n_r = 0;
-c_n_delta_a = 0;
-c_n_delta_r = 0;
+c_n_p = rand_num_in_interval(-eps, eps); % Cross coupling
+c_n_r = rand_num_in_interval(-1, 0); % Dynamic damping derivative. Should be negative
+c_n_delta_a = rand_num_in_interval(-eps, eps); % Cross-control derivative
+c_n_delta_r = rand_num_in_interval(0, 1); % Control derivative. Should be positive to follow PX4 convention
 
 % Build model
 ParName = {
@@ -126,6 +125,7 @@ ParName = {
     'chord',              ...
     'b',					...
     'lam',				...
+    'J_yy' ,            ...
     'r_t1',               ...
     'r_t2',				...
     'r_t3',				...
@@ -134,9 +134,8 @@ ParName = {
     'c_L_alpha',      	...
     'c_L_q',          	...
     'c_L_delta_e',    	...
-    'M',              	...
-    'alpha_stall',    	...
     'c_D_p',				...
+    'c_D_alpha',				...
     'c_Y_p',				...
     'c_Y_r',				...
     'c_Y_delta_a',		...
@@ -169,6 +168,7 @@ ParValue = {
     chord,              ...
     b,					...
     lam,				...
+    Jyy, ...
     r_t1,               ...
     r_t2,				...
     r_t3,				...
@@ -177,9 +177,8 @@ ParValue = {
     c_L_alpha,      	...
     c_L_q,          	...
     c_L_delta_e,    	...
-    M,              	...
-    alpha_stall,    	...
     c_D_p,				...
+    c_D_alpha,          ...
     c_Y_p,				...
     c_Y_r,				...
     c_Y_delta_a,		...
@@ -212,11 +211,11 @@ ParUnit = {
     'm',		...
     'm',		...
     '',			...
+    '', ...
     'm',		...
     'm',		...
     'm',		...
     'm',		...
-    '',			...
     '',			...
     '',			...
     '',			...
@@ -260,7 +259,7 @@ ParFixed = {
     true, ...
     true, ...
     true, ...
-    false, ...
+    true, ...
     false, ...
     false, ...
     false, ...
@@ -287,13 +286,18 @@ ParFixed = {
 ParMin = -Inf;
 ParMax   = Inf;
 
-
 Parameters    = struct('Name', ParName, 'Unit', ParUnit, 'Value', ParValue, ...
                        'Minimum', ParMin, 'Maximum', ParMax, 'Fixed', ParFixed);
+                   
+% Initial values
+state_initial = state(1,:);
+
 InitialStates = struct(...
     'Name', {'q0', 'q1', 'q2', 'q3', 'p', 'q', 'r', 'u', 'v', 'w'},...
     'Unit', {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', 'm/s', 'm/s', 'm/s'}, ...
-    'Value', {1, 0, 0, 0, 0, 0, 0, 23, 0, 0}, ...
+    'Value', {state(1,1), state(1,2), state(1,3), state(1,4), ...
+        state(1,5), state(1,6), state(1,7), ...
+        state(1,8), state(1,9), state(1,10)}, ...
     'Minimum', -Inf, 'Maximum', Inf, 'Fixed', false);
          
 Ts = 0;
@@ -301,3 +305,58 @@ Ts = 0;
 nlgr = idnlgrey(FileName,Order,Parameters, InitialStates, Ts, ...
     'Name', 'VTOL_aircraft');
 
+%% Create sysid data object
+
+sysid_data = iddata(state, input, dt, 'Name', 'VTOL-roll');
+
+sysid_data.InputName = {'nt1', 'nt2', 'nt3', 'nt4',...
+    'delta_a', 'delta_e', 'delta_r', 'np'};
+sysid_data.InputUnit =  {'rpm', 'rpm', 'rpm', 'rpm', ...
+    'rpm', 'rad', 'rad', 'rad'};
+sysid_data.OutputName = {'q0', 'q1', 'q2', 'q3', ...
+    'p', 'q', 'r', 'u', 'v', 'w'};
+sysid_data.OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', ...
+    'm/s', 'm/s', 'm/s'};
+sysid_data.Tstart = 0;
+sysid_data.TimeUnit = 's';
+
+%figure('Name', [sysid_data.Name ': Aileron input -> Attitude output']);
+%plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair
+
+%%
+
+%compare(sysid_data, nlgr);
+
+% GOAL:
+y = sim(nlgr, sysid_data);
+predicted_state = y.y;
+q_pred = predicted_state(:,1:4,:);
+w_pred = predicted_state(:,5:7,:);
+v_pred = predicted_state(:,8:10,:);
+eul_pred = quat2eul(q_pred);
+
+figure
+subplot(3,1,1)
+plot(eul_pred(:,1)); hold on
+plot(eul(:,1))
+legend("yaw", "yaw (estimated)")
+
+subplot(3,1,2)
+plot(eul_pred(:,2)); hold on
+plot(eul(:,2))
+legend("pitch", "pitch (estimated)")
+
+subplot(3,1,3)
+plot(eul_pred(:,3)); hold on
+plot(eul(:,3))
+legend("roll", "roll (estimated)")
+
+
+%figure('Name', [sysid_data.Name ': Aileron input -> Attitude output']);
+%plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair
+
+%%
+
+function [r] = rand_num_in_interval(min, max)
+    r = min + (max - min) * rand();
+end
