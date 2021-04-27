@@ -53,27 +53,34 @@ void compute_dx(
     // ********
 
 		// Physical constants
-    double *rho; // Air density
     double *g; // Gravitational constant
 
-    rho = p[0];
-		g = p[1];
+		g = p[0];
+
+		// Pre-calculated constants
+		double *rho_diam_top_pwr_four,
+				 *rho_diam_pusher_pwr_four,
+				 *rho_diam_top_pwr_five,
+				 *rho_diam_pusher_pwr_five,
+				 *half_rho_planform;
+
+		rho_diam_top_pwr_four = p[1];
+		rho_diam_pusher_pwr_four = p[2];
+		rho_diam_top_pwr_five = p[3];
+		rho_diam_pusher_pwr_five = p[4];
+		half_rho_planform = p[5];
 
     // Propellers and motors
-    double *prop_diam_top, *prop_diam_pusher; // Propeller diameters
     double *c_F_top, *c_F_pusher; // Motor thrust constants
     double *c_Q_top, *c_Q_pusher; // Motor moment constants
 
-    prop_diam_top = p[2];
-    prop_diam_pusher = p[3];
-    c_F_top = p[4];
-    c_F_pusher = p[5];
-    c_Q_top = p[6];
-    c_Q_pusher = p[7];
+    c_F_top = p[6];
+    c_F_pusher = p[7];
+    c_Q_top = p[8];
+    c_Q_pusher = p[9];
 
     // Airframe
     double *m; // Mass
-    double *S; // Surface area
     double *chord; // Mean chord length
     double *b; // Wingspan
     double *lam; // Intermediate constants calculated from inertia matrix
@@ -83,54 +90,53 @@ void compute_dx(
     double *r_t3; // Position of motor 3
     double *r_t4; // Position of motor 4
 
-    m = p[8];
-    S = p[9];
-    chord = p[10];
-    b = p[11];
-    lam = p[12]; // Vector of 8 elements
-		J_yy = p[13];
-    r_t1 = p[14]; // Vector of 3 elements
-    r_t2 = p[15]; // Vector of 3 elements
-    r_t3 = p[16]; // Vector of 3 elements
-    r_t4 = p[17]; // Vector of 3 elements
+    m = p[10];
+    chord = p[11];
+    b = p[12];
+    lam = p[13]; // Vector of 8 elements
+		J_yy = p[14];
+    r_t1 = p[15]; // Vector of 3 elements
+    r_t2 = p[16]; // Vector of 3 elements
+    r_t3 = p[17]; // Vector of 3 elements
+    r_t4 = p[18]; // Vector of 3 elements
 
     // ********
     // Parameters
     // ********
 
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[18];
-    c_L_alpha = p[19];
-    c_L_q = p[20];
-    c_L_delta_e = p[21];
+    c_L_0 = p[19];
+    c_L_alpha = p[20];
+    c_L_q = p[21];
+    c_L_delta_e = p[22];
 
     double *c_D_p, *c_D_alpha; // Drag parameters
-    c_D_p = p[22];
-    c_D_alpha = p[23];
+    c_D_p = p[23];
+    c_D_alpha = p[24];
 
     double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r; // Y-aerodynamic force
-    c_Y_p = p[24];
-    c_Y_r = p[25];
-    c_Y_delta_a = p[26];
-    c_Y_delta_r = p[27];
+    c_Y_p = p[25];
+    c_Y_r = p[26];
+    c_Y_delta_a = p[27];
+    c_Y_delta_r = p[28];
 
     double *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r; // Aerodynamic moment around x axis
-    c_l_p = p[28];
-    c_l_r = p[29];
-    c_l_delta_a = p[30];
-    c_l_delta_r = p[31];
+    c_l_p = p[29];
+    c_l_r = p[30];
+    c_l_delta_a = p[31];
+    c_l_delta_r = p[32];
 
     double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[32];
-    c_m_alpha = p[33];
-    c_m_q = p[34];
-    c_m_delta_e = p[35];
+    c_m_0 = p[33];
+    c_m_alpha = p[34];
+    c_m_q = p[35];
+    c_m_delta_e = p[36];
 
     double *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r; // Aerodynamic moment around z axis
-    c_n_p = p[36];
-    c_n_r = p[37];
-    c_n_delta_a = p[38];
-    c_n_delta_r = p[39];
+    c_n_p = p[37];
+    c_n_r = p[38];
+    c_n_delta_a = p[39];
+    c_n_delta_r = p[40];
 
 
     // *******
@@ -179,20 +185,19 @@ void compute_dx(
     double alpha = atan(vel_w / vel_u);
 
     // Gravitational force
+		double m_times_g = m[0] * g[0];
     double F_g[3];
-    F_g[0] = 2 * ( q1 * q3 + q0 * q2);
-    F_g[1] = 2 * (-q0 * q1 + q2 * q3);
-    F_g[2] = pow(q0, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
+    F_g[0] = 2 * ( q1 * q3 + q0 * q2) * m_times_g;
+    F_g[1] = 2 * (-q0 * q1 + q2 * q3) * m_times_g;
+    F_g[2] = (pow(q0, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2)) * m_times_g;
 
     // Propeller forces
-    double const_top_force = rho[0] * pow(prop_diam_top[0], 4); // TODO: This should not be computed at every iteration
-    double const_pusher_force = rho[0] * pow(prop_diam_pusher[0], 4); // TODO: This should not be computed at every iteration
     double F_t1, F_t2, F_t3, F_t4, F_p;
-    F_t1 = const_top_force * c_F_top[0] * pow(n_t1, 2);
-    F_t2 = const_top_force * c_F_top[0] * pow(n_t2, 2);
-    F_t3 = const_top_force * c_F_top[0] * pow(n_t3, 2);
-    F_t4 = const_top_force * c_F_top[0] * pow(n_t4, 2);
-    F_p = const_pusher_force * c_F_pusher[0] * pow(n_p, 2);
+    F_t1 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t1, 2);
+    F_t2 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t2, 2);
+    F_t3 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t3, 2);
+    F_t4 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t4, 2);
+    F_p = rho_diam_pusher_pwr_four[0] * c_F_pusher[0] * pow(n_p, 2);
 
     double F_T[3];
     F_T[0] = F_p;
@@ -200,12 +205,11 @@ void compute_dx(
     F_T[2] = F_t1 + F_t2 + F_t3 + F_t4;
 
     // Aerodynamic forces
-    double half_rho_S = 0.5 * rho[0] * S[0];
     double sgn_alpha = alpha > 0 ? 1 : -1;
     double c_L_linear = c_L_0[0] + c_L_alpha[0] * alpha;
     double c_L = c_L_linear;
 
-    double F_lift = half_rho_S * pow(V, 2) * (
+    double F_lift = half_rho_planform[0] * pow(V, 2) * (
       c_L
       + c_L_q[0] * (chord[0] / (2 * V)) * ang_q
       + c_L_delta_e[0] * delta_e_sp
@@ -213,7 +217,7 @@ void compute_dx(
     // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
 
     double c_D = c_D_p[0] + c_D_alpha[0] * pow(alpha, 2);
-    double F_drag = half_rho_S * pow(V, 2) * c_D;
+    double F_drag = half_rho_planform[0] * pow(V, 2) * c_D;
 
     double F_aero[3];
     // Rotate from stability frame to body frame
@@ -223,7 +227,7 @@ void compute_dx(
     double c_Y = c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
       + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
     // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
-    F_aero[1] = half_rho_S * pow(V, 2) * c_Y;
+    F_aero[1] = half_rho_planform[0] * pow(V, 2) * c_Y;
 
     // Sum all forces
     double F_tot[3];
@@ -236,14 +240,12 @@ void compute_dx(
     // ******
 
     // Propeller moments
-    double const_top_moment = rho[0] * pow(prop_diam_top[0], 5); // TODO: This should not be computed at every iteration
-    double const_pusher_moment = rho[0] * pow(prop_diam_pusher[0], 5); // TODO: This should not be computed at every iteration
     double Q_t1, Q_t2, Q_t3, Q_t4, Q_p;
-    Q_t1 = const_top_moment * c_Q_top[0] * pow(n_t1, 2);
-    Q_t2 = const_top_moment * c_Q_top[0] * pow(n_t2, 2);
-    Q_t3 = const_top_moment * c_Q_top[0] * pow(n_t3, 2);
-    Q_t4 = const_top_moment * c_Q_top[0] * pow(n_t4, 2);
-    //Q_p = const_pusher_moment * c_Q_pusher[0] * pow(n_p, 2); // TODO: Add if needed
+    Q_t1 = rho_diam_top_pwr_five[0] * c_Q_top[0] * pow(n_t1, 2);
+    Q_t2 = rho_diam_top_pwr_five[0] * c_Q_top[0] * pow(n_t2, 2);
+    Q_t3 = rho_diam_top_pwr_five[0] * c_Q_top[0] * pow(n_t3, 2);
+    Q_t4 = rho_diam_top_pwr_five[0] * c_Q_top[0] * pow(n_t4, 2);
+    //Q_p = rho_diam_pusher_pwr_five[0] * c_Q_pusher[0] * pow(n_p, 2); // TODO: Add if needed
 
     double Tau_Q[3];
     //Tau_Q[0] = Q_p; // TODO: Add propeller moment from pusher if needed
@@ -292,9 +294,9 @@ void compute_dx(
       + c_n_delta_r[0] * delta_r_sp;
 
     double Tau_aero[3];
-    Tau_aero[0] = half_rho_S * pow(V, 2) * b[0] * c_l;
-    Tau_aero[1] = half_rho_S * pow(V, 2) * chord[0] * c_m;
-    Tau_aero[2] = half_rho_S * pow(V, 2) * b[0] * c_n;
+    Tau_aero[0] = half_rho_planform[0] * pow(V, 2) * b[0] * c_l;
+    Tau_aero[1] = half_rho_planform[0] * pow(V, 2) * chord[0] * c_m;
+    Tau_aero[2] = half_rho_planform[0] * pow(V, 2) * b[0] * c_n;
 
     // Sum all moments 
     double Tau_tot[3];
