@@ -96,3 +96,10 @@ c_T_top = 0;
 c_T_pusher = 2.3906e-05; % See motor_id.m for calculation off this
 c_Q_top = 0;
 c_Q_pusher = 0;
+
+% Convenience constants
+rho_diam_top_pwr_four = rho * prop_diam_top ^ 4; % computed once for efficiency
+rho_diam_pusher_pwr_four = rho * prop_diam_pusher ^ 4; % computed once for efficiency
+rho_diam_top_pwr_five = rho * prop_diam_top ^ 5; % computed once for efficiency
+rho_diam_pusher_pwr_five = rho * prop_diam_pusher ^ 5; % computed once for efficiency
+half_rho_planform = 0.5 * rho * planform_sqm; % computed once for efficiency

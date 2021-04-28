@@ -52,11 +52,8 @@ void compute_dx(
     // Constants
     // ********
 
-		// Physical constants
-    double *g; // Gravitational constant
-
-		g = p[0];
-
+		// Gravitational constant
+    double *g;
 		// Pre-calculated constants
 		double *rho_diam_top_pwr_four,
 				 *rho_diam_pusher_pwr_four,
@@ -64,6 +61,7 @@ void compute_dx(
 				 *rho_diam_pusher_pwr_five,
 				 *half_rho_planform;
 
+		g = p[0];
 		rho_diam_top_pwr_four = p[1];
 		rho_diam_pusher_pwr_four = p[2];
 		rho_diam_top_pwr_five = p[3];
@@ -71,11 +69,11 @@ void compute_dx(
 		half_rho_planform = p[5];
 
     // Propellers and motors
-    double *c_F_top, *c_F_pusher; // Motor thrust constants
+    double *c_T_top, *c_T_pusher; // Motor thrust constants
     double *c_Q_top, *c_Q_pusher; // Motor moment constants
 
-    c_F_top = p[6];
-    c_F_pusher = p[7];
+    c_T_top = p[6];
+    c_T_pusher = p[7];
     c_Q_top = p[8];
     c_Q_pusher = p[9];
 
@@ -138,7 +136,6 @@ void compute_dx(
     c_n_delta_a = p[39];
     c_n_delta_r = p[40];
 
-
     // *******
     // State and input
     // *******
@@ -150,6 +147,8 @@ void compute_dx(
     q1 = x[1];
     q2 = x[2];
     q3 = x[3];
+
+		// TODO: Consider normalizing q here!
 
     // ang_v_body = p, q, r
     double ang_p, ang_q, ang_r;
@@ -163,17 +162,17 @@ void compute_dx(
     vel_v = x[8];
     vel_w = x[9];
 
-    // Input: [n_t1, n_t2, n_t3, n_t4, delta_a_sp, delta_r_sp, delta_e_sp, n_p]
+    // Input: [n_t1, n_t2, n_t3, n_t4, delta_a, delta_r, delta_e, n_p]
     double n_t1, n_t2, n_t3, n_t4;
     n_t1 = u[0];
     n_t2 = u[1];
     n_t3 = u[2];
     n_t4 = u[3];
 
-    double delta_a_sp, delta_r_sp, delta_e_sp, n_p;
-    delta_a_sp = u[4];
-    delta_e_sp = u[5];
-    delta_r_sp = u[6];
+    double delta_a, delta_r, delta_e, n_p;
+    delta_a = u[4];
+    delta_e = u[5];
+    delta_r = u[6];
     n_p = u[7];
 
     // ******
@@ -193,11 +192,11 @@ void compute_dx(
 
     // Propeller forces
     double F_t1, F_t2, F_t3, F_t4, F_p;
-    F_t1 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t1, 2);
-    F_t2 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t2, 2);
-    F_t3 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t3, 2);
-    F_t4 = rho_diam_top_pwr_four[0] * c_F_top[0] * pow(n_t4, 2);
-    F_p = rho_diam_pusher_pwr_four[0] * c_F_pusher[0] * pow(n_p, 2);
+    F_t1 = rho_diam_top_pwr_four[0] * c_T_top[0] * pow(n_t1, 2);
+    F_t2 = rho_diam_top_pwr_four[0] * c_T_top[0] * pow(n_t2, 2);
+    F_t3 = rho_diam_top_pwr_four[0] * c_T_top[0] * pow(n_t3, 2);
+    F_t4 = rho_diam_top_pwr_four[0] * c_T_top[0] * pow(n_t4, 2);
+    F_p = rho_diam_pusher_pwr_four[0] * c_T_pusher[0] * pow(n_p, 2);
 
     double F_T[3];
     F_T[0] = F_p;
@@ -205,14 +204,12 @@ void compute_dx(
     F_T[2] = F_t1 + F_t2 + F_t3 + F_t4;
 
     // Aerodynamic forces
-    double sgn_alpha = alpha > 0 ? 1 : -1;
-    double c_L_linear = c_L_0[0] + c_L_alpha[0] * alpha;
-    double c_L = c_L_linear;
+    double c_L = c_L_0[0] + c_L_alpha[0] * alpha;
 
     double F_lift = half_rho_planform[0] * pow(V, 2) * (
       c_L
       + c_L_q[0] * (chord[0] / (2 * V)) * ang_q
-      + c_L_delta_e[0] * delta_e_sp
+      + c_L_delta_e[0] * delta_e
       );
     // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
 
@@ -225,7 +222,7 @@ void compute_dx(
     F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
 
     double c_Y = c_Y_p[0] * (b[0] / (2 * V)) * ang_p + c_Y_r[0] * (b[0] / (2 * V)) * ang_r
-      + c_Y_delta_a[0] * delta_a_sp + c_Y_delta_r[0] * delta_r_sp;
+      + c_Y_delta_a[0] * delta_a + c_Y_delta_r[0] * delta_r;
     // Here we are assuming immediate control surface response. This could be changed by adding control surface dynamics.
     F_aero[1] = half_rho_planform[0] * pow(V, 2) * c_Y;
 
@@ -261,7 +258,7 @@ void compute_dx(
     Tau_T1[2] = 0;
 
     Tau_T2[0] = - r_t2[1] * F_t2;
-    Tau_T2[2] =   r_t2[0] * F_t2;
+    Tau_T2[1] =   r_t2[0] * F_t2;
     Tau_T2[2] = 0;
 
     Tau_T3[0] = - r_t3[1] * F_t3;
@@ -280,18 +277,18 @@ void compute_dx(
     // Aerodynamic moments
     double c_l = c_l_p[0] * (b[0] / (2 * V)) * ang_p
       + c_l_r[0] * (b[0] / (2 * V)) * ang_r
-      + c_l_delta_a[0] * delta_a_sp
-      + c_l_delta_r[0] * delta_r_sp;
+      + c_l_delta_a[0] * delta_a
+      + c_l_delta_r[0] * delta_r;
 
     double c_m = c_m_0[0]
       + c_m_alpha[0] * alpha
       + c_m_q[0] * ang_q
-      + c_m_delta_e[0] * delta_e_sp;
+      + c_m_delta_e[0] * delta_e;
 
     double c_n = c_n_p[0] * (b[0] / (2 * V)) * ang_p
       + c_n_r[0] * (b[0] / (2 * V)) * ang_r
-      + c_n_delta_a[0] * delta_a_sp
-      + c_n_delta_r[0] * delta_r_sp;
+      + c_n_delta_a[0] * delta_a
+      + c_n_delta_r[0] * delta_r;
 
     double Tau_aero[3];
     Tau_aero[0] = half_rho_planform[0] * pow(V, 2) * b[0] * c_l;
