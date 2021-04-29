@@ -1,0 +1,2 @@
+load /Users/bernhardpausgraesdal/development/vtol_sysid/avl_model/vtol.avl
+mass /Users/bernhardpausgraesdal/development/vtol_sysid/avl_model/vtol.mass

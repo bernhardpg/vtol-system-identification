@@ -2,7 +2,7 @@ VTOL
 0.0                   !   Mach
 0.0     0.0     0.0       !   iYsym  iZsym  Zsym
 0.6617 0.2477 2.5			!   Sref   Cref   Bref   reference area, chord, span
-0.00  0.0   0.0       !   Xref   Yref   Zref   moment reference location (arb.)
+0.48  0.0   0.0       !   Xref   Yref   Zref   moment reference location (arb.)
 #
 #==============================================================
 #
@@ -12,11 +12,11 @@ Wing
 #
 # reflect image wing about y=0 plane
 YDUPLICATE
-     0.0 
+     0.0
 #
 # twist angle bias for whole surface
 ANGLE
-     1.88
+     1.75
 #
 SCALE
   1.0   1.0   1.0
@@ -31,40 +31,60 @@ TRANSLATE
 SECTION
     0.0        0.0        0.0         0.295        0.000
 
-NACA
-0010
+AFIL
+e397.dat
 
 #-------Section 2----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.1       0.743        0.0        0.224      0.00
+    0.062       0.557        0.0        0.251      0.00
 
-NACA
-0010
+AFIL
+e397.dat
 
 #Cname   Cgain  Xhinge  HingeVec       SgnDup
 CONTROL
-aileron  1.0   0.70    0.0 1.0 0.0    -1.0
+aileron  1.0   0.76    0.0 1.0 0.0    -1.0
 
 #-------Section 3----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.204      1.088        0.0       0.133      0.00
+    0.1       0.8405        0.0        0.224      0.00
 
-NACA
-0010
+AFIL
+e397.dat
 
 #Cname   Cgain  Xhinge  HingeVec       SgnDup
 CONTROL
-aileron  1.0   0.70    0.0 1.0 0.0    -1.0
+aileron  1.0   0.75    0.0 1.0 0.0    -1.0
+
+#-------Section 4----------------------
+#    Xle         Yle         Zle         chord       angle 
+SECTION
+    0.179      1.089        0.0       0.154      0.00
+
+AFIL
+e397.dat
+
+#Cname   Cgain  Xhinge  HingeVec       SgnDup
+CONTROL
+aileron  1.0   0.74    0.0 1.0 0.0    -1.0
+
+#-------Section 5----------------------
+#    Xle         Yle         Zle         chord       angle 
+SECTION
+    0.207      1.176        0.0       0.130      0.00
+
+AFIL
+e397.dat
 
 #-------End Section----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.284      1.152        0.0       0.056      0.00
+    0.284      1.25        0.0       0.056      0.00
 
-NACA
-0010
+AFIL
+e397.dat
 
 #==============================================================
 #
@@ -78,7 +98,7 @@ YDUPLICATE
 #
 # twist angle bias for whole surface
 ANGLE
-     0.00000    
+     0.000 
 #
 # x,y,z bias for whole surface
 TRANSLATE
@@ -88,7 +108,7 @@ TRANSLATE
 #-------Inner section----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.000      0.000        0.0       0.170      0.00
+    0.000      0.000        -0.033       0.170      0.00
 
 NACA
 0010
@@ -96,7 +116,7 @@ NACA
 #-------End Section----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.000      0.100        0.0       0.170      0.00
+    0.000      0.100        -0.033       0.170      0.00
 
 NACA
 0010
@@ -105,30 +125,36 @@ NACA
 #
 SURFACE
 A-Tail
-8  1.0  14  1.0! Nchord   Cspace
+8  1.0  8  1.0! Nchord   Cspace
 #
+# reflect image wing about y=0 plane
+YDUPLICATE
+     0
+ANGLE
+     0.0 
+
 # x,y,z bias for whole surface
 TRANSLATE
-   33.3000     0.00000     0.00000
-#--------------------------------------------------------------
+   1.28000     0.00000     0.3000
+#------------Inner section--------------------------------------------------
 #    Xle         Yle         Zle         chord       angle   Nspan  Sspace
 SECTION
-   -1.0           0.0       -3.25        2.50        0.000   4      1.50
+   0.0           0.1        0.00        0.170        0.000   4      1.50
 
 CONTROL
-rudder    1.0    0.40    0.0 0.0 1.0
-#-----------------------------
+elevator  1.0  0.70  0. 0. 0.   1.
+CONTROL
+rudder   -1.0  0.70  0. 0. 0.  -1.
+
+#-------------End section------------
 SECTION
-   -1.6           0.0        0.0         4.00        0.000   6     -1.50
+   0.0           0.4        -0.33         0.170        0.000   6     -1.50
 
 CONTROL
-rudder    1.0    0.40    0.0 0.0 1.0
-#-----------------------------
-SECTION
-   -0.6           0.0        6.0         1.50        0.000   0      0
-
+elevator  1.0  0.70  0. 0. 0.   1.
 CONTROL
-rudder    1.0    0.40    0.0 0.0 1.0
+rudder   -1.0  0.70  0. 0. 0.  -1.
+
 #==============================================================
 
 # Created by Bernhard Paus Græsdal, 2021-04-29

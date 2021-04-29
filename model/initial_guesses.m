@@ -21,7 +21,7 @@ c_l_delta_a = rand_num_in_interval(0.6, 1); % Control derivative, should be posi
 c_l_delta_r = 0; % Cross-control derivative
 
 % Aerodynamic moment around y axis
-c_m_0 = rand_num_in_interval(-small_number, small_number);
+c_m_0 = rand_num_in_interval(0, small_number); % This needs to be positive
 c_m_alpha = rand_num_in_interval(-0.5, -approx_zero); % Spring coefficient. Should be negative for stable aircraft
 c_m_q = rand_num_in_interval(-0.5, -approx_zero); % Dynamic damping derivative. Should be negative
 c_m_delta_e = rand_num_in_interval(0.6, 1); % Control derivative. Should be positive to follow PX4 convention
