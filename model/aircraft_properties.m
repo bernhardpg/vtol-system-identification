@@ -10,15 +10,15 @@ mass_kg = mass_g * 1e-3;
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
-Jxx = 1025160985.28;
-Jxy = 36558.56;
-Jxz = 131913617.37;
-Jyx = 36558.56;
-Jyy = 12553415.26;
-Jyz = 32858.06;
-Jzx = 131913617.37;
-Jzy = 32858.06;
-Jzz = 2028820899.68;
+Jxx = 1016109734.10;
+Jxy = 20628.39;
+Jxz = 131901925.67;
+Jyx = 20628.39;
+Jyy = 12659798.50;
+Jyz = 33807.67;
+Jzx = 131901925.67;
+Jzy = 33807.67;
+Jzz = 2019897459.65;
 
 J_grams_sqmm = [Jxx Jxy Jxz;
      Jyx Jyy Jyz
@@ -64,7 +64,7 @@ chord_length_wingtip_side_mm = 195.4;
 mean_chord_length_m = (chord_length_body_side_mm + chord_length_wingtip_side_mm) / 1e3 / 2;
 
 % Wingspan
-wingspan_mm = 2560; % TODO this is not accurate yet!
+wingspan_mm = 2500;
 wingspan_m = wingspan_mm / 1e3;
 
 % Aspect ratio
