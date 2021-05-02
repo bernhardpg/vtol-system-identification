@@ -19,8 +19,9 @@ aircraft_properties;
 
 % Scatter plot of all maneuvers
 
-scatter_lift_drag(AoA_rad, delta_e, c_L, c_D);
+scatter_lift_drag()
 plot_3d_lift_drag(AoA_rad, delta_e, c_L, c_D);
+
 
 
 %sgtitle(filename);
@@ -159,9 +160,31 @@ disp("c_Dalpha = " + c_Dalpha);
 % saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 
-%%
+%% 3D plots
+if 0
+    for i = 1:num_maneuvers
+        start_index = 1 + maneuver_length * (i - 1);
+        end_index = start_index + maneuver_length - 1;
+        fig = figure;
+        %fig.Visible = 'off';
+        fig.Position = [100 100 1000 300];
+        subplot(1,2,1)
+        scatter3(AoA_rad(start_index:end_index), u_fw(start_index:end_index,2), c_L(start_index:end_index));
+        xlabel("AoA")
+        ylabel("delta e")
+        zlabel("c_L")
 
-function [] = scatter_lift_drag(AoA_rad, delta_e, c_L, c_D)
+        subplot(1,2,2)
+        scatter3(AoA_rad(start_index:end_index), u_fw(start_index:end_index,2), c_D(start_index:end_index));
+        xlabel("AoA")
+        ylabel("delta e")
+        zlabel("c_D")
+
+        sgtitle("maneuver no " + aggregated_maneuvers(i));
+    end
+end
+
+function [] = scatter_lift_drag(AoA_rad, delta_e, c_)
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
@@ -187,14 +210,12 @@ function [] = plot_3d_lift_drag(AoA_rad, delta_e, c_L, c_D)
     xlabel("AoA")
     ylabel("delta_e")
     zlabel("c_L")
-    zlim([0 1.15])
 
     subplot(1,2,2)
     scatter3(AoA_rad, delta_e, c_D);
     xlabel("AoA")
     ylabel("delta_e")
     zlabel("c_D")
-    zlim([0 0.2])
 end
 
 function [sigma] = blending_function(alpha_stall_rad, M, alpha_rad)

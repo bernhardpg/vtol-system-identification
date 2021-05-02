@@ -184,7 +184,7 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     num_aggregated_maneuvers = 0;
     for i = maneuvers_to_aggregate
         maneuver_start_index = max([sysid_indices(i) + round(maneuver_trim_start / dt) 1]);
-        maneuver_end_index = max([maneuver_start_index + sweep_maneuver_length / dt + round(maneuver_trim_end/ dt) 1]);
+        maneuver_end_index = maneuver_start_index + sweep_maneuver_length / dt + round(maneuver_trim_end/ dt);
         maneuver_start_indices = [maneuver_start_indices maneuver_start_index];
 
         % Extract only maneuver data
