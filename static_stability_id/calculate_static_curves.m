@@ -1,15 +1,42 @@
 clc; clear all; close all;
 
 % Load data
-datapath = "data/static_stability/";
-state = readmatrix(datapath + "state.csv");
-input = readmatrix(datapath + "input.csv");
-c_L = readmatrix(datapath + "cl.csv");
-c_D = readmatrix(datapath + "cd.csv");
-AoA_rad = readmatrix(datapath + "aoa_rad.csv");
-maneuver_start_indices = readmatrix(datapath + "maneuver_start_indices.csv");
-AoA_deg = AoA_rad .* (180 / pi);
-dt = readmatrix(datapath + "dt.csv");
+datapaths = ["data/static_stability/experiment_1/" "data/static_stability/experiment_2/"];
+num_experiments = length(datapaths);
+state = [];
+input = [];
+c_L = [];
+c_D = [];
+AoA_rad = [];
+dt = [];
+
+for i = 1:num_experiments
+    datapath = datapaths(i);
+    state_exp = readmatrix(datapath + "state.csv");
+    input_exp = readmatrix(datapath + "input.csv");
+    c_L_exp = readmatrix(datapath + "cl.csv");
+    c_D_exp = readmatrix(datapath + "cd.csv");
+    AoA_rad_exp = readmatrix(datapath + "aoa_rad.csv");
+    maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
+    AoA_deg_exp = AoA_rad .* (180 / pi);
+    dt_exp = readmatrix(datapath + "dt.csv");
+    
+    state = [state;
+             state_exp];
+    input = [input;
+             input_exp];
+    c_L = [c_L;
+           c_L_exp];
+    c_D = [c_D;
+           c_D_exp];
+    AoA_rad = [AoA_rad;
+               AoA_rad_exp];
+    dt = [dt;
+           dt_exp];
+    
+end
+
+
 
 q = state(:,6);
 delta_e = input(:,6);
@@ -19,8 +46,8 @@ aircraft_properties;
 
 % Scatter plot of all maneuvers
 
-scatter_lift_drag(AoA_rad, delta_e, c_L, c_D);
-plot_3d_lift_drag(AoA_rad, delta_e, c_L, c_D);
+scatter_lift_drag(AoA_rad, q, c_L, c_D);
+plot_3d_lift_drag(AoA_rad, q, c_L, c_D);
 
 
 %sgtitle(filename);
@@ -161,38 +188,40 @@ disp("c_Dalpha = " + c_Dalpha);
 
 %%
 
-function [] = scatter_lift_drag(AoA_rad, delta_e, c_L, c_D)
+function [] = scatter_lift_drag(AoA_rad, q, c_L, c_D)
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter(AoA_rad * 180 / pi, c_L, [], delta_e); alpha(0.5);
-    colorbar;
+    scatter(AoA_rad * 180 / pi, c_L, [], q); alpha(0.5);
+    c = colorbar;
+    c.Label.String = 'q [rad/s]';
     xlabel("AoA")
     ylabel("c_L")
     ylim([0 1.15])
 
     subplot(1,2,2)
-    scatter(AoA_rad * 180 / pi, c_D, [], delta_e); alpha(0.5);
-    colorbar;
+    scatter(AoA_rad * 180 / pi, c_D, [], q); alpha(0.5);
+    c = colorbar;
+    c.Label.String = 'q [rad/s]';
     xlabel("AoA")
     ylabel("c_D")
     ylim([0 0.2])
 end
 
-function [] = plot_3d_lift_drag(AoA_rad, delta_e, c_L, c_D)
+function [] = plot_3d_lift_drag(AoA_rad, q, c_L, c_D)
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter3(AoA_rad, delta_e, c_L);
+    scatter3(AoA_rad, q, c_L);
     xlabel("AoA")
-    ylabel("delta_e")
+    ylabel("q")
     zlabel("c_L")
     zlim([0 1.15])
 
     subplot(1,2,2)
-    scatter3(AoA_rad, delta_e, c_D);
+    scatter3(AoA_rad, q, c_D);
     xlabel("AoA")
-    ylabel("delta_e")
+    ylabel("q")
     zlabel("c_D")
     zlim([0 0.2])
 end

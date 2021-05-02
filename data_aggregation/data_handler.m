@@ -1,16 +1,10 @@
 clc; clear all; close all;
 
 % File location
-log_file = "06_31_21";
+log_file = "07_24_19";
+%log_file = "06_31_21";
 csv_files_location = 'data/logs/csv/';
 csv_log_file_location = csv_files_location + log_file;
-
-% Output data
-save_output_data = false;
-save_plot = true;
-show_plot = false;
-plot_output_location = "data/plots/static_stability/00_full_maneuvers/experiment_2/";
-data_output_location = "data/static_stability/experiment_2/";
 
 % Set common data time resolution
 dt = 1/100;
@@ -31,8 +25,16 @@ num_maneuvers = length(sysid_indices);
 
 %%
 
-generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, sysid_indices, mass_kg, g, show_plot, save_plot, plot_output_location)
+% Output data
+save_output_data = true;
+save_plot = false;
+show_plot = false;
+plot_output_location = "data/plots/static_stability/01_trimmed_maneuvers/experiment_1/";
+data_output_location = "data/static_stability/experiment_1/";
+metadata_filepath = "data/static_stability/experiment_1/metadata.csv";
 
+%generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, sysid_indices, mass_kg, g, show_plot, save_plot, plot_output_location)
+extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, mass_kg, g, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
 
 %%
 
@@ -78,9 +80,9 @@ AoA_aggregated = [];
 num_aggregated_maneuvers = 0;
 for i = maneuvers_to_aggregate
     maneuver_metadata = metadata(string(i));
-    maneuver_start_index = round((maneuver_metadata(1) - t(1)) / dt);
+    maneuver_start_index = round((maneuver_metadata(1) - t(1)) / dt)
     maneuver_start_indices = [maneuver_start_indices maneuver_start_index];
-    maneuver_end_index = round((maneuver_metadata(2) - t(1)) / dt);
+    maneuver_end_index = round((maneuver_metadata(2) - t(1)) / dt)
 
     % Extract only maneuver data
     t_maneuver = t(maneuver_start_index:maneuver_end_index)';
@@ -137,6 +139,104 @@ if save_output_data
     writematrix(maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
 end
 
+function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, mass_kg, g, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
+    q_NB = state(:,1:4);
+    w_B = state(:,5:7);
+    v_B = state(:,8:10);
+    u_mr = input(:,1:4);
+    u_fw = input(:,5:8);    
+
+    [maneuvers_to_aggregate, metadata] = read_metadata(metadata_filepath);
+
+    % Cutoff frequency for acceleration data
+    f_cutoff = 25;
+
+    % Process data
+    [acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
+    acc_N = calculate_acc_N(acc_B, q_NB);
+
+    % Calculate Angle of Attack
+    AoA_rad = atan2(v_B(:,3),v_B(:,1));
+    AoA_deg = rad2deg(AoA_rad);
+
+    % Calculate lift and drag
+    v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
+    [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
+
+    % Initialize empty output variables
+    maneuver_start_indices = [];
+    t_aggregated = [];
+    input_aggregated = [];
+    state_aggregated = [];
+    c_D_aggregated = [];
+    c_L_aggregated = [];
+    AoA_aggregated = [];
+
+    % Iterate through maneuvers
+    num_aggregated_maneuvers = 0;
+    for i = maneuvers_to_aggregate
+        maneuver_metadata = metadata(string(i));
+        maneuver_start_index = round((maneuver_metadata(1) - t(1)) / dt);
+        maneuver_start_indices = [maneuver_start_indices maneuver_start_index];
+        maneuver_end_index = round((maneuver_metadata(2) - t(1)) / dt);
+
+        % Extract only maneuver data
+        t_maneuver = t(maneuver_start_index:maneuver_end_index)';
+        state_maneuver = state(maneuver_start_index:maneuver_end_index,:);
+        input_maneuver = input(maneuver_start_index:maneuver_end_index,:);
+        AoA_deg_maneuver = AoA_deg(maneuver_start_index:maneuver_end_index);
+        AoA_rad_maneuver = AoA_rad(maneuver_start_index:maneuver_end_index);
+        acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
+        acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
+        acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
+        bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
+        L_maneuver = L(maneuver_start_index:maneuver_end_index);
+        D_maneuver = D(maneuver_start_index:maneuver_end_index);
+        c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
+        c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
+
+        % Plot data
+        plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
+        plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
+            AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
+            acc_N_maneuver, show_plot, save_plot, plot_output_location);
+        plot_scatter_lift_drag(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, c_L_maneuver, c_D_maneuver, show_plot, save_plot, plot_output_location);
+
+        % Store data in aggregated data matrices
+        t_aggregated = [t_aggregated;
+                        t_maneuver];
+        state_aggregated = [state_aggregated;
+                            state_maneuver];
+        input_aggregated = [input_aggregated;
+                            input_maneuver];
+        c_L_aggregated = [c_L_aggregated;
+                          c_L_maneuver];
+        c_D_aggregated = [c_D_aggregated;
+                          c_D_maneuver];
+        AoA_aggregated = [AoA_aggregated;
+                          AoA_rad_maneuver];
+
+        num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
+
+    end
+
+    disp("Succesfully aggregated " + num_aggregated_maneuvers + " maneuvers");
+    disp(maneuvers_to_aggregate);
+
+    % Save to files
+    if save_output_data
+        writematrix(state_aggregated, data_output_location + 'state.csv');
+        writematrix(input_aggregated, data_output_location + 'input.csv');
+        writematrix(t_aggregated, data_output_location + 't.csv');
+        writematrix(AoA_aggregated, data_output_location + 'aoa_rad.csv');
+        writematrix(c_D_aggregated, data_output_location + 'cd.csv');
+        writematrix(c_L_aggregated, data_output_location + 'cl.csv');
+        writematrix(dt, data_output_location + 'dt.csv');
+        writematrix(maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+    end
+
+end
+
 
 function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, sysid_indices, mass_kg, g, show_plot, save_plot, plot_output_location)
     q_NB = state(:,1:4);
@@ -144,7 +244,6 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     v_B = state(:,8:10);
     u_mr = input(:,1:4);
     u_fw = input(:,5:8);
-
 
     maneuvers_to_aggregate = 1:length(sysid_indices);
     
@@ -163,14 +262,6 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
     [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
 
-    %%%
-    % Aggregate data
-    % Set aggregation parameters
-    maneuver_trim_start = -1; %s
-    maneuver_trim_end = -1; %s
-    sweep_maneuver_length = 16; % s
-    sweep_maneuver_length_indices = round(sweep_maneuver_length / dt);
-
     % Initialize empty output variables
     maneuver_start_indices = [];
     t_aggregated = [];
@@ -179,6 +270,15 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     c_D_aggregated = [];
     c_L_aggregated = [];
     AoA_aggregated = [];
+    
+    %
+    % Aggregate data
+    % Set aggregation parameters
+    maneuver_trim_start = -1; %s
+    maneuver_trim_end = -1; %s
+    sweep_maneuver_length = 8; % s
+    sweep_maneuver_length_indices = round(sweep_maneuver_length / dt);
+
 
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
