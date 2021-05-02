@@ -1,0 +1,33 @@
+geometry:
+  wing:
+    sections:
+    - pos:
+          x: 0.0
+          y: 0.0
+          z: 0.0
+      chord: 0.295
+    - pos:
+          x: 0.062
+          y: 0.557
+          z: 0.0
+      chord: 0.251
+    - pos:
+          x: 0.1
+          y: 0.845
+          z: 0.0
+      chord: 0.224
+    - pos:
+          x: 0.179
+          y: 1.089
+          z: 0.0
+      chord: 0.154
+    - pos:
+          x: 0.207
+          y: 1.176
+          z: 0.0
+      chord: 0.130
+    - pos:
+          x: 0.284
+          y: 1.25
+          z: 0.0
+      chord: 0.056

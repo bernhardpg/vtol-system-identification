@@ -1,9 +1,9 @@
 clc; clear all; close all;
 
 % File location
-dynamic_curves_log_file = "2021_3_25_ Freehand RC 2-1-1 maneuvers";
+log_file = "";
 csv_files_location = 'logs/csv/dynamic_curves_1/';
-csv_log_file_location = csv_files_location + dynamic_curves_log_file;
+csv_log_file_location = csv_files_location + log_file;
 
 % Output data
 save_output_data = true;
@@ -14,9 +14,6 @@ data_output_location = "dynamic_curves/freehand/";
 
 % Set common data time resolution
 dt = 1/50;
-
-start_time_s = 3.4 * 60;
-end_time_s = 215;
 
 read_state_input_data_in_time_interval(start_time_s, end_time_s, csv_log_file_location, dt, save_plot, show_plot, plot_output_location, save_output_data, data_output_location);
 
