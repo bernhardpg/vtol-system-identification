@@ -86,7 +86,7 @@ c_Dq = theta(3);
 
 AoA_test_deg = 0:0.5:11;
 AoA_test_rad = AoA_test_deg .* (pi / 180);
-q_test = 0:0.01:0.4;
+q_test = 0:0.01:0.5;
 %delta_e_test = 0:0.01:0.5;
 [X,Y] = meshgrid(AoA_test_rad, q_test);
 %surf(X(:,:,1),Y(:,:,1),c_L_estimated(:,:,1));
@@ -99,8 +99,8 @@ c_D_estimated = c_Dp + c_Dalpha * X .^2 + ...
 fig = figure;
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
-surf(X,Y,c_L_estimated); hold on;
-scatter3(AoA_rad, q, c_L);
+surf(X,Y,c_L_estimated); hold on; alpha(0.5);
+scatter3(AoA_rad, q, c_L); alpha(0.5);
 xlabel("AoA")
 ylabel("q")
 zlabel("c_L")
@@ -108,22 +108,36 @@ zlim([0 1.15])
 
 
 subplot(1,2,2)
-surf(X,Y,c_D_estimated); hold on;
-scatter3(AoA_rad, q, c_D);
+surf(X,Y,c_D_estimated); hold on; alpha(0.5);
+scatter3(AoA_rad, q, c_D); alpha(0.5);
 xlabel("AoA")
 ylabel("q")
 zlabel("c_D")
 zlim([0 0.2])
 
-disp("Linear lift model");
-disp("c_L = c_L0 + c_Lalpha * AoA");
-disp("c_L0 = " + c_L0);
-disp("c_Lalpha = " + c_Lalpha);
-disp("Quadratic drag model");
-disp("c_D = c_Dp + c_Dalpha * AoA.^2");
-disp("c_Dp = " + c_Dp);
-disp("c_Dalpha = " + c_Dalpha);
-disp(" ");
+
+% Calculate fit
+c_L_estimated = c_L0 + c_Lalpha .* AoA_rad + ...
+    c_Lq .* q;
+c_D_estimated = c_Dp + c_Dalpha * AoA_rad .^2 + ...
+    c_Dq .* q;
+
+residuals_c_L = abs((c_L - c_L_estimated) ./ c_L);
+fit_c_L = 1 - mean(residuals_c_L);
+residuals_c_D = abs((c_D - c_D_estimated) ./ c_D);
+fit_c_D = 1 - mean(residuals_c_D);
+
+
+
+% disp("Linear lift model");
+% disp("c_L = c_L0 + c_Lalpha * AoA");
+% disp("c_L0 = " + c_L0);
+% disp("c_Lalpha = " + c_Lalpha);
+% disp("Quadratic drag model");
+% disp("c_D = c_Dp + c_Dalpha * AoA.^2");
+% disp("c_Dp = " + c_Dp);
+% disp("c_Dalpha = " + c_Dalpha);
+% disp(" ");
 
 %sgtitle(filename);
 %filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
@@ -135,7 +149,7 @@ function [] = scatter_lift_drag(AoA_rad, q, c_L, c_D)
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter(AoA_rad * 180 / pi, c_L, [], q); alpha(0.5);
+    scatter(AoA_rad * 180 / pi, c_L, [], q); alpha(0.3);
     c = colorbar;
     c.Label.String = 'q [rad/s]';
     xlabel("AoA")
@@ -143,7 +157,7 @@ function [] = scatter_lift_drag(AoA_rad, q, c_L, c_D)
     ylim([0 1.15])
 
     subplot(1,2,2)
-    scatter(AoA_rad * 180 / pi, c_D, [], q); alpha(0.5);
+    scatter(AoA_rad * 180 / pi, c_D, [], q); alpha(0.3);
     c = colorbar;
     c.Label.String = 'q [rad/s]';
     xlabel("AoA")
@@ -155,14 +169,14 @@ function [] = plot_3d_lift_drag(AoA_rad, q, c_L, c_D)
     fig = figure;
     fig.Position = [100 100 1000 300];
     subplot(1,2,1)
-    scatter3(AoA_rad, q, c_L);
+    scatter3(AoA_rad, q, c_L); alpha(0.3);
     xlabel("AoA")
     ylabel("q")
     zlabel("c_L")
     zlim([0 1.15])
 
     subplot(1,2,2)
-    scatter3(AoA_rad, q, c_D);
+    scatter3(AoA_rad, q, c_D); alpha(0.3);
     xlabel("AoA")
     ylabel("q")
     zlabel("c_D")
