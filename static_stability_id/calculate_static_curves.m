@@ -36,7 +36,7 @@ for i = 1:num_experiments
     
 end
 
-
+AoA_deg = rad2deg(AoA_rad);
 
 q = state(:,6);
 delta_e = input(:,6);
@@ -56,63 +56,64 @@ plot_3d_lift_drag(AoA_rad, q, c_L, c_D);
 
 
 %% Curve fitting
-% c_Lalpha guess
-c_Lalpha_guess = pi * aspect_ratio / (1 + sqrt(1 + (aspect_ratio/2)^2));
-disp("c_Lalpha_guess = " + c_Lalpha_guess);
-disp(" ");
-
 N = length(AoA_rad);
 
-% Linear lift
+% c_L = c_L0 + c_Lalpha * alpha + c_Lq * q + c_Ldeltae + delta_e
 Phi = [ones(1,N);
-       AoA_rad'];
+       AoA_rad';
+       q'];
 Y = c_L;
 
-P = inv(Phi * Phi');
-B = Phi * Y;
-
-theta = P * B;
+theta = least_squares_est(Phi, Y);
 c_L0 = theta(1);
 c_Lalpha = theta(2);
+c_Lq = theta(3);
+%c_Ldeltae = theta(4);
     
 % Quadratic drag
+% c_D = c_Dp + c_Dalpha * alpha^2 + c_Dq * q + c_Ddeltae + delta_e
 Phi = [ones(1,N);
-       AoA_rad'.^2];
-P = inv(Phi * Phi');
+       AoA_rad'.^2;
+       q'];
+      % delta_e'];
 Y = c_D;
-B = Phi * Y;
-theta = P * B;
+theta = least_squares_est(Phi, Y);
+
 c_Dp = theta(1);
 c_Dalpha = theta(2);
+c_Dq = theta(3);
+%c_Ddeltae = theta(4);
 
-% Using Oswald's efficiency factor
-% Phi = [ones(1,N);
-%        (c_L0 + c_Lalpha * AoA_deg)'.^2 / (AR * pi)];
-% P = inv(Phi * Phi');
-% Y = c_D;
-% B = Phi * Y;
-% theta = P * B;
-% c_Dp = theta(1);
-% e = 1/theta(2); % Oswalds efficiency factor
-
-AoA_test_deg = 2:0.01:11;
+AoA_test_deg = 0:0.5:11;
 AoA_test_rad = AoA_test_deg .* (pi / 180);
-c_L_estimated = c_L0 + c_Lalpha * AoA_test_rad;
-c_D_estimated = c_Dp + c_Dalpha * AoA_test_rad .^2;
+q_test = 0:0.01:0.4;
+%delta_e_test = 0:0.01:0.5;
+[X,Y] = meshgrid(AoA_test_rad, q_test);
+%surf(X(:,:,1),Y(:,:,1),c_L_estimated(:,:,1));
+
+c_L_estimated = c_L0 + c_Lalpha .* X + ...
+    c_Lq .* Y;
+c_D_estimated = c_Dp + c_Dalpha * X .^2 + ...
+    c_Dq .* Y;
 
 fig = figure;
 fig.Position = [100 100 1000 300];
 subplot(1,2,1)
-plot(AoA_test_deg, c_L_estimated); hold on
-scatter(AoA_deg, c_L);
+surf(X,Y,c_L_estimated); hold on;
+scatter3(AoA_rad, q, c_L);
 xlabel("AoA")
-ylabel("c_L")
+ylabel("q")
+zlabel("c_L")
+zlim([0 1.15])
+
 
 subplot(1,2,2)
-plot(AoA_test_deg, c_D_estimated); hold on
-scatter(AoA_deg, c_D);
+surf(X,Y,c_D_estimated); hold on;
+scatter3(AoA_rad, q, c_D);
 xlabel("AoA")
-ylabel("c_D")
+ylabel("q")
+zlabel("c_D")
+zlim([0 0.2])
 
 disp("Linear lift model");
 disp("c_L = c_L0 + c_Lalpha * AoA");
@@ -127,64 +128,6 @@ disp(" ");
 %sgtitle(filename);
 %filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered)";
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
-
-
-%%% Flat plate model fit
-% Guesstimate these
-alpha_stall = 14 / 180 * pi;
-M = 0.001;
-
-sigma = blending_function(alpha_stall, M, AoA_rad);
-Phi = [(1 - sigma)';
-       (1 - sigma)' .* AoA_rad'];
-Y = c_L - sigma .* lift_flat_plate(AoA_rad);
-P = inv(Phi * Phi');
-B = Phi * Y;
-
-theta = P * B;
-c_L0 = theta(1);
-c_Lalpha = theta(2);
-    
-
-% Flat plate model
-
-% Test blending function
-%AoA_test = 0:0.01:12;
-%plot(AoA_test, blending_function(AoA_test));
-%plot(AoA_test, flat_plate(AoA_test / 180 * pi));
-sigma = blending_function(alpha_stall, M, AoA_test_rad);
-
-c_L_estimated = (1 - sigma) .* lift_linear(c_L0, c_Lalpha, AoA_test_rad) + sigma .* lift_flat_plate(AoA_test_rad);
-
-fig = figure;
-fig.Position = [100 100 1000 300];
-subplot(1,2,1)
-plot(AoA_test_deg, c_L_estimated); hold on
-scatter(AoA_deg, c_L);
-xlabel("AoA")
-ylabel("c_L")
-
-subplot(1,2,2)
-plot(AoA_test_deg, c_D_estimated); hold on
-scatter(AoA_deg, c_D);
-xlabel("AoA")
-ylabel("c_D")
-
-disp("")
-disp("Flat plate model")
-disp("Chosen values: alpha_stall = " + alpha_stall + ", M = " + M);
-disp("c_L = (1 - sigma) * (c_L0 + c_Lalpha * AoA) + (sigma) * c_L_flat_plate(AoA)");
-disp("c_L0 = " + c_L0);
-disp("c_Lalpha = " + c_Lalpha);
-disp("c_D = c_Dp + c_Dalpha * AoA.^2");
-disp("c_Dp = " + c_Dp);
-disp("c_Dalpha = " + c_Dalpha);
-
-% filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
-% sgtitle(filename);
-% filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers (unfiltered) flat plate";
-% saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
-
 
 %%
 
@@ -224,6 +167,13 @@ function [] = plot_3d_lift_drag(AoA_rad, q, c_L, c_D)
     ylabel("q")
     zlabel("c_D")
     zlim([0 0.2])
+end
+
+function [theta] = least_squares_est(Phi, Y)
+    P = inv(Phi * Phi');
+    B = Phi * Y;
+
+    theta = P * B;
 end
 
 function [sigma] = blending_function(alpha_stall_rad, M, alpha_rad)
