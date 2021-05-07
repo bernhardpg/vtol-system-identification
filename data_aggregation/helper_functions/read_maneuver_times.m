@@ -1,4 +1,4 @@
-function [maneuvers_to_aggregate, metadata] = read_metadata(filepath)
+function [maneuvers_to_aggregate, metadata] = read_maneuver_times(filepath)
     % Read maneuver trims from file
     temp = readtable(filepath);
     maneuvers = temp.maneuver;

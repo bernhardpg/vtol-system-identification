@@ -1,8 +1,8 @@
 clc; clear all; close all;
 
 % File location
-log_file = "07_24_19";
-%log_file = "06_31_21";
+%log_file = "07_24_19"; % Experiment 1
+log_file = "06_31_21"; % Experiment 2
 csv_files_location = 'data/logs/csv/';
 csv_log_file_location = csv_files_location + log_file;
 
@@ -22,124 +22,37 @@ u_fw = input(:,5:8);
 sysid_indices = get_sysid_indices(csv_log_file_location, t);
 num_maneuvers = length(sysid_indices);
 [acc_B_unfiltered, acc_B_raw, t_acc_raw, bias_acc] = read_accelerations(csv_log_file_location, t);
+[ang_acc_unfiltered, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t);
+
+% Cutoff frequency for acceleration data
+f_cutoff_lin_acc = 25;
+f_cutoff_ang_acc = 10;
+
+% Process acceleration data
+acc_B = filter_accelerations(t, dt, acc_B_raw, t_acc_raw, f_cutoff_lin_acc);
+ang_acc = filter_accelerations(t, dt, ang_acc_raw, t_ang_acc, f_cutoff_ang_acc);
+
+acc_N = calculate_acc_N(acc_B, q_NB);
 
 %%
 
 % Output data
-save_output_data = true;
-save_plot = false;
+save_output_data = false;
+save_plot = true;
 show_plot = false;
-plot_output_location = "data/plots/static_stability/01_trimmed_maneuvers/experiment_1/";
-data_output_location = "data/static_stability/experiment_1/";
-metadata_filepath = "data/static_stability/experiment_1/metadata.csv";
+plot_output_location = "data/plots/static_stability/00_full_maneuvers/experiment_2/";
+data_output_location = "data/static_stability/experiment_2/";
+metadata_filepath = "data/static_stability/experiment_2/metadata.csv";
 
-%generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, sysid_indices, mass_kg, g, show_plot, save_plot, plot_output_location)
-extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, mass_kg, g, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
-
-%%
+generate_plot_of_all_maneuvers(t, dt, acc_B, acc_B_unfiltered, bias_acc, acc_N, ang_acc, ang_acc_unfiltered, state, input, sysid_indices, mass_kg, g, lam_5, lam_6, Jyy, rho, show_plot, save_plot, plot_output_location);
+%extract_data_from_metadata(metadata_filepath, t, dt, acc_B, acc_B_unfiltered, acc_N, bias_acc, ang_acc, ang_acc_unfiltered, state, input, mass_kg, g, lam_5, lam_6, Jyy, rho, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
 
 
 
-filepath = 'data/metadata.csv';
-%[maneuvers_to_aggregate, metadata] = read_metadata(filepath);
-maneuvers_to_aggregate = 1:20;
 
-% Cutoff frequency for acceleration data
-f_cutoff = 25;
+%% Functions
 
-% Process data
-[acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
-acc_N = calculate_acc_N(acc_B, q_NB);
-
-% Calculate Angle of Attack
-AoA_rad = atan2(v_B(:,3),v_B(:,1));
-AoA_deg = rad2deg(AoA_rad);
-
-% Calculate lift and drag
-v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
-[L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
-
-%%%
-% Aggregate data
-% Set aggregation parameters
-maneuver_trim_start = -1; %s
-maneuver_trim_end = -1; %s
-sweep_maneuver_length = 16; % s
-sweep_maneuver_length_in_indices = round((sweep_maneuver_length - maneuver_trim_start - maneuver_trim_end) / dt);
-
-% Initialize empty output variables
-maneuver_start_indices = [];
-t_aggregated = [];
-input_aggregated = [];
-state_aggregated = [];
-c_D_aggregated = [];
-c_L_aggregated = [];
-AoA_aggregated = [];
-
-% Iterate through maneuvers
-num_aggregated_maneuvers = 0;
-for i = maneuvers_to_aggregate
-    maneuver_metadata = metadata(string(i));
-    maneuver_start_index = round((maneuver_metadata(1) - t(1)) / dt)
-    maneuver_start_indices = [maneuver_start_indices maneuver_start_index];
-    maneuver_end_index = round((maneuver_metadata(2) - t(1)) / dt)
-
-    % Extract only maneuver data
-    t_maneuver = t(maneuver_start_index:maneuver_end_index)';
-    state_maneuver = state(maneuver_start_index:maneuver_end_index,:);
-    input_maneuver = input(maneuver_start_index:maneuver_end_index,:);
-    AoA_deg_maneuver = AoA_deg(maneuver_start_index:maneuver_end_index);
-    AoA_rad_maneuver = AoA_rad(maneuver_start_index:maneuver_end_index);
-    acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
-    acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
-    acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
-    bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
-    L_maneuver = L(maneuver_start_index:maneuver_end_index);
-    D_maneuver = D(maneuver_start_index:maneuver_end_index);
-    c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
-    c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
-
-    % Plot data
-    plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
-    plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-        AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-        acc_N_maneuver, show_plot, save_plot, plot_output_location);
-    plot_scatter_lift_drag(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, c_L_maneuver, c_D_maneuver, show_plot, save_plot, plot_output_location);
-
-    % Store data in aggregated data matrices
-    t_aggregated = [t_aggregated;
-                    t_maneuver];
-    state_aggregated = [state_aggregated;
-                        state_maneuver];
-    input_aggregated = [input_aggregated;
-                        input_maneuver];
-    c_L_aggregated = [c_L_aggregated;
-                      c_L_maneuver];
-    c_D_aggregated = [c_D_aggregated;
-                      c_D_maneuver];
-    AoA_aggregated = [AoA_aggregated;
-                      AoA_rad_maneuver];
-
-    num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
-
-end
-
-disp("Succesfully aggregated " + num_aggregated_maneuvers + " maneuvers");
-disp(maneuvers_to_aggregate);
-
-% Save to files
-if save_output_data
-    writematrix(state_aggregated, data_output_location + 'state.csv');
-    writematrix(input_aggregated, data_output_location + 'input.csv');
-    writematrix(t_aggregated, data_output_location + 't.csv');
-    writematrix(AoA_aggregated, data_output_location + 'aoa_rad.csv');
-    writematrix(c_D_aggregated, data_output_location + 'cd.csv');
-    writematrix(c_L_aggregated, data_output_location + 'cl.csv');
-    writematrix(dt, data_output_location + 'dt.csv');
-    writematrix(maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
-end
-
-function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, mass_kg, g, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
+function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B, acc_B_unfiltered, acc_N, bias_acc, ang_acc, ang_acc_unfiltered, state, input, mass_kg, g, lam_5, lam_6, Jyy, rho, show_plot, save_plot, plot_output_location, save_output_data, data_output_location)
     q_NB = state(:,1:4);
     w_B = state(:,5:7);
     v_B = state(:,8:10);
@@ -148,13 +61,6 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
 
     [maneuvers_to_aggregate, metadata] = read_metadata(metadata_filepath);
 
-    % Cutoff frequency for acceleration data
-    f_cutoff = 25;
-
-    % Process data
-    [acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
-    acc_N = calculate_acc_N(acc_B, q_NB);
-
     % Calculate Angle of Attack
     AoA_rad = atan2(v_B(:,3),v_B(:,1));
     AoA_deg = rad2deg(AoA_rad);
@@ -162,6 +68,9 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
     % Calculate lift and drag
     v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
     [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
+    
+    % Calculate pitch moment
+    [c_m, Tau_y] = calculate_pitch_moment(state, v_A, ang_acc, lam_5, lam_6, Jyy, rho);
 
     % Initialize empty output variables
     maneuver_start_indices = [];
@@ -170,7 +79,9 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
     state_aggregated = [];
     c_D_aggregated = [];
     c_L_aggregated = [];
+    c_m_aggregated = [];
     AoA_aggregated = [];
+    ang_acc_aggregated = [];
 
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
@@ -190,17 +101,22 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
         acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
         acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
         bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
+        ang_acc_maneuver = ang_acc(maneuver_start_index:maneuver_end_index,:);
+        ang_acc_unfiltered_maneuver = ang_acc_unfiltered(maneuver_start_index:maneuver_end_index,:);
         L_maneuver = L(maneuver_start_index:maneuver_end_index);
         D_maneuver = D(maneuver_start_index:maneuver_end_index);
+        Tau_y_maneuver = Tau_y(maneuver_start_index:maneuver_end_index);
         c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
         c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
+        c_m_maneuver = c_m(maneuver_start_index:maneuver_end_index);
 
         % Plot data
         plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
         plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
             AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
             acc_N_maneuver, show_plot, save_plot, plot_output_location);
-        plot_scatter_lift_drag(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, c_L_maneuver, c_D_maneuver, show_plot, save_plot, plot_output_location);
+        plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+        scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
 
         % Store data in aggregated data matrices
         t_aggregated = [t_aggregated;
@@ -215,6 +131,10 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
                           c_D_maneuver];
         AoA_aggregated = [AoA_aggregated;
                           AoA_rad_maneuver];
+        ang_acc_aggregated = [ang_acc_aggregated;
+                              ang_acc_maneuver];
+        c_m_aggregated = [c_m_aggregated;
+                          c_m_maneuver];
 
         num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
 
@@ -231,28 +151,22 @@ function [] = extract_data_from_metadata(metadata_filepath, t, dt, acc_B_raw, t_
         writematrix(AoA_aggregated, data_output_location + 'aoa_rad.csv');
         writematrix(c_D_aggregated, data_output_location + 'cd.csv');
         writematrix(c_L_aggregated, data_output_location + 'cl.csv');
+        writematrix(c_m_aggregated, data_output_location + 'cm.csv');
+        writematrix(ang_acc_aggregated, data_output_location + 'ang_acc.csv');
         writematrix(dt, data_output_location + 'dt.csv');
         writematrix(maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
     end
 
 end
 
-
-function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_unfiltered, state, bias_acc, input, sysid_indices, mass_kg, g, show_plot, save_plot, plot_output_location)
+function [] = generate_plot_of_all_maneuvers(t, dt, acc_B, acc_B_unfiltered, bias_acc, acc_N, ang_acc, ang_acc_unfiltered, state, input, sysid_indices, mass_kg, g, lam_5, lam_6, Jyy, rho, show_plot, save_plot, plot_output_location)
     q_NB = state(:,1:4);
     w_B = state(:,5:7);
     v_B = state(:,8:10);
     u_mr = input(:,1:4);
     u_fw = input(:,5:8);
 
-    maneuvers_to_aggregate = 1:length(sysid_indices);
-    
-    % Cutoff frequency for acceleration data
-    f_cutoff = 25;
-
-    % Process data
-    [acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
-    acc_N = calculate_acc_N(acc_B, q_NB);
+    maneuvers_to_aggregate = 1:31;
 
     % Calculate Angle of Attack
     AoA_rad = atan2(v_B(:,3),v_B(:,1));
@@ -261,6 +175,7 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     % Calculate lift and drag
     v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
     [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
+    [c_m, Tau_y] = calculate_pitch_moment(state, v_A, ang_acc, lam_5, lam_6, Jyy, rho);
 
     % Initialize empty output variables
     maneuver_start_indices = [];
@@ -270,6 +185,7 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
     c_D_aggregated = [];
     c_L_aggregated = [];
     AoA_aggregated = [];
+    ang_acc_aggregated = [];
     
     %
     % Aggregate data
@@ -297,22 +213,25 @@ function [] = generate_plot_of_all_maneuvers(t, dt, acc_B_raw, t_acc_raw, acc_B_
         acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
         acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
         bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
+        ang_acc_maneuver = ang_acc(maneuver_start_index:maneuver_end_index,:);
+        ang_acc_unfiltered_maneuver = ang_acc_unfiltered(maneuver_start_index:maneuver_end_index,:);
         L_maneuver = L(maneuver_start_index:maneuver_end_index);
         D_maneuver = D(maneuver_start_index:maneuver_end_index);
+        Tau_y_maneuver = Tau_y(maneuver_start_index:maneuver_end_index);
         c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
         c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
+        c_m_maneuver = c_m(maneuver_start_index:maneuver_end_index);
 
         % Plot data
         plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
         plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
             AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
             acc_N_maneuver, show_plot, save_plot, plot_output_location);
-        plot_scatter_lift_drag(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, c_L_maneuver, c_D_maneuver, show_plot, save_plot, plot_output_location);
-
+        plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+        scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
     end
 end
 
-%%
 
 function [] = read_state_input_data_in_time_interval(start_time_s, end_time_s, csv_log_file_location, dt, save_plot, show_plot, plot_output_location, save_output_data, data_output_location)
     % Read data
@@ -343,182 +262,6 @@ function [] = read_state_input_data_in_time_interval(start_time_s, end_time_s, c
 
 end
 
-
-%%
-
-function [] = read_static_curves_data()
-    % File location
-    static_curves_log_file = "2021_04_18_flight_2_static_curves_no_thrust_211_roll";
-    csv_files_location = 'logs/csv/';
-    csv_log_file_location = csv_files_location + log_file;
-
-    % Output data
-    save_output = false;
-    %output_location = "static_curves/data/";
-    plot_output_location = "plots/maneuver_plots/";
-
-    % Plotting options
-    show_plots = false;
-    save_plots = false;
-
-    % Set common data time resolution
-    dt = 0.01;
-
-    % Aircraft parameters
-    aircraft_properties
-
-    % Read data
-    [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt);
-    q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
-    sysid_indices = get_sysid_indices(csv_log_file_location, t);
-    [acc_B_unfiltered, acc_B_raw, t_acc_raw, bias_acc] = read_accelerations(csv_log_file_location, t);
-    [V_a_measured, V_a_measured_validated] = read_airspeed(csv_log_file_location, t);
-    wind_B = get_wind_body_frame(csv_log_file_location, state, t);
-    v_airspeed_B = v_B - wind_B;
-    V_a_calculated = sqrt(v_airspeed_B(:,1).^2 + v_airspeed_B(:,2).^2 + v_airspeed_B(:,3).^2);
-
-
-    %%% Analyze and aggregate data
-    % Data filtering
-    AIRSPEED_TRESHOLD_MIN = 21; % m/s
-    AIRSPEED_TRESHOLD_MAX = 25; % m/s
-
-    % Cutoff frequency for acceleration data
-    f_cutoff = 15;
-
-    %maneuvers_to_aggregate = [2:9 11:27 29:31]; % All maneuvers without dropout
-    %maneuvers_to_aggregate = 1:31; % All maneuvers without dropout
-    %maneuvers_to_aggregate = [2:7 9 11:13 15 17 20:23 29:31];
-    static_curves_maneuvers_to_aggregate = [9 11:13 20:23 31];
-
-    % Process data
-    [acc_B] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff);
-    acc_N = calculate_acc_N(acc_B, q_NB);
-
-    % Calculate Angle of Attack
-    AoA_rad = atan2(v_airspeed_B(:,3),v_airspeed_B(:,1));
-    %AoA_rad = atan2(v_B(:,3),v_B(:,1));
-    AoA_deg = rad2deg(AoA_rad);
-
-    % Calculate lift and drag
-    [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, V_a_calculated, acc_B, mass_kg, g);
-
-    %%%
-    % Aggregate data
-    % Set aggregation meta data
-    maneuver_trim_start = 0.5; %s
-    maneuver_trim_end = 2.8; %s
-    sweep_maneuver_period = 2; % s
-    total_sweep_maneuver_length = 2 * sweep_maneuver_period;
-    sweep_maneuver_length_in_indices = round((total_sweep_maneuver_length - maneuver_trim_start - maneuver_trim_end) / dt);
-
-    % Initialize empty output variables
-    data_set_length = sweep_maneuver_length_in_indices * length(static_curves_maneuvers_to_aggregate);
-    lift_dra = zeros(data_set_length, 3);
-    input_output = zeros(data_set_length, 8);
-    state_output = zeros(data_set_length, 10);
-    c_D_output = zeros(data_set_length, 1);
-    c_L_output = zeros(data_set_length, 1);
-    AoA_rad_output = zeros(data_set_length, 1);
-
-    % Iterate through maneuvers
-    curr_maneuver_aggregation_index = 1;
-    num_aggregated_maneuvers = 0;
-    aggregated_maneuvers = zeros(100);
-    for i = static_curves_maneuvers_to_aggregate
-        % Find exact maneuver index interval
-        maneuver_start_index = find_exact_start_index_sweep(u_fw(:,2), sysid_indices(i), dt, sweep_maneuver_period);
-
-        % Trim maneuver by padding
-        maneuver_start_index = maneuver_start_index + maneuver_trim_start / dt;
-        maneuver_end_index = maneuver_start_index + sweep_maneuver_length_in_indices;
-
-        % Extract only maneuver data
-        t_maneuver = t(maneuver_start_index:maneuver_end_index);
-        state_maneuver = state(maneuver_start_index:maneuver_end_index,:);
-        input_maneuver = input(maneuver_start_index:maneuver_end_index,:);
-        AoA_deg_maneuver = AoA_deg(maneuver_start_index:maneuver_end_index);
-        AoA_rad_maneuver = AoA_rad(maneuver_start_index:maneuver_end_index);
-        V_a_measured_maneuver = V_a_measured(maneuver_start_index:maneuver_end_index);
-        V_a_measured_validated_maneuver = V_a_measured_validated(maneuver_start_index:maneuver_end_index);
-        V_a_calculated_maneuver = V_a_calculated(maneuver_start_index:maneuver_end_index);
-        acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
-        acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
-        acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
-        bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index,:);
-        v_airspeed_B_maneuver = v_airspeed_B(maneuver_start_index:maneuver_end_index,:);
-        wind_B_maneuver = wind_B(maneuver_start_index:maneuver_end_index,:);
-        L_maneuver = L(maneuver_start_index:maneuver_end_index,:);
-        D_maneuver = D(maneuver_start_index:maneuver_end_index,:);
-        c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index,:);
-        c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index,:);
-
-        % Plot data
-        plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, ...
-            v_airspeed_B_maneuver, 0.5, show_plots, save_plots, plot_output_location);
-        plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-            AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-            acc_N_maneuver, V_a_measured_maneuver, V_a_calculated_maneuver, show_plots, save_plots, plot_output_location);
-        plot_scatter_lift_drag(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, c_L_maneuver, c_D_maneuver, show_plots, save_plots, plot_output_location);
-
-    %     % Check if data passes tests
-    %     if ~does_data_pass_validation_tests(state_maneuver, V_a_measured_maneuver, i, AIRSPEED_TRESHOLD_MIN, AIRSPEED_TRESHOLD_MAX)
-    %         continue
-    %     end
-
-        % Store data in aggregated data matrices
-        curr_maneuver_aggregation_index = num_aggregated_maneuvers * sweep_maneuver_length_in_indices + 1;
-        state_output(...
-            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-            ,:) = state_maneuver;
-        input_output(...
-            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-            ,:) = input_maneuver;
-        c_L_output(...
-            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-            ,:) = c_L_maneuver;
-        c_D_output(...
-            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-            ,:) = c_D_maneuver;
-        AoA_rad_output(...
-            curr_maneuver_aggregation_index:curr_maneuver_aggregation_index + sweep_maneuver_length_in_indices ...
-            ,:) = AoA_rad_maneuver;
-
-        num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
-        aggregated_maneuvers(num_aggregated_maneuvers) = i;
-
-    end
-
-    % Trim data
-    state_output = state_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-    input_output = input_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-    AoA_rad_output = AoA_rad_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-    c_D_output = c_D_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-    c_L_output = c_L_output(1:num_aggregated_maneuvers * sweep_maneuver_length_in_indices,:);
-
-    aggregated_maneuvers = aggregated_maneuvers(1:num_aggregated_maneuvers);
-    display("aggregated " + num_aggregated_maneuvers + " maneuvers");
-    disp(aggregated_maneuvers);
-
-    % Save to files
-    if save_output
-        output_data_in_table = table(state_output, input_output);
-        writetable(output_data_in_table, output_location + 'output.csv');
-        writematrix(AoA_rad_output, output_location + 'AoA_rad.csv');
-        writematrix(c_D_output, output_location + 'c_D.csv');
-        writematrix(c_L_output, output_location + 'c_L.csv');
-        writematrix(sweep_maneuver_length_in_indices, output_location + 'maneuver_length.csv');
-        writematrix(dt, output_location + 'dt.csv');
-        writematrix(aggregated_maneuvers, output_location + 'aggregated_maneuvers.csv');
-    end
-    
-end
-
-%% Functions
 function [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt)
     ekf_data = readtable(csv_log_file_location + '_' + "estimator_status_0" + ".csv");
     angular_velocity = readtable(csv_log_file_location + '_' + "vehicle_angular_velocity_0" + ".csv");
@@ -647,6 +390,19 @@ function [t, state, input] = read_state_and_input_from_log(csv_log_file_location
     
 end
 
+function [ang_acc, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t)
+    % Load data
+    ang_acc_data = readtable(csv_log_file_location + '_' + "vehicle_angular_acceleration_0" + ".csv");
+    
+    % Read raw sensor data
+    ang_acc_raw = [ang_acc_data.xyz_0_ ang_acc_data.xyz_1_ ang_acc_data.xyz_2_];
+    t_ang_acc = ang_acc_data.timestamp / 1e6;
+    
+    % Fuse to common time horizon
+    ang_acc = interp1q(t_ang_acc, ang_acc_raw, t');
+end
+
+
 function [sysid_indices] = get_sysid_indices(csv_log_file_location, t)
     input_rc = readtable(csv_log_file_location + '_' + "input_rc_0" + ".csv");
     
@@ -741,27 +497,27 @@ function [acc_B, acc_B_raw, t_acc, bias_acc] = read_accelerations(csv_log_file_l
     acc_B = interp1q(t_acc, acc_B_raw, t');
 end
 
-function [acc_B_filtered] = filter_accelerations(t, acc_B_raw, t_acc_raw, f_cutoff)
+function [acc_filtered] = filter_accelerations(t, dt, acc_raw, t_acc_raw, f_cutoff)
     % Filter data
     T_c = 1/f_cutoff;
     temp = filloutliers(t_acc_raw(2:end) - t_acc_raw(1:end-1), 'linear');
     dt_acc = mean(temp);
     alpha = dt_acc / (T_c + dt_acc);
 
-    acc_B_raw_filtered = zeros(size(acc_B_raw));
-    acc_B_raw_filtered(1,:) = acc_B_raw(1,:);
-    for i = 2:length(acc_B_raw)
-       acc_B_raw_filtered(i,:) = alpha * acc_B_raw(i,:) + (1 - alpha) * acc_B_raw_filtered(i-1,:);
+    acc_raw_filtered = zeros(size(acc_raw));
+    acc_raw_filtered(1,:) = acc_raw(1,:);
+    for i = 2:length(acc_raw)
+       acc_raw_filtered(i,:) = alpha * acc_raw(i,:) + (1 - alpha) * acc_raw_filtered(i-1,:);
     end
 
     % Frequency analysis
     if 0
-        plot_fft(acc_B_raw, dt);
-        plot_fft(acc_B_raw_filtered, dt);
+        plot_fft(acc_raw, dt);
+        plot_fft(acc_raw_filtered, dt);
     end
 
     % Fuse to common time horizon
-    acc_B_filtered = interp1q(t_acc_raw, acc_B_raw_filtered, t');
+    acc_filtered = interp1q(t_acc_raw, acc_raw_filtered, t');
 end
 
 function [V_a, V_a_validated] = read_airspeed(csv_log_file_location, t)
@@ -972,6 +728,64 @@ function [] = plot_trajectory_static_details(maneuver_index, t, state, input, Ao
     end
 end
 
+function [] = plot_accelerations(maneuver_index, t, acc_B, acc_B_unfiltered, bias_acc, ang_acc, ang_acc_unfiltered, show_plot, save_plot, plot_output_location)
+    % Figure details
+    fig = figure; 
+    if ~show_plot
+        fig.Visible = 'off';
+    end
+    fig.Position = [100 100 1600 1000];
+    num_plots = 6; 
+    
+    subplot(num_plots,1,1);
+    plot(t, acc_B_unfiltered(:,1)); hold on
+    plot(t, acc_B(:,1)); hold on
+    plot(t, bias_acc(:,1));
+    legend('a_x', 'a_x (filtered)', 'bias');
+    title("Linear acceleration")
+    
+    subplot(num_plots,1,2);
+    plot(t, acc_B_unfiltered(:,2)); hold on
+    plot(t, acc_B(:,2)); hold on
+    plot(t, bias_acc(:,2));
+    legend('a_y', 'a_y (filtered)', 'bias');
+    title("Linear acceleration")
+    
+    subplot(num_plots,1,3);
+    plot(t, acc_B_unfiltered(:,3)); hold on
+    plot(t, acc_B(:,3)); hold on
+    plot(t, bias_acc(:,3));
+    legend('a_z', 'a_z (filtered)', 'bias');
+    title("Linear acceleration")
+
+    subplot(num_plots,1,4);
+    plot(t, ang_acc_unfiltered(:,1)); hold on
+    plot(t, ang_acc(:,1));
+    legend('a_x', 'a_x (filtered)');
+    title("Angular acceleration")
+    
+    subplot(num_plots,1,5);
+    plot(t, ang_acc_unfiltered(:,2)); hold on
+    plot(t, ang_acc(:,2));
+    legend('a_y', 'a_y (filtered)');
+    title("Angular acceleration")
+    
+    subplot(num_plots,1,6);
+    plot(t, ang_acc_unfiltered(:,3)); hold on
+    plot(t, ang_acc(:,3));
+    legend('a_z', 'a_z (filtered)');
+    title("Angular acceleration")
+
+    figure_title = "Accelerations, maneuver: " + maneuver_index;
+    sgtitle(figure_title)
+    
+    if save_plot
+        filename = maneuver_index + "_accelerations";
+        saveas(fig, plot_output_location + filename, 'epsc')
+    end
+end
+
+
 function [] = plot_wind(maneuver_index, t, wind_B, ...
     show_plot, save_plot, plot_output_location)
     
@@ -995,7 +809,7 @@ function [] = plot_wind(maneuver_index, t, wind_B, ...
     end
 end
 
-function [] = plot_scatter_lift_drag(maneuver_index, t, AoA_deg, L, D, c_L, c_D, show_plot, save_plot, plot_output_location)
+function [] = scatter_static_curves(maneuver_index, t, AoA_deg, L, D, Tau_y, c_L, c_D, c_m, show_plot, save_plot, plot_output_location)
     % Figure details
     fig = figure; 
     if ~show_plot
@@ -1003,32 +817,46 @@ function [] = plot_scatter_lift_drag(maneuver_index, t, AoA_deg, L, D, c_L, c_D,
     end
     fig.Position = [100 100 1600 1000];
 
-    subplot(2,2,1)
+    subplot(3,2,1)
     scatter(AoA_deg, L, [], t)
     xlabel('AoA [deg]')
     ylabel('L')
     title("Lift")
     colorbar
     
-    subplot(2,2,2)
-    scatter(AoA_deg, D, [], t)
-    xlabel('AoA [deg]')
-    ylabel('D')
-    title("Drag")
-    colorbar
-    
-    subplot(2,2,3)
+    subplot(3,2,2)
     scatter(AoA_deg, c_L, [], t)
     xlabel('AoA [deg]')
     ylabel('c_L')
     title("Lift coeff")
     colorbar
     
-    subplot(2,2,4)
+    subplot(3,2,3)
+    scatter(AoA_deg, D, [], t)
+    xlabel('AoA [deg]')
+    ylabel('D')
+    title("Drag")
+    colorbar
+    
+    subplot(3,2,4)
     scatter(AoA_deg, c_D, [], t)
     xlabel('AoA [deg]')
     ylabel('c_D')
     title("Drag coeff")
+    colorbar
+        
+    subplot(3,2,5)
+    scatter(AoA_deg, Tau_y, [], t)
+    xlabel('AoA [deg]')
+    ylabel('Tau_y')
+    title("Pitch moment")
+    colorbar
+     
+    subplot(3,2,6)
+    scatter(AoA_deg, c_m, [], t)
+    xlabel('AoA [deg]')
+    ylabel('c_m')
+    title("Pitch moment coeff")
     colorbar
     
     figure_title = "static curves, maneuver: " + maneuver_index;

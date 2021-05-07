@@ -10,11 +10,11 @@ mass_kg = mass_g * 1e-3;
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
-Jxx = 1016109734.10;
+Jxx = 1016009734.10;
 Jxy = 20628.39;
 Jxz = 131901925.67;
 Jyx = 20628.39;
-Jyy = 12659798.50;
+Jyy = 1265979800.50;
 Jyz = 33807.67;
 Jzx = 131901925.67;
 Jzy = 33807.67;

@@ -9,6 +9,7 @@ c_L = [];
 c_D = [];
 AoA_rad = [];
 dt = [];
+c_m = [];
 
 for i = 1:num_experiments
     datapath = datapaths(i);
@@ -16,6 +17,7 @@ for i = 1:num_experiments
     input_exp = readmatrix(datapath + "input.csv");
     c_L_exp = readmatrix(datapath + "cl.csv");
     c_D_exp = readmatrix(datapath + "cd.csv");
+    c_m_exp = readmatrix(datapath + "cm.csv");
     AoA_rad_exp = readmatrix(datapath + "aoa_rad.csv");
     maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
     AoA_deg_exp = AoA_rad .* (180 / pi);
@@ -33,21 +35,63 @@ for i = 1:num_experiments
                AoA_rad_exp];
     dt = [dt;
            dt_exp];
+    c_m = [c_m;
+           c_m_exp];
     
 end
-
+%%
 AoA_deg = rad2deg(AoA_rad);
 
+p = state(:,5);
 q = state(:,6);
+r = state(:,7);
 delta_e = input(:,6);
 
 % Model parameters
 aircraft_properties;
 
+%%
 % Scatter plot of all maneuvers
+N = length(AoA_rad);
+Phi = [ones(1,N);
+       AoA_rad';
+       q'];
+Y = c_m;
 
-scatter_lift_drag(AoA_rad, q, c_L, c_D);
-plot_3d_lift_drag(AoA_rad, q, c_L, c_D);
+theta = least_squares_est(Phi, Y);
+c_m0 = theta(1);
+c_malpha = theta(2);
+c_mq = theta(3);
+
+%plot_3d_pitch_moment(AoA_rad, q, delta_e, c_m);
+
+% Calculate fit
+c_m_estimated = c_m0 + c_malpha .* AoA_rad + ...
+    c_mq .* q;
+
+residuals_c_m = abs((c_m - c_m_estimated) ./ c_m);
+fit_c_m = 1 - median(residuals_c_m);
+
+% plot surface
+AoA_test_deg = 0:0.5:11;
+AoA_test_rad = AoA_test_deg .* (pi / 180);
+q_test = 0:0.01:0.5;
+%delta_e_test = 0:0.01:0.5;
+[X,Y] = meshgrid(AoA_test_rad, q_test);
+%surf(X(:,:,1),Y(:,:,1),c_L_estimated(:,:,1));
+
+c_m_estimated = c_m0 + c_malpha .* X + ...
+    c_mq .* Y;
+
+fig = figure;
+fig.Position = [100 100 1000 300];
+surf(X,Y,c_m_estimated); hold on; alpha(0.5);
+xlabel("AoA [rad]")
+ylabel("q [rad/s]")
+scatter3(AoA_rad, q, c_m); alpha(0.5);
+
+%scatter_lift_drag(AoA_rad, q, c_L, c_D);
+%plot_3d_lift_drag(AoA_rad, q, c_L, c_D);
 
 
 %sgtitle(filename);
@@ -163,6 +207,25 @@ function [] = scatter_lift_drag(AoA_rad, q, c_L, c_D)
     xlabel("AoA")
     ylabel("c_D")
     ylim([0 0.2])
+end
+
+function [] = plot_3d_pitch_moment(AoA_rad, q, delta_e, c_m)
+    fig = figure;
+    fig.Position = [100 100 1000 300];
+    subplot(1,2,1)
+    scatter3(AoA_rad, q, c_m); alpha(0.3);
+    xlabel("AoA")
+    ylabel("q")
+    zlabel("c_m")
+    zlim([0 3*1e-3])
+
+    subplot(1,2,2)
+    scatter3(AoA_rad, delta_e, c_m); alpha(0.3);
+    xlabel("AoA")
+    ylabel("delta_e")
+    zlabel("c_m")
+    zlim([0 3*1e-3])
+
 end
 
 function [] = plot_3d_lift_drag(AoA_rad, q, c_L, c_D)
