@@ -4,21 +4,24 @@ metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Output data
-save_output_data = true;
+save_output_data = false;
 save_plot = true;
 show_plot = false;
+% plot_output_location = "data/plots/static_stability/00_full_maneuvers/experiment_2/";
+% data_output_location = "data/static_stability/experiment_2/";
+% metadata_filepath = "data/static_stability/experiment_2/metadata.csv";
 
 % Set common data time resolution
 dt = 1/100;
 
 num_experiments = length(metadata.Experiments);
 for i = 1:num_experiments
-    parse_data_from_flight(metadata.Experiments(i), dt, save_output_data, save_plot, show_plot);
+    parse_data_from_flight(metadata.Experiments(i), dt, save_output_datasave_plot, show_plot);
 end
 
 %% Functions
 
-function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot, show_plot)
+function [] = parse_data_from_flight(experiment, dt)
     log_file = experiment.LogName;
     maneuver_metadata = experiment.Maneuvers;
     num_maneuvers = length(fieldnames(maneuver_metadata));
@@ -105,25 +108,18 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
         c_m_maneuver = c_m(maneuver_start_index:maneuver_end_index);
 
-        % Plot maneuver data
-        if save_plot || show_plot
-            % Determine output location
-            plot_output_location = "data/experiments/experiment_" + string(experiment.Number) ...
-                + "/" + string(curr_maneuver_metadata.type) + "/plots/";
-            if ~maneuver_should_be_aggregated
-                plot_output_location = plot_output_location + "not_used_";
-            end
-            
-            mkdir(plot_output_location);
-            
-            plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
-            plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-                AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-                acc_N_maneuver, show_plot, save_plot, plot_output_location);
-            plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
-            scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
-        end
+        % Determine output location
+        plot_output_location = "data/experiment_" + string(experiment.Number) ...
+            + "/" + string(curr_maneuver_metadata.type) + "/plots/";
         
+        % Plot maneuver data
+        plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
+        plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
+            AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
+            acc_N_maneuver, show_plot, save_plot, plot_output_location);
+        plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+        scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
+
         % Store data in aggregated data matrices
         if maneuver_should_be_aggregated
             output_data.(curr_maneuver_metadata.type).t = ...
@@ -151,10 +147,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
                 [output_data.(curr_maneuver_metadata.type).c_m;
                  c_m_maneuver];
 
-            output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
-                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices maneuver_start_index];
-            output_data.(curr_maneuver_metadata.type).aggregated_maneuvers = ...
-                [output_data.(curr_maneuver_metadata.type).aggregated_maneuvers i];
+            output_data.(curr_maneuver_metadata.type).maneuver_start_indices = [output_data.(curr_maneuver_metadata.type).maneuver_start_indices maneuver_start_index];
             num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
         end
     end
@@ -163,76 +156,17 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
 
     % Save to files
     if save_output_data
-        save_output(experiment.Number, output_data)
+        writematrix(state_aggregated, data_output_location + 'state.csv');
+        writematrix(input_aggregated, data_output_location + 'input.csv');
+        writematrix(t_aggregated, data_output_location + 't.csv');
+        writematrix(AoA_aggregated, data_output_location + 'aoa_rad.csv');
+        writematrix(c_D_aggregated, data_output_location + 'cd.csv');
+        writematrix(c_L_aggregated, data_output_location + 'cl.csv');
+        writematrix(c_m_aggregated, data_output_location + 'cm.csv');
+        writematrix(ang_acc_aggregated, data_output_location + 'ang_acc.csv');
+        writematrix(dt, data_output_location + 'dt.csv');
+        writematrix(maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
     end
-end
-
-function [] = save_output(experiment_number, output_data)
-        if ~isempty(output_data.sweep.state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
-                + "/sweep/output/";
-            mkdir(data_output_location);
-            
-            writematrix(output_data.sweep.state, data_output_location + 'state.csv');
-            writematrix(output_data.sweep.input, data_output_location + 'input.csv');
-            writematrix(output_data.sweep.t, data_output_location + 't.csv');
-            writematrix(output_data.sweep.AoA, data_output_location + 'aoa_rad.csv');
-            writematrix(output_data.sweep.c_D, data_output_location + 'cd.csv');
-            writematrix(output_data.sweep.c_L, data_output_location + 'cl.csv');
-            writematrix(output_data.sweep.c_m, data_output_location + 'cm.csv');
-            writematrix(output_data.sweep.ang_acc, data_output_location + 'ang_acc.csv');
-            writematrix(output_data.sweep.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
-            writematrix(output_data.sweep.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
-        end
-        
-        if ~isempty(output_data.roll_211.state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
-                + "/roll_211/output/";
-            mkdir(data_output_location);
-            
-            writematrix(output_data.roll_211.state, data_output_location + 'state.csv');
-            writematrix(output_data.roll_211.input, data_output_location + 'input.csv');
-            writematrix(output_data.roll_211.t, data_output_location + 't.csv');
-            writematrix(output_data.roll_211.AoA, data_output_location + 'aoa_rad.csv');
-            writematrix(output_data.roll_211.c_D, data_output_location + 'cd.csv');
-            writematrix(output_data.roll_211.c_L, data_output_location + 'cl.csv');
-            writematrix(output_data.roll_211.c_m, data_output_location + 'cm.csv');
-            writematrix(output_data.roll_211.ang_acc, data_output_location + 'ang_acc.csv');
-            writematrix(output_data.roll_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
-            writematrix(output_data.roll_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
-        end
-        
-        if ~isempty(output_data.pitch_211.state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
-                + "/pitch_211/output/";
-            writematrix(output_data.pitch_211.state, data_output_location + 'state.csv');
-            writematrix(output_data.pitch_211.input, data_output_location + 'input.csv');
-            writematrix(output_data.pitch_211.t, data_output_location + 't.csv');
-            writematrix(output_data.pitch_211.AoA, data_output_location + 'aoa_rad.csv');
-            writematrix(output_data.pitch_211.c_D, data_output_location + 'cd.csv');
-            writematrix(output_data.pitch_211.c_L, data_output_location + 'cl.csv');
-            writematrix(output_data.pitch_211.c_m, data_output_location + 'cm.csv');
-            writematrix(output_data.pitch_211.ang_acc, data_output_location + 'ang_acc.csv');
-            writematrix(output_data.pitch_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
-            writematrix(output_data.pitch_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
-        end
-        
-        if ~isempty(output_data.yaw_211.state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
-                + "/yaw_211/output/";
-            mkdir(data_output_location);
-            
-            writematrix(output_data.yaw_211.state, data_output_location + 'state.csv');
-            writematrix(output_data.yaw_211.input, data_output_location + 'input.csv');
-            writematrix(output_data.yaw_211.t, data_output_location + 't.csv');
-            writematrix(output_data.yaw_211.AoA, data_output_location + 'aoa_rad.csv');
-            writematrix(output_data.yaw_211.c_D, data_output_location + 'cd.csv');
-            writematrix(output_data.yaw_211.c_L, data_output_location + 'cl.csv');
-            writematrix(output_data.yaw_211.c_m, data_output_location + 'cm.csv');
-            writematrix(output_data.yaw_211.ang_acc, data_output_location + 'ang_acc.csv');
-            writematrix(output_data.yaw_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
-            writematrix(output_data.yaw_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
-        end
 end
 
 function [output_struct] = intialize_empty_output_struct()
@@ -247,7 +181,6 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.sweep.c_m = [];
     output_struct.sweep.AoA = [];
     output_struct.sweep.ang_acc = [];
-    output_struct.sweep.aggregated_maneuvers = [];
 
     output_struct.roll_211.maneuver_start_indices = [];
     output_struct.roll_211.t = [];
@@ -258,7 +191,6 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.roll_211.c_m = [];
     output_struct.roll_211.AoA = [];
     output_struct.roll_211.ang_acc = [];
-    output_struct.roll_211.aggregated_maneuvers = [];
 
     output_struct.pitch_211.maneuver_start_indices = [];
     output_struct.pitch_211.t = [];
@@ -269,7 +201,6 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.pitch_211.c_m = [];
     output_struct.pitch_211.AoA = [];
     output_struct.pitch_211.ang_acc = [];
-    output_struct.pitch_211.aggregated_maneuvers = [];
 
     output_struct.yaw_211.maneuver_start_indices = [];
     output_struct.yaw_211.t = [];
@@ -280,19 +211,6 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.yaw_211.c_m = [];
     output_struct.yaw_211.AoA = [];
     output_struct.yaw_211.ang_acc = [];
-    output_struct.yaw_211.aggregated_maneuvers = [];
-    
-    output_struct.not_set.maneuver_start_indices = [];
-    output_struct.not_set.t = [];
-    output_struct.not_set.input = [];
-    output_struct.not_set.state = [];
-    output_struct.not_set.c_D = [];
-    output_struct.not_set.c_L = [];
-    output_struct.not_set.c_m = [];
-    output_struct.not_set.AoA = [];
-    output_struct.not_set.ang_acc = [];
-    output_struct.not_set.aggregated_maneuvers = [];
-
 
 end
 
