@@ -10,24 +10,18 @@ mass_kg = mass_g * 1e-3;
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
-Jxx = 1016009734.10;
-Jxy = 20628.39;
-Jxz = 131901925.67;
-Jyx = 20628.39;
-Jyy = 1265979800.50;
-Jyz = 33807.67;
-Jzx = 131901925.67;
-Jzy = 33807.67;
-Jzz = 2019897459.65;
+Jxx = 1016069849.02;	Jxy = 20625.57;	Jxz = 131897698.13;
+Jyx = 20625.57;	Jyy = 1112626767.24;	Jyz = 33212.68;
+Jzx = 131897698.13;	Jzy = 33212.68;	Jzz = 2019891007.45;
 
 J_grams_sqmm = [Jxx Jxy Jxz;
-     Jyx Jyy Jyz
-     Jzx Jzy Jzz];
+                Jyx Jyy Jyz
+                Jzx Jzy Jzz];
 
 grams_sqmm_to_kg_sqm = 1e-3 * 1e-3^2;
 J = J_grams_sqmm * grams_sqmm_to_kg_sqm;
 
-% Redefine these (bad coding style)
+% Redefine these with correct units (this is bad coding style)
 Jxx = J(1,1);
 Jxy = J(1,2);
 Jxz = J(1,3);
@@ -61,7 +55,7 @@ planform_sqm = planform_sqmm * 1e-3^2;
 % From CAD 3D model
 chord_length_body_side_mm = 300;
 chord_length_wingtip_side_mm = 195.4;
-mean_chord_length_m = (chord_length_body_side_mm + chord_length_wingtip_side_mm) / 1e3 / 2;
+mean_aerodynamic_chord_m = 0.242; % Found through wing approximation in python script
 
 % Wingspan
 wingspan_mm = 2500;
