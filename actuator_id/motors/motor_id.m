@@ -138,8 +138,7 @@ ylabel("Thrust [N]")
 title("Motor characteristics")
 
 %%
-% Calculate input to PWM
-disp("pwm_to_rpm = " + theta(1) + " + " + theta(2) + " * pwm");
+
 
 % Follows the following format
 %    pwm = scale * input + offset
@@ -160,5 +159,10 @@ theta = P * B;
 
 esc_signal_test = 0:1:2000;
 rpm_estimated = theta(1) + theta(2) * esc_signal_test;
-%scatter(esc_signal, rpm_mechanical); hold on;
-%plot(esc_signal_test, rpm_estimated);
+scatter(esc_signal, rpm_mechanical); hold on;
+plot(esc_signal_test, rpm_estimated);
+xlabel("ESC signal (PWM)")
+ylabel("Input (RPM)")
+
+% Calculate input to PWM
+disp("pwm_to_rpm = " + theta(1) + " + " + theta(2) + " * pwm");

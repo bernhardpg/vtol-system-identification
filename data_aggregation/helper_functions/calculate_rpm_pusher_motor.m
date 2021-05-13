@@ -20,5 +20,5 @@ function [rpm] = convert_pusher_pwm_to_rpm(pwm_signal)
     pwm_to_rpm_scale = 11.2054; % See motor_id.m
     pwm_to_rpm_offset = -12009.2554; % See motor_id.m
     
-    rpm = pwm_to_rpm_scale .* pwm_signal + pwm_to_rpm_offset;
+    rpm = max(pwm_to_rpm_scale .* pwm_signal + pwm_to_rpm_offset, 0);
 end

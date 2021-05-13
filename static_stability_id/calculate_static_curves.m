@@ -1,18 +1,23 @@
 clc; clear all; close all;
 
+metadata_filename = "data/metadata.json";
+metadata = read_metadata(metadata_filename);
+
 % Load data
-datapaths = ["data/static_stability/experiment_1/" "data/static_stability/experiment_2/"];
-num_experiments = length(datapaths);
+num_experiments = length(metadata.Experiments);
+experiment_data_path = "data/experiments/";
+
 state = [];
 input = [];
 c_L = [];
 c_D = [];
 AoA_rad = [];
-dt = [];
 c_m = [];
 
 for i = 1:num_experiments
-    datapath = datapaths(i);
+    datapath = experiment_data_path + "experiment_" + metadata.Experiments(i).Number ...
+        + "/sweep/output/";
+    
     state_exp = readmatrix(datapath + "state.csv");
     input_exp = readmatrix(datapath + "input.csv");
     c_L_exp = readmatrix(datapath + "cl.csv");
@@ -21,7 +26,6 @@ for i = 1:num_experiments
     AoA_rad_exp = readmatrix(datapath + "aoa_rad.csv");
     maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
     AoA_deg_exp = AoA_rad .* (180 / pi);
-    dt_exp = readmatrix(datapath + "dt.csv");
     
     state = [state;
              state_exp];
@@ -33,19 +37,19 @@ for i = 1:num_experiments
            c_D_exp];
     AoA_rad = [AoA_rad;
                AoA_rad_exp];
-    dt = [dt;
-           dt_exp];
     c_m = [c_m;
            c_m_exp];
     
 end
-%%
+
 AoA_deg = rad2deg(AoA_rad);
 
 p = state(:,5);
 q = state(:,6);
 r = state(:,7);
+delta_a = input(:,5);
 delta_e = input(:,6);
+delta_r = input(:,7);
 
 % Model parameters
 aircraft_properties;
@@ -75,9 +79,9 @@ fit_c_m = 1 - median(residuals_c_m);
 % plot surface
 AoA_test_deg = 0:0.5:11;
 AoA_test_rad = AoA_test_deg .* (pi / 180);
-q_test = 0:0.01:0.5;
+deltae_test = 0:0.01:0.5;
 %delta_e_test = 0:0.01:0.5;
-[X,Y] = meshgrid(AoA_test_rad, q_test);
+[X,Y] = meshgrid(AoA_test_rad, deltae_test);
 %surf(X(:,:,1),Y(:,:,1),c_L_estimated(:,:,1));
 
 c_m_estimated = c_m0 + c_malpha .* X + ...
@@ -98,41 +102,21 @@ scatter3(AoA_rad, q, c_m); alpha(0.5);
 %filename = "Scatter plot with " + length(aggregated_maneuvers) + " maneuvers";
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
+%% 
 
-%% Curve fitting
-N = length(AoA_rad);
 
-% c_L = c_L0 + c_Lalpha * alpha + c_Lq * q + c_Ldeltae + delta_e
-Phi = [ones(1,N);
-       AoA_rad';
-       q'];
-Y = c_L;
 
-theta = least_squares_est(Phi, Y);
-c_L0 = theta(1);
-c_Lalpha = theta(2);
-c_Lq = theta(3);
-%c_Ldeltae = theta(4);
+
+%% Plot results
+
     
-% Quadratic drag
-% c_D = c_Dp + c_Dalpha * alpha^2 + c_Dq * q + c_Ddeltae + delta_e
-Phi = [ones(1,N);
-       AoA_rad'.^2;
-       q'];
-      % delta_e'];
-Y = c_D;
-theta = least_squares_est(Phi, Y);
 
-c_Dp = theta(1);
-c_Dalpha = theta(2);
-c_Dq = theta(3);
-%c_Ddeltae = theta(4);
 
 AoA_test_deg = 0:0.5:11;
 AoA_test_rad = AoA_test_deg .* (pi / 180);
-q_test = 0:0.01:0.5;
+deltae_test = 0:0.01:0.5;
 %delta_e_test = 0:0.01:0.5;
-[X,Y] = meshgrid(AoA_test_rad, q_test);
+[X,Y] = meshgrid(AoA_test_rad, deltae_test);
 %surf(X(:,:,1),Y(:,:,1),c_L_estimated(:,:,1));
 
 c_L_estimated = c_L0 + c_Lalpha .* X + ...
@@ -188,6 +172,46 @@ fit_c_D = 1 - mean(residuals_c_D);
 %saveas(fig, 'static_curves/data/maneuver_plots/' + filename, 'epsc')
 
 %%
+
+function [] = calculate_lift_curve(AoA_rad, c_L, q, delta_a, delta_e, delta_r)
+    N = length(AoA_rad);
+    
+    R = corrcoef(A);
+
+    % c_L = c_L0 + c_Lalpha * alpha + c_Lq * q + c_Ldeltae + delta_e
+    Phi = [ones(1,N);
+           AoA_rad';
+           q'];
+    Y = c_L;
+
+    theta = least_squares_est(Phi, Y);
+    c_L0 = theta(1);
+    c_Lalpha = theta(2);
+    c_Lq = theta(3);
+    %c_Ldeltae = theta(4);
+
+
+end
+
+function [] = calculate_drag_curve(AoA_rad, c_D, q, delta_a, delta_e, delta_r)
+    N = length(AoA_rad);
+    
+    % Quadratic drag
+    % c_D = c_Dp + c_Dalpha * alpha^2 + c_Dq * q + c_Ddeltae + delta_e
+    Phi = [ones(1,N);
+           AoA_rad'.^2;
+           q'];
+          % delta_e'];
+    Y = c_D;
+    theta = least_squares_est(Phi, Y);
+
+    c_Dp = theta(1);
+    c_Dalpha = theta(2);
+    c_Dq = theta(3);
+    %c_Ddeltae = theta(4);
+end
+
+
 
 function [] = scatter_lift_drag(AoA_rad, q, c_L, c_D)
     fig = figure;

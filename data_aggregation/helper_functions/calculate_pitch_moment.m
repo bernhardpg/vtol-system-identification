@@ -1,6 +1,6 @@
 function [c_m, tau_y] = calculate_pitch_moment(state, V_a, ang_acc, lam_5, lam_6, Jyy, rho)
     p = state(:,5);
-    q = state(:,6);
+    % q = state(:,6);
     r = state(:,7);
     q_dot = ang_acc(:,2);
     
