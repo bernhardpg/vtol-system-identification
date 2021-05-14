@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 
 def create_maneuver_dict(maneuver_type="not_set", maneuver_start=-1, maneuver_end=-1):
@@ -10,28 +11,12 @@ def create_maneuver_dict(maneuver_type="not_set", maneuver_start=-1, maneuver_en
     return d
 
 
+# Static curves of exp 1
+
 exp1 = {}
 exp1["LogName"] = "06_31_21"
 exp1["Number"] = 1
 exp1["Maneuvers"] = {str(i): create_maneuver_dict() for i in range(1, 32)}
-
-exp2_static_times = {
-    "177": [3543.5, 3545],
-    "178": [0, 0],
-    "179": [3653, 3654.5],
-    "180": [0, 0],
-    "181": [3728, 3730],
-    "182": [0, 0],
-    "183": [3801.3, 3802.6],
-    "184": [0, 0],
-    "185": [3872, 3873.5],
-    "186": [0, 0],
-    "187": [0, 0],
-    "188": [0, 0],
-    "189": [3992, 3993.2],
-    "190": [0, 0],
-    "191": [0, 0],
-}
 
 exp1_static_times = {
     "1": [0, 0],
@@ -40,12 +25,12 @@ exp1_static_times = {
     "4": [809.5, 810.3],
     "5": [0, 0],
     "6": [925, 926],
-    "7": [994, 995.5],
+    "7": [0, 0],  # too high c_L
     "8": [0, 0],
     "9": [1129.5, 1131],
     "10": [0, 0],
     "11": [0, 0],
-    "12": [1278.5, 1279.5],
+    "12": [0, 0],  # too high c_L
     "13": [0, 0],
     "14": [0, 0],
     "15": [0, 0],
@@ -77,8 +62,50 @@ exp2["LogName"] = "07_24_19"
 exp2["Number"] = 2
 exp2["Maneuvers"] = {str(i): create_maneuver_dict() for i in range(1, 192)}
 
+# Static curves of exp 2
+exp2_static_times = {
+    "177": [3543.5, 3545],
+    "178": [0, 0],
+    "179": [3653, 3654.5],
+    "180": [0, 0],
+    "181": [3728, 3730],
+    "182": [0, 0],
+    "183": [3801.3, 3802.6],
+    "184": [0, 0],
+    "185": [3872, 3873.5],
+    "186": [0, 0],
+    "187": [0, 0],
+    "188": [0, 0],
+    "189": [3992, 3993.2],
+    "190": [0, 0],
+    "191": [0, 0],
+}
+
 for key, value in exp2_static_times.items():
     exp2["Maneuvers"][key] = create_maneuver_dict("sweep", value[0], value[1])
+
+# Longitudinal dynamic experiments in exp 2
+pitch_211 = np.arange(1, 22)
+pitch_211_no_throttle_indices = np.arange(22, 37)
+roll_211 = np.arange(37, 57)
+roll_211_no_throttle_indices = np.arange(57, 100)
+yaw_211 = np.hstack((np.arange(100, 113), np.arange(149, 177)))
+yaw_211_no_throttle_indices = np.arange(113, 149)
+
+for i in pitch_211:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("pitch_211")
+for i in pitch_211_no_throttle_indices:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("pitch_211_no_throttle")
+
+for i in roll_211:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("roll_211")
+for i in roll_211_no_throttle_indices:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("roll_211_no_throttle")
+
+for i in yaw_211:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("yaw_211")
+for i in yaw_211_no_throttle_indices:
+    exp2["Maneuvers"][str(i)] = create_maneuver_dict("yaw_211_no_throttle")
 
 metadata = {"Experiments": [exp1, exp2]}
 

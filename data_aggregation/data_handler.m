@@ -71,7 +71,7 @@ function [] = plot_single_maneuver(experiment, maneuver_i, dt)
     sysid_indices = get_sysid_indices(csv_log_file_location, t);
 
     % Normal maneuver length
-    default_maneuver_padding_s = 2;
+    default_maneuver_padding_s = 1;
     maneuver_length_s = 6;
     
     i = maneuver_i;
@@ -139,7 +139,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
 
     % Cutoff frequency for acceleration data
     f_cutoff_lin_acc = 25;
-    f_cutoff_ang_acc = 10;
+    f_cutoff_ang_acc = 1000;
 
     % Process acceleration data
     acc_B = filter_accelerations(t, dt, acc_B_raw, t_acc_raw, f_cutoff_lin_acc);
@@ -166,15 +166,16 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     output_data = intialize_empty_output_struct();
 
     % Normal maneuver length
-    default_maneuver_padding_s = 2;
-    maneuver_length_s = 6;
-    
+    default_maneuver_padding_s = 1.5;
+
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
     for i = 1:num_maneuvers
         % Read maneuver metadata
         curr_maneuver_name = "x" + string(i);
         curr_maneuver_metadata = maneuver_metadata.(curr_maneuver_name);
+        
+        [maneuver_length_s] = get_default_maneuver_length_s(curr_maneuver_metadata.type);
         
         [maneuver_should_be_aggregated,...
             maneuver_start_index,...
@@ -212,12 +213,18 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
                 plot_output_location = plot_output_location + "not_used_";
             end
             
+            if curr_maneuver_metadata.type == "sweep"
+                continue % TODO: For now, don't generate plot or aggregate data for sweep maneuvers
+                if false
+                    plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
+                        AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
+                        acc_N_maneuver, show_plot, save_plot, plot_output_location);
+                    plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+                    scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
+                end
+            end
             plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
-            plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-                AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-                acc_N_maneuver, show_plot, save_plot, plot_output_location);
-            plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
-            scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
+            
         end
         
         % Store data in aggregated data matrices
@@ -263,6 +270,20 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     end
 end
 
+function [maneuver_length_s] = get_default_maneuver_length_s(maneuver_type) 
+        if maneuver_type == "sweep"
+            maneuver_length_s = 6;
+        elseif (maneuver_type == "roll_211") || (maneuver_type == "roll_211_no_throttle")
+            maneuver_length_s = 2;
+        elseif (maneuver_type == "pitch_211") || (maneuver_type == "pitch_211_no_throttle")
+            maneuver_length_s = 2;
+        elseif (maneuver_type == "yaw_211") || (maneuver_type == "yaw_211_no_throttle")
+            maneuver_length_s = 4;
+        else
+            maneuver_length_s = 6;
+        end
+end
+
 function [] = save_output(experiment_number, output_data)
         if ~isempty(output_data.sweep.state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
@@ -298,9 +319,28 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.roll_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
+        if ~isempty(output_data.roll_211_no_throttle.state)
+            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+                + "/roll_211_no_throttle/output/";
+            mkdir(data_output_location);
+            
+            writematrix(output_data.roll_211_no_throttle.state, data_output_location + 'state.csv');
+            writematrix(output_data.roll_211_no_throttle.input, data_output_location + 'input.csv');
+            writematrix(output_data.roll_211_no_throttle.t, data_output_location + 't.csv');
+            writematrix(output_data.roll_211_no_throttle.AoA, data_output_location + 'aoa_rad.csv');
+            writematrix(output_data.roll_211_no_throttle.c_D, data_output_location + 'cd.csv');
+            writematrix(output_data.roll_211_no_throttle.c_L, data_output_location + 'cl.csv');
+            writematrix(output_data.roll_211_no_throttle.c_m, data_output_location + 'cm.csv');
+            writematrix(output_data.roll_211_no_throttle.ang_acc, data_output_location + 'ang_acc.csv');
+            writematrix(output_data.roll_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.roll_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
+        end
+        
         if ~isempty(output_data.pitch_211.state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/pitch_211/output/";
+            mkdir(data_output_location);
+            
             writematrix(output_data.pitch_211.state, data_output_location + 'state.csv');
             writematrix(output_data.pitch_211.input, data_output_location + 'input.csv');
             writematrix(output_data.pitch_211.t, data_output_location + 't.csv');
@@ -311,6 +351,23 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.pitch_211.ang_acc, data_output_location + 'ang_acc.csv');
             writematrix(output_data.pitch_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.pitch_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
+        end
+        
+        if ~isempty(output_data.pitch_211_no_throttle.state)
+            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+                + "/pitch_211_no_throttle/output/";
+            mkdir(data_output_location);
+            
+            writematrix(output_data.pitch_211_no_throttle.state, data_output_location + 'state.csv');
+            writematrix(output_data.pitch_211_no_throttle.input, data_output_location + 'input.csv');
+            writematrix(output_data.pitch_211_no_throttle.t, data_output_location + 't.csv');
+            writematrix(output_data.pitch_211_no_throttle.AoA, data_output_location + 'aoa_rad.csv');
+            writematrix(output_data.pitch_211_no_throttle.c_D, data_output_location + 'cd.csv');
+            writematrix(output_data.pitch_211_no_throttle.c_L, data_output_location + 'cl.csv');
+            writematrix(output_data.pitch_211_no_throttle.c_m, data_output_location + 'cm.csv');
+            writematrix(output_data.pitch_211_no_throttle.ang_acc, data_output_location + 'ang_acc.csv');
+            writematrix(output_data.pitch_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.pitch_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
         if ~isempty(output_data.yaw_211.state)
@@ -328,6 +385,23 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.yaw_211.ang_acc, data_output_location + 'ang_acc.csv');
             writematrix(output_data.yaw_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.yaw_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
+        end
+        
+        if ~isempty(output_data.yaw_211_no_throttle.state)
+            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+                + "/yaw_211_no_throttle/output/";
+            mkdir(data_output_location);
+            
+            writematrix(output_data.yaw_211_no_throttle.state, data_output_location + 'state.csv');
+            writematrix(output_data.yaw_211_no_throttle.input, data_output_location + 'input.csv');
+            writematrix(output_data.yaw_211_no_throttle.t, data_output_location + 't.csv');
+            writematrix(output_data.yaw_211_no_throttle.AoA, data_output_location + 'aoa_rad.csv');
+            writematrix(output_data.yaw_211_no_throttle.c_D, data_output_location + 'cd.csv');
+            writematrix(output_data.yaw_211_no_throttle.c_L, data_output_location + 'cl.csv');
+            writematrix(output_data.yaw_211_no_throttle.c_m, data_output_location + 'cm.csv');
+            writematrix(output_data.yaw_211_no_throttle.ang_acc, data_output_location + 'ang_acc.csv');
+            writematrix(output_data.yaw_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.yaw_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
 end
 
@@ -355,6 +429,17 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.roll_211.AoA = [];
     output_struct.roll_211.ang_acc = [];
     output_struct.roll_211.aggregated_maneuvers = [];
+    
+    output_struct.roll_211_no_throttle.maneuver_start_indices = [];
+    output_struct.roll_211_no_throttle.t = [];
+    output_struct.roll_211_no_throttle.input = [];
+    output_struct.roll_211_no_throttle.state = [];
+    output_struct.roll_211_no_throttle.c_D = [];
+    output_struct.roll_211_no_throttle.c_L = [];
+    output_struct.roll_211_no_throttle.c_m = [];
+    output_struct.roll_211_no_throttle.AoA = [];
+    output_struct.roll_211_no_throttle.ang_acc = [];
+    output_struct.roll_211_no_throttle.aggregated_maneuvers = [];
 
     output_struct.pitch_211.maneuver_start_indices = [];
     output_struct.pitch_211.t = [];
@@ -367,6 +452,17 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.pitch_211.ang_acc = [];
     output_struct.pitch_211.aggregated_maneuvers = [];
 
+    output_struct.pitch_211_no_throttle.maneuver_start_indices = [];
+    output_struct.pitch_211_no_throttle.t = [];
+    output_struct.pitch_211_no_throttle.input = [];
+    output_struct.pitch_211_no_throttle.state = [];
+    output_struct.pitch_211_no_throttle.c_D = [];
+    output_struct.pitch_211_no_throttle.c_L = [];
+    output_struct.pitch_211_no_throttle.c_m = [];
+    output_struct.pitch_211_no_throttle.AoA = [];
+    output_struct.pitch_211_no_throttle.ang_acc = [];
+    output_struct.pitch_211_no_throttle.aggregated_maneuvers = [];
+    
     output_struct.yaw_211.maneuver_start_indices = [];
     output_struct.yaw_211.t = [];
     output_struct.yaw_211.input = [];
@@ -377,6 +473,17 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.yaw_211.AoA = [];
     output_struct.yaw_211.ang_acc = [];
     output_struct.yaw_211.aggregated_maneuvers = [];
+    
+    output_struct.yaw_211_no_throttle.maneuver_start_indices = [];
+    output_struct.yaw_211_no_throttle.t = [];
+    output_struct.yaw_211_no_throttle.input = [];
+    output_struct.yaw_211_no_throttle.state = [];
+    output_struct.yaw_211_no_throttle.c_D = [];
+    output_struct.yaw_211_no_throttle.c_L = [];
+    output_struct.yaw_211_no_throttle.c_m = [];
+    output_struct.yaw_211_no_throttle.AoA = [];
+    output_struct.yaw_211_no_throttle.ang_acc = [];
+    output_struct.yaw_211_no_throttle.aggregated_maneuvers = [];
     
     output_struct.not_set.maneuver_start_indices = [];
     output_struct.not_set.t = [];
@@ -407,7 +514,7 @@ function [maneuver_should_be_aggregated,...
                 [sysid_index - round(default_maneuver_padding_s / dt)...
                 1]);
             maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt - round(default_maneuver_padding_s / dt)...
+                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 2) / dt)...
                 1]);
         % Aggregate maneuver with set start and end time
         else
@@ -710,6 +817,30 @@ function [acc_filtered] = filter_accelerations(t, dt, acc_raw, t_acc_raw, f_cuto
     acc_filtered = interp1q(t_acc_raw, acc_raw_filtered, t');
 end
 
+function [] = differentiate_signal()
+    % NOTE: Function not working, code snippet only kept here for reference
+    % Alternative way of obtaining ang acceleration data
+    Nf = 50; 
+    Fpass = 10; 
+    Fstop = 15;
+
+    dt = 1/100;
+    Fs = 1/dt;
+
+    %pwelch(q,[],[],[],Fs)
+
+    %
+    d = designfilt('differentiatorfir','FilterOrder',Nf, ...
+        'PassbandFrequency',Fpass,'StopbandFrequency',Fstop, ...
+        'SampleRate',Fs);
+
+
+    q = w_B(:,2);
+    vq = filter(d,q)/dt;
+    ang_acc = [zeros(length(vq),1) vq zeros(length(vq),1)];
+    
+end
+
 function [V_a, V_a_validated] = read_airspeed(csv_log_file_location, t)
     airspeed_data = readtable(csv_log_file_location + '_' + "airspeed_0" + ".csv");
     airspeed_validated_data = readtable(csv_log_file_location + '_' + "airspeed_validated_0" + ".csv");
@@ -811,39 +942,65 @@ function [] = plot_trajectory(maneuver_index, t, state, input, show_plot, save_p
     if ~show_plot
         fig.Visible = 'off';
     end
-    fig.Position = [100 100 1600 1000];
-    num_plots = 6; 
-   
+    fig.Position = [100 100 1600 2000];
+    num_plots = 10;
+    
     subplot(num_plots,1,1);
-    plot(t, eul_deg(:,2:3));
-    legend('pitch','roll');
+    plot(t, eul_deg(:,3));
+    legend('roll');
     title("attitude")
     
+    
     subplot(num_plots,1,2);
+    plot(t, eul_deg(:,2));
+    legend('pitch');
+    title("attitude")
+    
+
+    subplot(num_plots,1,3);
     plot(t, eul_deg(:,1));
     legend('yaw');
     title("attitude")
 
-    subplot(num_plots,1,3);
-    plot(t, w_B);
-    legend('p','q','r');
-    max_ang_rate = 0.5;
+    subplot(num_plots,1,4);
+    plot(t, w_B(:,1));
+    legend('p')
+    max_ang_rate = 0.8;
+    ylim([-max_ang_rate max_ang_rate])
+    title("ang vel body")
+    
+    subplot(num_plots,1,5);
+    plot(t, w_B(:,2));
+    legend('q')
+    max_ang_rate = 0.8;
+    ylim([-max_ang_rate max_ang_rate])
+    title("ang vel body")
+    
+    subplot(num_plots,1,6);
+    plot(t, w_B(:,3));
+    legend('r')
+    max_ang_rate = 0.8;
     ylim([-max_ang_rate max_ang_rate])
     title("ang vel body")
 
-    subplot(num_plots,1,4);
+    subplot(num_plots,1,7);
     plot(t, v_B(:,1)); hold on
     legend('u');
     title("vel body")
     
-    subplot(num_plots,1,5);
+    subplot(num_plots,1,8);
     plot(t, v_B(:,2:3)); hold on;
     legend('v','w');
     title("vel body")
 
-    subplot(num_plots,1,6);
-    plot(t, u_fw);
-    legend('delta_a','delta_e','delta_r', 'T_fw');
+    subplot(num_plots,1,9);
+    plot(t, u_fw(:,1:3));
+    legend('delta_a','delta_e','delta_r');
+    title("inputs")
+    
+    subplot(num_plots,1,10);
+    plot(t, u_fw(:,4));
+    legend('T_fw');
     title("inputs")
     
     figure_title = "state and input, maneuver: " + maneuver_index;

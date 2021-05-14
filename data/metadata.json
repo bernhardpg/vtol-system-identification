@@ -19,8 +19,8 @@
                     "type": "sweep"
                 },
                 "12": {
-                    "end_s": 1279.5,
-                    "start_s": 1278.5,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "sweep"
                 },
                 "13": {
@@ -144,8 +144,8 @@
                     "type": "sweep"
                 },
                 "7": {
-                    "end_s": 995.5,
-                    "start_s": 994,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "sweep"
                 },
                 "8": {
@@ -167,432 +167,432 @@
                 "1": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "10": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "100": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "101": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "102": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "103": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "104": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "105": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "106": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "107": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "108": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "109": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "11": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "110": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "111": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "112": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "113": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "114": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "115": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "116": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "117": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "118": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "119": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "12": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "120": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "121": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "122": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "123": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "124": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "125": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "126": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "127": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "128": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "129": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "13": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "130": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "131": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "132": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "133": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "134": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "135": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "136": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "137": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "138": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "139": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "14": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "140": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "141": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "142": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "143": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "144": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "145": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "146": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "147": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "148": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211_no_throttle"
                 },
                 "149": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "15": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "150": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "151": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "152": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "153": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "154": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "155": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "156": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "157": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "158": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "159": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "16": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "160": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "161": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "162": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "163": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "164": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "165": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "166": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "167": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "168": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "169": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "17": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "170": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "171": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "172": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "173": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "174": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "175": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "176": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "yaw_211"
                 },
                 "177": {
                     "end_s": 3545,
@@ -612,7 +612,7 @@
                 "18": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "180": {
                     "end_s": 0,
@@ -667,7 +667,7 @@
                 "19": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "190": {
                     "end_s": 0,
@@ -682,442 +682,442 @@
                 "2": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "20": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "21": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "22": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "23": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "24": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "25": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "26": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "27": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "28": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "29": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "3": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "30": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "31": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "32": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "33": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "34": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "35": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "36": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211_no_throttle"
                 },
                 "37": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "38": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "39": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "4": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "40": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "41": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "42": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "43": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "44": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "45": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "46": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "47": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "48": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "49": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "5": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "50": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "51": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "52": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "53": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "54": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "55": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "56": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211"
                 },
                 "57": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "58": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "59": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "6": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "60": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "61": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "62": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "63": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "64": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "65": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "66": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "67": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "68": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "69": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "7": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "70": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "71": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "72": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "73": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "74": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "75": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "76": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "77": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "78": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "79": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "8": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "80": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "81": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "82": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "83": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "84": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "85": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "86": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "87": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "88": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "89": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "9": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "pitch_211"
                 },
                 "90": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "91": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "92": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "93": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "94": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "95": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "96": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "97": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "98": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 },
                 "99": {
                     "end_s": -1,
                     "start_s": -1,
-                    "type": "not_set"
+                    "type": "roll_211_no_throttle"
                 }
             },
             "Number": 2
