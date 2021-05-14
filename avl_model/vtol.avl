@@ -1,7 +1,7 @@
 VTOL
 0.0                   !   Mach
 0.0     0.0     0.0       !   iYsym  iZsym  Zsym
-0.6617 0.2477 2.5			!   Sref   Cref   Bref   reference area, chord, span
+0.6617 0.2420 2.5			!   Sref   Cref   Bref   reference area, chord, span
 0.48  0.0   0.0       !   Xref   Yref   Zref   moment reference location (arb.)
 #
 #==============================================================
@@ -61,7 +61,7 @@ aileron  1.0   0.75    0.0 1.0 0.0    -1.0
 #-------Section 4----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.179      1.089        0.0       0.154      -3.00
+    0.179      1.089        0.0       0.154      0.00
 
 AFIL
 e397.dat
@@ -73,7 +73,7 @@ aileron  1.0   0.74    0.0 1.0 0.0    -1.0
 #-------Section 5----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.207      1.176        0.0       0.130      -4.00
+    0.207      1.176        0.0       0.130      0.00
 
 AFIL
 e397.dat
@@ -81,7 +81,7 @@ e397.dat
 #-------End Section----------------------
 #    Xle         Yle         Zle         chord       angle 
 SECTION
-    0.284      1.25        0.0       0.056      -5.00
+    0.284      1.25        0.0       0.056      0.00
 
 AFIL
 e397.dat

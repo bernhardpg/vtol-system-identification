@@ -28,7 +28,7 @@ rho = 1.225
 #
 #  mass   x     y     z       Ixx   Iyy   Izz    Ixy  Ixz  Iyz
 #
-   12.630 0.48   0.0   -0.043    1.0161   0.0127  2.0199 0.0 -0.1319 0.0    ! Entire aircraft
+   12.630 0.52   0.0   -0.043    1.0161   1.1126  2.0199 0.0 -0.1319 0.0    ! Entire aircraft
 
 # Created by Bernhard Paus Græsdal, 2021-04-29
 
