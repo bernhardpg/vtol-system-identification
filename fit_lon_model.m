@@ -10,110 +10,73 @@ metadata = read_metadata(metadata_filename);
 aircraft_properties;
 
 % Create ID data from each experiment
-
 [data] = create_iddata(full_state, full_input, maneuver_start_indices, t);
 
-% figure('Name', [data.Name ': Elevator input -> Pitch rate output']);
-% plot(data(:, 5, 1));   % Plot first input-output pair
+state_size = 7;
+%% Create nlgr object
+%parameters = create_lon_parameter_struct();
 
-parameters = create_lon_parameters();
-% Initial state values
-initial_states = struct(...
-    'Name', {'q0', 'q1', 'q2', 'q3', 'q','u', 'w'},...
-    'Unit', {'', '', '', '', 'rad/s', 'm/s', 'm/s'}, ...
-    'Value', num2cell(data(1,:,:,1).OutputData), ...
-    'Minimum', -Inf, 'Maximum', Inf, ...
-    'Fixed', true);
-[nlgr] = create_nlgr_object(parameters, initial_states);
+experiments_to_use = [1:15];
+initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
+
+[nlgr_model] = create_nlgr_object(parameters, initial_states);
+%nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
+
+opt = nlgreyestOptions('Display', 'on');
+opt.SearchOptions.MaxIterations = 100;
+
+%nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
+parameters = nlgr_model.Parameters;
+print_parameters(parameters);
+
+%%
+
+%%
+sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use));
+%compare(data(:,:,:,experiments_to_use), nlgr_model)
+
+
+%%
+%nlgr.SimulationOptions.RelTol = 1e-5;
 %compare(data, nlgr);
 
-%%
-
-
-
-%compare(sysid_data, nlgr);
-nlgr.SimulationOptions.Solver = 'ode4';
-nlgr.SimulationOptions.FixedStep = 0.0001;
-% GOAL:
-%y = sim(nlgr, z);
-fig = figure;
-compare(z, nlgr);
-%fig.Visible = 'off';
-fig.Position = [100 100 1600 1000];
-plot_output_location = "initial_guess/";
-filename = "guess_" + 8;
-saveas(fig, plot_output_location + filename, 'epsc')
-    
-    %predict(nlgr, sysid_data)
-%%
-opt = nlgreyestOptions();
-opt.Display = 'on';
-%opt.SearchMethod = 'lm';
-opt.SearchOptions.MaxIterations = 5;
-m2 = nlgreyest(z,nlgr,opt);
-
-%%
-predicted_state = y.y;
-q_pred = predicted_state(:,1:4,:);
-w_pred = predicted_state(:,5:7,:);
-v_pred = predicted_state(:,8:10,:);
-eul_pred = quat2eul(q_pred);
-
-close all
-figure
-subplot(9,1,1)
-plot(eul_pred(:,1)); hold on
-plot(eul(:,1))
-legend("yaw (estimated)", "yaw")
-
-subplot(9,1,2)
-plot(eul_pred(:,2)); hold on
-plot(eul(:,2))
-legend("pitch (estimated)", "pitch")
-
-subplot(9,1,3)
-plot(eul_pred(:,3)); hold on
-plot(eul(:,3))
-legend("roll (estimated)", "roll")
-
-subplot(9,1,4)
-plot(w_pred(:,1)); hold on
-plot(w_B(:,1))
-legend("p (estimated)", "p")
-
-subplot(9,1,5)
-plot(w_pred(:,2)); hold on
-plot(w_B(:,2))
-legend("q (estimated)", "q")
-
-subplot(9,1,6)
-plot(w_pred(:,3)); hold on
-plot(w_B(:,3))
-legend("r (estimated)", "r")
-
-subplot(9,1,7)
-plot(v_pred(:,1)); hold on
-plot(v_B(:,1))
-legend("u (estimated)", "u")
-
-subplot(9,1,8)
-plot(v_pred(:,2)); hold on
-plot(v_B(:,2))
-legend("v (estimated)", "v")
-
-subplot(9,1,9)
-plot(v_pred(:,3)); hold on
-plot(v_B(:,3))
-legend("w (estimated)", "w")
-
-
-
-%figure('Name', [sysid_data.Name ': Aileron input -> Attitude output']);
-%plot(sysid_data(:, 1:4, 5));   % Plot first input-output pair
 
 
 %%
 
+
+%opt = nlgreyestOptions('Display', 'on', 'SearchMethod', 'fmincon');
+%opt = nlgreyestOptions('SearchMethod', 'lm', 'Display', 'on');
+
+
+%%
+
+function [] = print_parameters(parameters)
+    num_parameters = length(parameters);
+    disp(" ")
+    disp("=== Parameter values ===")
+    for i = 1:num_parameters
+       param_fixed = parameters(i).Fixed;
+       if ~param_fixed
+           param_name = parameters(i).Name;
+           param_value = parameters(i).Value;
+           disp(param_name + " = " + param_value);
+       end
+    end
+end
+
+
+function [nlgr_model] = fix_parameters(parameters_to_fix, nlgr_model)
+    for i = parameters_to_fix
+        nlgr_model.Parameters(i).Fixed = 1;
+    end
+end
+
+function [nlgr_model] = unfix_parameters(parameters_to_fix, nlgr_model)
+    for i = parameters_to_fix
+        nlgr_model.Parameters(i).Fixed = 0;
+    end
+end
 
 function [state, input, t, maneuver_start_indices] = read_experiment_data(metadata)
     num_experiments = length(metadata.Experiments);
@@ -178,13 +141,15 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
         full_input_maneuver = full_input(maneuver_start_index:maneuver_end_index,:);
 
         quat = full_state_maneuver(:,1:4);
+        quat_only_pitch = create_quat_w_only_pitch_movement(quat);
+        
         q = full_state_maneuver(:,6);
         u = full_state_maneuver(:,8);
         w = full_state_maneuver(:,10);
         delta_e = full_input_maneuver(:,6);
         delta_t_fw = full_input_maneuver(:,8);
 
-        state = [quat q u w];
+        state = [quat_only_pitch q u w];
         input = [delta_e delta_t_fw];
 
         % Create sysid data object
@@ -204,7 +169,19 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
     end
 end
 
-function [parameters] = create_lon_parameters()
+
+function [quat_only_pitch] = create_quat_w_only_pitch_movement(quat)
+    eul = quat2eul(quat);
+    roll = eul(:,3);
+    pitch = eul(:,2);
+    yaw = eul(:,1);
+
+    eul_only_pitch = [zeros(size(pitch)) pitch zeros(size(pitch))];
+    quat_only_pitch = eul2quat(eul_only_pitch);
+end
+
+
+function [parameters] = create_lon_parameter_struct()
     aircraft_properties;
     initial_guess_lon;
     approx_zero = eps;
@@ -338,6 +315,26 @@ function [parameters] = create_lon_parameters()
         'Fixed', ParFixed);
 end
 
+function [initial_states] = create_initial_states_struct(data, state_size, experiments_to_use)
+    initial_states_values = {};
+    if length(experiments_to_use) == 1
+       for i = 1:state_size
+           initial_states_values(i) = {data(1,i,:,experiments_to_use).y};
+       end
+    else
+        for i = 1:state_size
+           initial_states_values(i) = {cell2mat(data(1,i,:,experiments_to_use).y)'};
+        end
+    end
+
+    initial_states = struct(...
+        'Name', {'q0', 'q1', 'q2', 'q3', 'q','u', 'w'},...
+        'Unit', {'', '', '', '', 'rad/s', 'm/s', 'm/s'}, ...
+        'Value', initial_states_values, ...
+        'Minimum', -Inf, 'Maximum', Inf, ...
+        'Fixed', true);
+end
+
 function [nlgr] = create_nlgr_object(parameters, initial_states)
     % Create model
     FileName = 'longitudinal_model_c';
@@ -363,4 +360,90 @@ function [nlgr] = create_nlgr_object(parameters, initial_states)
         'InputName', InputName, 'InputUnit', InputUnit, ...
         'OutputName', OutputName, 'OutputUnit', OutputUnit, ...
         'TimeUnit', 's');
+end
+
+function [] = sim_response(experiments_to_use, nlgr_model, data)
+    num_experiments = length(experiments_to_use);
+    if num_experiments == 1
+        exp_i = experiments_to_use;
+        y = sim(nlgr_model, data);
+        predicted_state = y.y;
+        state = data.y;
+        input = data.u;
+        dt = data.Ts;
+        plot_response(exp_i, state, predicted_state, input, dt, true);
+    else
+        for i = 1:num_experiments
+            exp_i = experiments_to_use(i);
+            y = sim(nlgr_model, data);
+            predicted_state = cell2mat(y.y(i));
+            state = cell2mat(data.y(i));
+            input = cell2mat(data.u(i));
+            dt = cell2mat(data.Ts(i));
+            plot_response(exp_i, state, predicted_state, input, dt, true);
+        end
+    end
+end
+
+function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actual_trajectory)
+    tf = length(state) * dt - dt;
+    t = 0:dt:tf;
+        
+    quat = state(:,1:4);
+    eul = quat2eul(quat);
+    quat_pred = predicted_state(:,1:4);
+    eul_pred = quat2eul(quat_pred);
+
+    theta_pred = eul_pred(:,2);
+    q_pred = predicted_state(:,5);
+    u_pred = predicted_state(:,6);
+    w_pred = predicted_state(:,7);
+
+    theta = eul(:,2);
+    q = state(:,5);
+    u = state(:,6);
+    w = state(:,7);
+
+    figure
+    subplot(6,1,1)
+    plot(t, theta_pred); 
+    if plot_actual_trajectory
+        hold on
+        plot(t, theta);
+    end
+    legend("\theta (estimated)", "\theta")
+
+    subplot(6,1,2)
+    plot(t, q_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, q);
+    end
+    legend("q (estimated)", "q")
+
+    subplot(6,1,3)
+    plot(t, u_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, u);
+    end
+    legend("u (estimated)", "u")
+
+    subplot(6,1,4)
+    plot(t, w_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, w);
+    end
+    legend("w (estimated)", "w")
+
+    subplot(6,1,5)
+    plot(t, input(:,1));
+    legend("\delta_e")
+
+    subplot(6,1,6)
+    plot(t, input(:,2));
+    legend("\delta_t")
+    
+    sgtitle("experiment index: " + exp_i)
 end

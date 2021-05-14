@@ -28,14 +28,8 @@ c_n_delta_a = c_n_delta_a * 180 / pi;
 c_n_delta_r = c_n_delta_r * 180 / pi;
 
 % Non-dimensionalize ang rate derivatives
-% TODO: I am not sure if AVL derivatives are nondimensionalized or not
-c_L_q = c_L_q / nondim_constant_lon;
-c_m_q = c_m_q / nondim_constant_lon;
-
-c_l_p = c_l_p / nondim_constant_lat;
-c_l_r = c_l_r / nondim_constant_lat;
-c_n_p = c_n_p / nondim_constant_lat;
-c_n_r = c_n_r / nondim_constant_lat;
+% NOTE: The values from AVL are already dimensionless. See this post:
+% https://www.researchgate.net/post/Does-anyone-know-if-the-derivatives-output-from-AVL-Athena-Vortex-Lattice-are-dimensional-or-dimensionless
 
 % Flip axis to be correct
 % All damping derivatives seem to have the correct sign

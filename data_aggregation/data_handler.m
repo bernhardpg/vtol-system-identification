@@ -166,7 +166,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     output_data = intialize_empty_output_struct();
 
     % Normal maneuver length
-    default_maneuver_padding_s = 0.7;
+    default_maneuver_padding_s = 1;
 
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
@@ -516,7 +516,7 @@ function [maneuver_should_be_aggregated,...
                 [sysid_index - round(default_maneuver_padding_s / dt)...
                 1]);
             maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 3) / dt)...
+                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 2) / dt)...
                 1]);
         % Aggregate maneuver with set start and end time
         else
