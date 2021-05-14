@@ -4,11 +4,12 @@ aircraft_properties;
 c_L_alpha = 4.732;
 c_L_q = 7.375 ;
 c_L_delta_e = 0.00632 ;
+c_D_delta_e = 0.000257; % Trefftz drag
 c_l_p = -0.472;
 c_l_r = 0.141;
 c_l_delta_a = -0.00494;
 c_l_delta_r = 0.000145;
-c_m0 = 0.00970;
+c_m_0 = 0.00970;
 c_m_alpha = -0.974;
 c_m_q = -11.882 ;
 c_m_delta_e = -0.0208;
@@ -19,6 +20,7 @@ c_n_delta_r = 0.0019;
 
 % Convert all control derivatives to rad instead of deg
 c_L_delta_e = c_L_delta_e * 180 / pi;
+c_D_delta_e = c_D_delta_e * 180 / pi;
 c_l_delta_a = c_l_delta_a * 180 / pi;
 c_l_delta_r = c_l_delta_r * 180 / pi;
 c_m_delta_e = c_m_delta_e * 180 / pi;

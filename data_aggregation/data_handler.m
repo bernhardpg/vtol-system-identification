@@ -166,7 +166,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     output_data = intialize_empty_output_struct();
 
     % Normal maneuver length
-    default_maneuver_padding_s = 1.5;
+    default_maneuver_padding_s = 0.7;
 
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
@@ -253,9 +253,11 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
             output_data.(curr_maneuver_metadata.type).c_m = ...
                 [output_data.(curr_maneuver_metadata.type).c_m;
                  c_m_maneuver];
-
+                
+            curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
             output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
-                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices maneuver_start_index];
+                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices...
+                 curr_maneuver_index_in_aggregation_matrix];
             output_data.(curr_maneuver_metadata.type).aggregated_maneuvers = ...
                 [output_data.(curr_maneuver_metadata.type).aggregated_maneuvers i];
             num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
@@ -514,7 +516,7 @@ function [maneuver_should_be_aggregated,...
                 [sysid_index - round(default_maneuver_padding_s / dt)...
                 1]);
             maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 2) / dt)...
+                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 3) / dt)...
                 1]);
         % Aggregate maneuver with set start and end time
         else

@@ -4,4 +4,7 @@
    <FileRef
       location = "group:../model/vtol_linear_c.c">
    </FileRef>
+   <FileRef
+      location = "group:../model/longitudinal_model_c.c">
+   </FileRef>
 </Workspace>
