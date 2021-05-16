@@ -92,10 +92,24 @@ roll_211_no_throttle_indices = np.arange(57, 100)
 yaw_211 = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 yaw_211_no_throttle_indices = np.arange(113, 149)
 
+pitch_211_nt_times = {
+    "11": [0, 0],
+}
+
+
 for i in pitch_211:
     exp2["Maneuvers"][str(i)] = create_maneuver_dict("pitch_211")
-for i in pitch_211_no_throttle_indices:
-    exp2["Maneuvers"][str(i)] = create_maneuver_dict("pitch_211_no_throttle")
+for i in range(len(pitch_211_no_throttle_indices)):
+    if str(i) in pitch_211_nt_times:
+        times = pitch_211_nt_times[str(i)]
+        exp2["Maneuvers"][str(pitch_211_no_throttle_indices[i])] = create_maneuver_dict(
+            "pitch_211_no_throttle", times[0], times[1]
+        )
+    else:
+        exp2["Maneuvers"][str(pitch_211_no_throttle_indices[i])] = create_maneuver_dict(
+            "pitch_211_no_throttle"
+        )
+
 
 for i in roll_211:
     exp2["Maneuvers"][str(i)] = create_maneuver_dict("roll_211")

@@ -5,7 +5,7 @@ metadata = read_metadata(metadata_filename);
 
 % Output data
 save_output_data = true;
-save_plot = false;
+save_plot = true;
 show_plot = false;
 
 % Set common data time resolution

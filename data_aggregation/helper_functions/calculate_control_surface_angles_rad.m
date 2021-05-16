@@ -1,7 +1,7 @@
 function [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = calculate_control_surface_angles_rad(aileron_input, elevator_input, rudder_input)
     % Trim values
     % Found from 2:48-2:52 in '07_12_32.ulg'
-    elevator_trim_px4_input = 0.175;
+    elevator_trim_px4_input = 0.15;
     aileron_trim_px4_input = -0.05;
     rudder_trim_px4_input = 0.1;
     
