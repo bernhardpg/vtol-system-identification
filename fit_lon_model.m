@@ -12,29 +12,52 @@ aircraft_properties;
 % Create ID data from each experiment
 [data] = create_iddata(full_state, full_input, maneuver_start_indices, t);
 
-state_size = 7;
-%% Create nlgr object
+state_size = 8;
+num_experiments = length(data.Experiment);
+
+%% Load previous model
+model_number_to_load = 2;
+model_load_path = "nlgr_models/" + "model_" + model_number_to_load + "/";
+load(model_load_path + "model.mat");
+old_parameters = nlgr_model.Parameters;
+
+%% Create new nlgr object
 %parameters = create_lon_parameter_struct();
 
-experiments_to_use = [1:15];
+% Create model path
+model_number = 2;
+model_path = "nlgr_models/" + "model_" + model_number + "/";
+
+experiments_to_use = [1];
 initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
 
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
-%nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
+[nlgr_model] = load_parameters(nlgr_model, old_parameters);
+
+nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
+
+
 
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
 
-%nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
+%% Estimate NLGR model
+nlgr_model = unfix_parameters([9 10 13 14 15], nlgr_model);
+nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
-print_parameters(parameters);
+print_parameters(nlgr_model.Parameters);
 
 %%
 
 %%
-sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use));
+print_parameters(nlgr_model.Parameters);
+sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
 %compare(data(:,:,:,experiments_to_use), nlgr_model)
+%% Save model
 
+mkdir(model_path)
+save(model_path + "model.mat", 'nlgr_model');
+print_parameters(parameters);
 
 %%
 %nlgr.SimulationOptions.RelTol = 1e-5;
@@ -51,13 +74,23 @@ sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use));
 
 %%
 
+function [nlgr_model] = load_parameters(nlgr_model, params)
+    for i = 1:length(nlgr_model.Parameters)
+        for j = 1:length(params)
+            if strcmp(nlgr_model.Parameters(i).Name, params(j).Name)
+                nlgr_model.Parameters(i).Value = params(j).Value;
+            end
+        end
+    end
+end
+
 function [] = print_parameters(parameters)
     num_parameters = length(parameters);
     disp(" ")
     disp("=== Parameter values ===")
     for i = 1:num_parameters
        param_fixed = parameters(i).Fixed;
-       if ~param_fixed
+       if i > 8
            param_name = parameters(i).Name;
            param_value = parameters(i).Value;
            disp(param_name + " = " + param_value);
@@ -119,7 +152,7 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
     data = iddata('Name', 'Longitudinal data');
 
     % Describe input
-    InputName = {'delta_e','delta_t_fw'};
+    InputName = {'delta_e_sp','delta_t_fw'};
     InputUnit =  {'rad', 'rpm'};
 
     % Describe state (which is equal to output)
@@ -149,11 +182,11 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
         delta_e = full_input_maneuver(:,6);
         delta_t_fw = full_input_maneuver(:,8);
 
-        state = [quat_only_pitch q u w];
+        output = [quat_only_pitch q u w];
         input = [delta_e delta_t_fw];
 
         % Create sysid data object
-        z = iddata(state, input, dt, 'Name', 'Pitch 211 maneuvers');
+        z = iddata(output, input, dt, 'Name', 'Pitch 211 maneuvers');
         z.TimeUnit = 's';
         z.Tstart = 0;
         z.InputName = InputName;
@@ -195,6 +228,7 @@ function [parameters] = create_lon_parameter_struct()
         'nondim_constant_lon', ...
         'lam',				...
         'J_yy' ,            ...
+        'elevator_time_const',...
         'c_L_0',				...
         'c_L_alpha',      	...
         'c_L_q',          	...
@@ -219,6 +253,7 @@ function [parameters] = create_lon_parameter_struct()
         true,... %nondim_constant_lon
         true,... % lam,				...
         true,... % Jyy, ...
+        true,... % elevator_time_const,...
         false,... % c_L_0,				...
         false,... % c_L_alpha,      	...
         false,... % c_L_q,          	...
@@ -243,6 +278,7 @@ function [parameters] = create_lon_parameter_struct()
         -Inf,...
         -Inf,...
         -Inf,...
+        approx_zero,... % elevator_time_const
         approx_zero,... % c_L_0,				...
         approx_zero,... % c_L_alpha,      	...
         approx_zero,... % c_L_q,          	...
@@ -267,6 +303,7 @@ function [parameters] = create_lon_parameter_struct()
         Inf,...
         Inf,...
         Inf,...
+        Inf,... % elevator_time_const
         Inf,... % c_L_0,				...
         Inf,... % c_L_alpha,      	...
         Inf,... % c_L_q,          	...
@@ -291,6 +328,7 @@ function [parameters] = create_lon_parameter_struct()
         nondim_constant_lon, ...
         lam,				...
         Jyy, ...
+        elevator_time_const, ...
         c_L_0,				...
         c_L_alpha,      	...
         c_L_q,          	...
@@ -318,18 +356,23 @@ end
 function [initial_states] = create_initial_states_struct(data, state_size, experiments_to_use)
     initial_states_values = {};
     if length(experiments_to_use) == 1
-       for i = 1:state_size
+       for i = 1:state_size - 1
            initial_states_values(i) = {data(1,i,:,experiments_to_use).y};
        end
+       initial_states_values(8) = {data(1,:,1,experiments_to_use).u};
     else
-        for i = 1:state_size
+        for i = 1:state_size - 1
            initial_states_values(i) = {cell2mat(data(1,i,:,experiments_to_use).y)'};
         end
+        % Load initial conditions for elevator
+        initial_states_values(8) = {cell2mat(data(1,:,1,experiments_to_use).u)'};
     end
+    
+
 
     initial_states = struct(...
-        'Name', {'q0', 'q1', 'q2', 'q3', 'q','u', 'w'},...
-        'Unit', {'', '', '', '', 'rad/s', 'm/s', 'm/s'}, ...
+        'Name', {'q0', 'q1', 'q2', 'q3', 'q','u', 'w','delta_e'},...
+        'Unit', {'', '', '', '', 'rad/s', 'm/s', 'm/s','rad'}, ...
         'Value', initial_states_values, ...
         'Minimum', -Inf, 'Maximum', Inf, ...
         'Fixed', true);
@@ -337,21 +380,19 @@ end
 
 function [nlgr] = create_nlgr_object(parameters, initial_states)
     % Create model
-    FileName = 'longitudinal_model_c';
-    Nx = 7; % number of states
+    FileName = 'longitudinal_model_w_actuator_dynamics_c';
+    Nx = 8; % number of states
     Ny = 7; % number of outputs
     Nu = 2; % number of inputs
     Order = [Ny Nu Nx];
 
     % Describe input
-    InputName = {'delta_e','delta_t_fw'};
+    InputName = {'delta_e_sp','delta_t_fw'};
     InputUnit =  {'rad', 'rpm'};
 
     % Describe state (which is equal to output)
     OutputName = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w'};
     OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
-
-
 
     % Construct nlgr object
     Ts = 0; % Continuous system
@@ -362,7 +403,7 @@ function [nlgr] = create_nlgr_object(parameters, initial_states)
         'TimeUnit', 's');
 end
 
-function [] = sim_response(experiments_to_use, nlgr_model, data)
+function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, save_plots)
     num_experiments = length(experiments_to_use);
     if num_experiments == 1
         exp_i = experiments_to_use;
@@ -371,7 +412,7 @@ function [] = sim_response(experiments_to_use, nlgr_model, data)
         state = data.y;
         input = data.u;
         dt = data.Ts;
-        plot_response(exp_i, state, predicted_state, input, dt, true);
+        plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
     else
         for i = 1:num_experiments
             exp_i = experiments_to_use(i);
@@ -380,12 +421,12 @@ function [] = sim_response(experiments_to_use, nlgr_model, data)
             state = cell2mat(data.y(i));
             input = cell2mat(data.u(i));
             dt = cell2mat(data.Ts(i));
-            plot_response(exp_i, state, predicted_state, input, dt, true);
+            plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
         end
     end
 end
 
-function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actual_trajectory)
+function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actual_trajectory, model_path, save_plots)
     tf = length(state) * dt - dt;
     t = 0:dt:tf;
         
@@ -404,7 +445,8 @@ function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actua
     u = state(:,6);
     w = state(:,7);
 
-    figure
+    fig = figure;
+    fig.Position = [100 100 600 600];
     subplot(6,1,1)
     plot(t, theta_pred); 
     if plot_actual_trajectory
@@ -446,4 +488,12 @@ function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actua
     legend("\delta_t")
     
     sgtitle("experiment index: " + exp_i)
+    
+    if save_plots
+        filename = exp_i + "_long";
+        plot_location = model_path + "plots/";
+        mkdir(plot_location);
+        saveas(fig, plot_location + filename, 'epsc')
+        savefig(plot_location + filename + '.fig')
+    end
 end

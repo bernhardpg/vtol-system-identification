@@ -755,8 +755,8 @@
                     "type": "pitch_211_no_throttle"
                 },
                 "33": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211_no_throttle"
                 },
                 "34": {

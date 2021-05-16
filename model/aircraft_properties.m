@@ -103,3 +103,7 @@ half_rho_planform = 0.5 * rho * planform_sqm; % computed once for efficiency
 V_cruise = 23; % m/s
 nondim_constant_lon = mean_aerodynamic_chord_m / (2 * V_cruise);
 nondim_constant_lat = wingspan_m / (2 * V_cruise);
+
+
+% Control surfaces
+elevator_time_const = 0.064; % see control_surface_time_constant_id.m
