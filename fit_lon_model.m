@@ -25,38 +25,48 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_lon_parameter_struct();
 
 % Create model path
-model_number = 2;
+model_number = 3;
 model_path = "nlgr_models/" + "model_" + model_number + "/";
 
-experiments_to_use = [1];
+experiments_to_use = [1:5];
 initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
 
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
-[nlgr_model] = load_parameters(nlgr_model, old_parameters);
+%[nlgr_model] = load_parameters(nlgr_model, old_parameters);
 
 nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
 
 
-
+%%
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
 
+weight = diag(ones(7,1));
+weight(1,1) = 0;
+weight(2,2) = 0;
+weight(3,3) = 0;
+weight(4,4) = 0;
+weight(5,5) = 10;
+opt.OutputWeight = weight;
+
 %% Estimate NLGR model
-nlgr_model = unfix_parameters([9 10 13 14 15], nlgr_model);
+%nlgr_model = unfix_parameters([9 10 13 14 15], nlgr_model);
 nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
 print_parameters(nlgr_model.Parameters);
 
-%%
 
 %%
 print_parameters(nlgr_model.Parameters);
-sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
+compare(nlgr_model, data(:,:,:,3));
+%sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
 %compare(data(:,:,:,experiments_to_use), nlgr_model)
 %% Save model
 
 mkdir(model_path)
 save(model_path + "model.mat", 'nlgr_model');
+
+%%
 print_parameters(parameters);
 
 %%

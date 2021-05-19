@@ -5,7 +5,7 @@ metadata = read_metadata(metadata_filename);
 
 % Output data
 save_output_data = true;
-save_plot = true;
+save_plot = false;
 show_plot = false;
 
 % Set common data time resolution
@@ -561,7 +561,7 @@ function [t, state, input] = read_state_and_input_from_log(csv_log_file_location
     actuator_controls_fw = readtable(csv_log_file_location + '_' + "actuator_controls_1_0" + ".csv");
     
     %%%
-    % Common time vector
+    % Create common time vector
     
     t0 = ekf_data.timestamp(1) / 1e6;
     t_end = ekf_data.timestamp(end) / 1e6;
@@ -571,8 +571,11 @@ function [t, state, input] = read_state_and_input_from_log(csv_log_file_location
     
     %%%
     % Extract data from ekf2
+    % NOTE: EKF2 runs at a delayed time horizon, determined by the largest
+    % EKF2_*_DELAY parameter. This is currently set to 175 ms.
+    ekf2_delay_s = 0.175;
 
-    t_ekf = ekf_data.timestamp / 1e6;
+    t_ekf = ekf_data.timestamp / 1e6 - ekf2_delay_s;
 
     % q_NB = unit quaternion describing vector rotation from NED to Body. i.e.
     % describes transformation from Body to NED frame.
