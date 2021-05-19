@@ -106,3 +106,22 @@ nondim_constant_lat = wingspan_m / (2 * V_cruise);
 % Servos
 servo_time_const = 0.026; % see control_surface_time_constant_id.m
 servo_rate_lim_rad_s = 230 / 180 * pi; % see control_surface_time_constant_id.m
+
+% Control surfaces
+elevator_trim_px4_input = 0.15;
+aileron_trim_px4_input = -0.05;
+rudder_trim_px4_input = 0.1;
+
+aileron_input_to_aileron_deg = 28.171; % See control_surface_scaling.m
+% NOTE: Signs are flipped to comply with standard aviation notation, as
+% in Beard & McClain
+elevator_input_to_tail_deg = -65.661; % See control_surface_scaling.m
+rudder_input_to_tail_deg = -57.454; % See control_surface_scaling.m
+
+elevator_trim_deg = elevator_trim_px4_input * elevator_input_to_tail_deg;
+aileron_trim_deg = aileron_trim_px4_input * aileron_input_to_aileron_deg;
+rudder_trim_deg = rudder_trim_px4_input * rudder_input_to_tail_deg;
+
+elevator_trim_rad = deg2rad(elevator_trim_deg);
+aileron_trim_rad = deg2rad(aileron_trim_deg);
+rudder_trim_rad = deg2rad(rudder_trim_deg);

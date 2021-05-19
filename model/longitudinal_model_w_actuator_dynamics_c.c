@@ -87,28 +87,31 @@ void compute_dx(
 		servo_time_const = p[8];
 		servo_rate_lim = p[9];
 
+		double *elevator_trim;
+		elevator_trim = p[10];
+
     // ********
     // Parameters
     // ********
 
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[10];
-    c_L_alpha = p[11];
-    c_L_q = p[12];
-    c_L_delta_e = p[13];
+    c_L_0 = p[11];
+    c_L_alpha = p[12];
+    c_L_q = p[13];
+    c_L_delta_e = p[14];
 
     double *c_D_p, *c_D_alpha, *c_D_alpha_sq, *c_D_q, *c_D_delta_e; // Drag parameters
-    c_D_p = p[14];
-    c_D_alpha = p[15];
-    c_D_alpha_sq = p[16];
-    c_D_q = p[17];
-    c_D_delta_e = p[18];
+    c_D_p = p[15];
+    c_D_alpha = p[16];
+    c_D_alpha_sq = p[17];
+    c_D_q = p[18];
+    c_D_delta_e = p[19];
 
     double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[19];
-    c_m_alpha = p[20];
-    c_m_q = p[21];
-    c_m_delta_e = p[22];
+    c_m_0 = p[20];
+    c_m_alpha = p[21];
+    c_m_q = p[22];
+    c_m_delta_e = p[23];
 
     // *******
     // State and input

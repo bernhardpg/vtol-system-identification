@@ -1,14 +1,15 @@
 function [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = calculate_control_surface_angles_rad(aileron_input, elevator_input, rudder_input)
     % Trim values
-    % Found from 2:48-2:52 in '07_12_32.ulg'
-    elevator_trim_px4_input = 0.15;
-    aileron_trim_px4_input = -0.05;
-    rudder_trim_px4_input = 0.1;
-    
-    % Subtract trim values from input signals
-    elevator_input_wo_trim = elevator_input - elevator_trim_px4_input;
-    aileron_input_wo_trim = aileron_input - aileron_trim_px4_input;
-    rudder_input_wo_trim = rudder_input - rudder_trim_px4_input;
+    % Calculate this in model instead
+%     % Found from 2:48-2:52 in '07_12_32.ulg'
+%     elevator_trim_px4_input = 0.15;
+%     aileron_trim_px4_input = -0.05;
+%     rudder_trim_px4_input = 0.1;
+%     
+%     % Subtract trim values from input signals
+%     elevator_input_wo_trim = elevator_input - elevator_trim_px4_input;
+%     aileron_input_wo_trim = aileron_input - aileron_trim_px4_input;
+%     rudder_input_wo_trim = rudder_input - rudder_trim_px4_input;
 
     % Control surfaces
     aileron_input_to_aileron_deg = 28.171; % See control_surface_scaling.m
@@ -28,13 +29,13 @@ function [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = calculate_c
     % Convert input signals to degrees
     % Makes the assumption that the elevator and rudder can be controlled individually.
     aileron_angle_deg = bound(...
-        aileron_input_wo_trim .* aileron_input_to_aileron_deg,...
+        aileron_input .* aileron_input_to_aileron_deg,...
         -max_aileron_angle_deg, max_aileron_angle_deg);
     elevator_angle_deg = bound(...
-        elevator_input_wo_trim .* elevator_input_to_tail_deg,...
+        elevator_input .* elevator_input_to_tail_deg,...
         -max_elevator_angle_deg, max_elevator_angle_deg);
     rudder_angle_deg = bound(...
-        rudder_input_wo_trim .* rudder_input_to_tail_deg,...
+        rudder_input .* rudder_input_to_tail_deg,...
         -max_rudder_angle_deg, max_rudder_angle_deg);
     
     % Convert degrees to radians

@@ -16,7 +16,7 @@ state_size = 8;
 num_experiments = length(data.Experiment);
 
 %% Load previous model
-model_number_to_load = 2;
+model_number_to_load = 3;
 model_load_path = "nlgr_models/" + "model_" + model_number_to_load + "/";
 load(model_load_path + "model.mat");
 old_parameters = nlgr_model.Parameters;
@@ -25,16 +25,16 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_lon_parameter_struct();
 
 % Create model path
-model_number = 3;
+model_number = 4;
 model_path = "nlgr_models/" + "model_" + model_number + "/";
 
-experiments_to_use = [1:5];
+experiments_to_use = [6:10];
 initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
 
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
-%[nlgr_model] = load_parameters(nlgr_model, old_parameters);
+[nlgr_model] = load_parameters(nlgr_model, old_parameters);
 
-nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
+%nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
 
 
 %%
@@ -46,11 +46,10 @@ weight(1,1) = 0;
 weight(2,2) = 0;
 weight(3,3) = 0;
 weight(4,4) = 0;
-weight(5,5) = 10;
+weight(5,5) = 1;
 opt.OutputWeight = weight;
 
 %% Estimate NLGR model
-%nlgr_model = unfix_parameters([9 10 13 14 15], nlgr_model);
 nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
 print_parameters(nlgr_model.Parameters);
@@ -58,8 +57,8 @@ print_parameters(nlgr_model.Parameters);
 
 %%
 print_parameters(nlgr_model.Parameters);
-compare(nlgr_model, data(:,:,:,3));
-%sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
+%compare(nlgr_model, data(:,:,:,3));
+sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
 %compare(data(:,:,:,experiments_to_use), nlgr_model)
 %% Save model
 
@@ -67,7 +66,7 @@ mkdir(model_path)
 save(model_path + "model.mat", 'nlgr_model');
 
 %%
-print_parameters(parameters);
+print_parameters(nlgr_model.Parameters);
 
 %%
 %nlgr.SimulationOptions.RelTol = 1e-5;
@@ -240,6 +239,7 @@ function [parameters] = create_lon_parameter_struct()
         'J_yy' ,            ...
         'servo_time_constant',...
         'servo_rate_lim_rad_s',...
+        'elevator_trim_rad',...
         'c_L_0',				...
         'c_L_alpha',      	...
         'c_L_q',          	...
@@ -266,6 +266,7 @@ function [parameters] = create_lon_parameter_struct()
         true,... % Jyy, ...
         true,... % servo_time_const,...
         true,... % servo_rate_lim_rad_s,...
+        true,... % elevator_trim_rad
         false,... % c_L_0,				...
         false,... % c_L_alpha,      	...
         false,... % c_L_q,          	...
@@ -291,7 +292,8 @@ function [parameters] = create_lon_parameter_struct()
         -Inf,...
         -Inf,...
         approx_zero,... % servo_time_const
-        servo_rate_lim_rad_s,... % servo_time_const
+        approx_zero,... % servo_time_const
+        -Inf,... % elevator_trim_rad
         approx_zero,... % c_L_0,				...
         approx_zero,... % c_L_alpha,      	...
         approx_zero,... % c_L_q,          	...
@@ -318,6 +320,7 @@ function [parameters] = create_lon_parameter_struct()
         Inf,...
         Inf,... % servo_time_const
         Inf,... % servo_rate_lim_rad_s
+        Inf,... % elevator_trim_rad
         Inf,... % c_L_0,				...
         Inf,... % c_L_alpha,      	...
         Inf,... % c_L_q,          	...
@@ -344,6 +347,7 @@ function [parameters] = create_lon_parameter_struct()
         Jyy, ...
         servo_time_const, ...
         servo_rate_lim_rad_s,...
+        elevator_trim_rad,...
         c_L_0,				...
         c_L_alpha,      	...
         c_L_q,          	...
