@@ -98,12 +98,11 @@ rho_diam_top_pwr_five = rho * prop_diam_top ^ 5; % computed once for efficiency
 rho_diam_pusher_pwr_five = rho * prop_diam_pusher ^ 5; % computed once for efficiency
 half_rho_planform = 0.5 * rho * planform_sqm; % computed once for efficiency
 
-
 % Cruise conditions
 V_cruise = 23; % m/s
 nondim_constant_lon = mean_aerodynamic_chord_m / (2 * V_cruise);
 nondim_constant_lat = wingspan_m / (2 * V_cruise);
 
-
-% Control surfaces
-elevator_time_const = 0.064; % see control_surface_time_constant_id.m
+% Servos
+servo_time_const = 0.026; % see control_surface_time_constant_id.m
+servo_rate_lim_rad_s = 230 / 180 * pi; % see control_surface_time_constant_id.m

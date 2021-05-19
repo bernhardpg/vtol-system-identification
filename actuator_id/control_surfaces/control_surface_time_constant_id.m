@@ -40,7 +40,7 @@ for i = 1:length(experiment_names)
     title(filename + " Tc = " + time_constant);
 end
 
-%% Simulate model
+%% Find time constant and rate limit heuristically
 % Load experiment
 exp_number = 6;
 [t, angle_deg, max_deflection] = load_data(exp_number);
@@ -51,8 +51,8 @@ u = max_deflection;
 
 delta_e_0 = 0;
 tspan = [0 0.5];
-T = 0.026;
-rate_lim_deg_s = 230;
+T = 0.026; % Found by comparing with experiments
+rate_lim_deg_s = 230; % From manufactorer: 429 deg/s without load.
 [t,y] = ode45(@(t,y) f(t,y,u,rate_lim_deg_s,T), tspan, delta_e_0);
 plot(t,y);
 

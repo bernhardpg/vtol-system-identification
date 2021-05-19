@@ -32,6 +32,16 @@
 
 /* Specify the number of outputs here. */
 #define NY 7
+// Taken from this page: https://stackoverflow.com/questions/3437404/min-and-max-in-c
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+#define bound(x,bl,bu) (min(max(x,bl),bu))
 
 /* State equations. */
 void compute_dx(
@@ -73,31 +83,32 @@ void compute_dx(
     lam = p[6]; // Vector of 8 elements
 		J_yy = p[7];
 
-		double *elevator_time_const;
-		elevator_time_const = p[8];
+		double *servo_time_const, *servo_rate_lim;
+		servo_time_const = p[8];
+		servo_rate_lim = p[9];
 
     // ********
     // Parameters
     // ********
 
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[9];
-    c_L_alpha = p[10];
-    c_L_q = p[11];
-    c_L_delta_e = p[12];
+    c_L_0 = p[10];
+    c_L_alpha = p[11];
+    c_L_q = p[12];
+    c_L_delta_e = p[13];
 
     double *c_D_p, *c_D_alpha, *c_D_alpha_sq, *c_D_q, *c_D_delta_e; // Drag parameters
-    c_D_p = p[13];
-    c_D_alpha = p[14];
-    c_D_alpha_sq = p[15];
-    c_D_q = p[16];
-    c_D_delta_e = p[17];
+    c_D_p = p[14];
+    c_D_alpha = p[15];
+    c_D_alpha_sq = p[16];
+    c_D_q = p[17];
+    c_D_delta_e = p[18];
 
     double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[18];
-    c_m_alpha = p[19];
-    c_m_q = p[20];
-    c_m_delta_e = p[21];
+    c_m_0 = p[19];
+    c_m_alpha = p[20];
+    c_m_q = p[21];
+    c_m_delta_e = p[22];
 
     // *******
     // State and input
@@ -207,7 +218,7 @@ void compute_dx(
 
 		// NOTE: Elevator is not an output, as it is not measured
 		double delta_e_dot;
-		delta_e_dot = -1 / elevator_time_const[0] * delta_e + 1 / elevator_time_const[0] * delta_e_sp;
+		delta_e_dot = bound(-1 / servo_time_const[0] * delta_e + 1 / servo_time_const[0] * delta_e_sp, -servo_rate_lim[0], servo_rate_lim[0]);
 
     dx[7] = delta_e_dot;
 }
