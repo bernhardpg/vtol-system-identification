@@ -18,102 +18,6 @@ end
 
 %% Functions
 
-function [] = plot_single_maneuver(experiment, maneuver_i, dt)
-    show_plot = true;
-    save_plot = false;
-
-    log_file = experiment.LogName;
-    maneuver_metadata = experiment.Maneuvers;
-    num_maneuvers = length(fieldnames(maneuver_metadata));
-    
-    csv_files_location = "data/log_files/csv/";
-    csv_log_file_location = csv_files_location + log_file;
-
-    % Load aircraft parameters
-    aircraft_properties;
-
-    % Read state and input data
-    [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt);
-    q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
-    
-    % Read accelerations
-    [acc_B_unfiltered, acc_B_raw, t_acc_raw, bias_acc] = read_accelerations(csv_log_file_location, t);
-    [ang_acc_unfiltered, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t);
-
-    
-    % Cutoff frequency for acceleration data
-    f_cutoff_lin_acc = 25;
-    f_cutoff_ang_acc = 10;
-
-    % Process acceleration data
-    acc_B = filter_accelerations(t, dt, acc_B_raw, t_acc_raw, f_cutoff_lin_acc);
-    ang_acc = filter_accelerations(t, dt, ang_acc_raw, t_ang_acc, f_cutoff_ang_acc);
-    
-    % Calculate acceleration data in NED frame
-    acc_N = calculate_acc_N(acc_B, q_NB);
-
-    % Calculate Angle of Attack
-    AoA_rad = atan2(v_B(:,3),v_B(:,1));
-    AoA_deg = rad2deg(AoA_rad);
-
-    % Calculate lift and drag
-    v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
-    [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
-    
-    % Calculate pitch moment
-    [c_m, Tau_y] = calculate_pitch_moment(state, v_A, ang_acc, lam_5, lam_6, Jyy, rho);
-    
-    % Get system identification maneuvers
-    sysid_indices = get_sysid_indices(csv_log_file_location, t);
-
-    % Normal maneuver length
-    default_maneuver_padding_s = 1;
-    maneuver_length_s = 6;
-    
-    i = maneuver_i;
-    % Read maneuver metadata
-    curr_maneuver_name = "x" + string(i);
-    curr_maneuver_metadata = maneuver_metadata.(curr_maneuver_name);
-
-    [maneuver_should_be_aggregated,...
-        maneuver_start_index,...
-        maneuver_end_index] = read_maneuver_metadata(...
-            curr_maneuver_metadata, default_maneuver_padding_s, t, dt, sysid_indices(i), maneuver_length_s ...
-        );
-
-    % Extract maneuver data
-    t_maneuver = t(maneuver_start_index:maneuver_end_index)';
-    state_maneuver = state(maneuver_start_index:maneuver_end_index,:);
-    input_maneuver = input(maneuver_start_index:maneuver_end_index,:);
-    AoA_deg_maneuver = AoA_deg(maneuver_start_index:maneuver_end_index);
-    AoA_rad_maneuver = AoA_rad(maneuver_start_index:maneuver_end_index);
-    acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
-    acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
-    acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
-    bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
-    ang_acc_maneuver = ang_acc(maneuver_start_index:maneuver_end_index,:);
-    ang_acc_unfiltered_maneuver = ang_acc_unfiltered(maneuver_start_index:maneuver_end_index,:);
-    L_maneuver = L(maneuver_start_index:maneuver_end_index);
-    D_maneuver = D(maneuver_start_index:maneuver_end_index);
-    Tau_y_maneuver = Tau_y(maneuver_start_index:maneuver_end_index);
-    c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
-    c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
-    c_m_maneuver = c_m(maneuver_start_index:maneuver_end_index);
-
-    plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, "");
-    plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-        AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-        acc_N_maneuver, show_plot, save_plot, "");
-    plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, "");
-    scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, "");
-end
-
-
-
 function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot, show_plot)
     log_file = experiment.LogName;
     maneuver_metadata = experiment.Maneuvers;
@@ -134,16 +38,15 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     u_fw = input(:,5:8);
     
     % Read accelerations
-    [acc_B_unfiltered, acc_B_raw, t_acc_raw, bias_acc] = read_accelerations(csv_log_file_location, t);
+    %[acc_B, acc_B_unfiltered] = read_accelerations_B(csv_log_file_location, t, state, input);
+    [acc_B] = differentiate_vel(dt, t, state);
+    acc_B_unfiltered = zeros(size(acc_B));
+    
+    % TODO: Angular acc data processing is horrible. Fix this!
     [ang_acc_unfiltered, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t);
-
-    % Cutoff frequency for acceleration data
-    f_cutoff_lin_acc = 25;
     f_cutoff_ang_acc = 1000;
-
-    % Process acceleration data
-    acc_B = filter_accelerations(t, dt, acc_B_raw, t_acc_raw, f_cutoff_lin_acc);
-    ang_acc = filter_accelerations(t, dt, ang_acc_raw, t_ang_acc, f_cutoff_ang_acc);
+    %ang_acc = filter_accelerations(t, dt, ang_acc_raw, t_ang_acc, f_cutoff_ang_acc);
+    ang_acc = ang_acc_unfiltered;
     
     % Calculate acceleration data in NED frame
     acc_N = calculate_acc_N(acc_B, q_NB);
@@ -154,6 +57,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
 
     % Calculate lift and drag
     v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
+    % TODO: Cont. here. Function needs to be updated
     [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
     
     % Calculate pitch moment
@@ -192,7 +96,6 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
         acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
         acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
-        bias_acc_maneuver = bias_acc(maneuver_start_index:maneuver_end_index);
         ang_acc_maneuver = ang_acc(maneuver_start_index:maneuver_end_index,:);
         ang_acc_unfiltered_maneuver = ang_acc_unfiltered(maneuver_start_index:maneuver_end_index,:);
         L_maneuver = L(maneuver_start_index:maneuver_end_index);
@@ -214,14 +117,14 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
             end
             
             if curr_maneuver_metadata.type == "sweep"
-                continue % TODO: For now, don't generate plot or aggregate data for sweep maneuvers
-                if false
-                    plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
-                        AoA_deg_maneuver, acc_B_unfiltered_maneuver, acc_B_maneuver, bias_acc_maneuver,...
-                        acc_N_maneuver, show_plot, save_plot, plot_output_location);
-                    plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, bias_acc_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
-                    scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
-                end
+                %continue % TODO: For now, don't generate plot or aggregate data for sweep maneuvers
+                plot_trajectory_static_details(i, t_maneuver, state_maneuver, input_maneuver,...
+                    AoA_deg_maneuver, L_maneuver, D_maneuver,...
+                    acc_N_maneuver, show_plot, save_plot, plot_output_location);
+                plot_accelerations(i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+                scatter_static_curves(i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
+            else % do not generatep plots for 2-1-1 maneuvers for now
+                continue
             end
             plot_trajectory(i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
             
@@ -768,58 +671,139 @@ end
 
 
 
-function [acc_B, acc_B_raw, t_acc, bias_acc] = read_accelerations(csv_log_file_location, t)
+function [acc_B, acc_B_unfiltered] = read_accelerations_B(csv_log_file_location, t, state, input)
     % Load data
     sensor_combined = readtable(csv_log_file_location + '_' + "sensor_combined_0" + ".csv");
     sensor_bias = readtable(csv_log_file_location + '_' + "estimator_sensor_bias_0" + ".csv");
 
     % Read raw sensor data
     t_acc = sensor_combined.timestamp / 1e6;
-    acc_B_raw = [sensor_combined.accelerometer_m_s2_0_ sensor_combined.accelerometer_m_s2_1_ sensor_combined.accelerometer_m_s2_2_];
+    acc_meas_raw = [sensor_combined.accelerometer_m_s2_0_ sensor_combined.accelerometer_m_s2_1_ sensor_combined.accelerometer_m_s2_2_];
 
-    % Check if significant bias
-    t_sensor_bias = sensor_bias.timestamp / 1e6;
-    bias_acc_raw = [sensor_bias.accel_bias_0_ sensor_bias.accel_bias_1_ sensor_bias.accel_bias_2_];
-    bias_acc = interp1q(t_sensor_bias, bias_acc_raw, t');
+%     % Check if significant bias
+%     t_sensor_bias = sensor_bias.timestamp / 1e6;
+%     bias_acc_raw = [sensor_bias.accel_bias_0_ sensor_bias.accel_bias_1_ sensor_bias.accel_bias_2_];
+%     bias_acc = interp1q(t_sensor_bias, bias_acc_raw, t');
 
-    if 0
-        figure
-        subplot(2,1,1)
-        plot(t, acc_B(:,1)); hold on
-        plot(t, bias_acc(:,1));
-        legend('acc x','bias')
-
-        subplot(2,1,2)
-        plot(t, acc_B(:,3)); hold on
-        plot(t, bias_acc(:,3));
-        legend('acc z','bias')
-    end
+    % Filter accelerations
+    f_cutoff_hz = 25;
+    acc_meas_filtered_raw = filter_accelerations(acc_meas_raw, t_acc, f_cutoff_hz);
 
     % Fuse to common time horizon
-    acc_B = interp1q(t_acc, acc_B_raw, t');
+    acc_meas_filtered = interp1q(t_acc, acc_meas_filtered_raw, t');
+    acc_meas_unfiltered = interp1q(t_acc, acc_meas_raw, t');
+    
+    % Calculate total acceleration in body frame
+    acc_B = calc_acc_body(t, state, input, acc_meas_filtered);
+    acc_B_unfiltered = calc_acc_body(t, state, input, acc_meas_unfiltered); 
 end
 
-function [acc_filtered] = filter_accelerations(t, dt, acc_raw, t_acc_raw, f_cutoff)
+
+function [acc_B] = differentiate_vel(dt, t, state)
+    v_B = state(:,8:10);
+    Fs = 1 / dt;
+    %pwelch(rmmissing(v_B),[],[],[],Fs);
+    
+    Nf = 50; 
+    Fpass = 10; 
+    Fstop = 12.5;
+    
+    % From this source:
+    % https://se.mathworks.com/help/signal/ug/take-derivatives-of-a-signal.html#:~:text=You%20want%20to%20differentiate%20a,use%20a%20differentiator%20filter%20instead.
+
+    d = designfilt('differentiatorfir','FilterOrder',Nf, ...
+        'PassbandFrequency',Fpass,'StopbandFrequency',Fstop, ...
+        'SampleRate',Fs);
+
+    %fvtool(d,'MagnitudeDisplay','zero-phase','Fs',Fs)
+    
+    dv_Bdt = filter(d, v_B) / dt;
+    
+    % Filtered signal is delayed, find this delay
+    filter_delay = mean(grpdelay(d));
+    
+    % Compensate for delay by discarding samples
+    % Shift signal delay forward
+    acc_B = [dv_Bdt(filter_delay+1:end,:);
+             zeros(filter_delay,3)];
+         
+    % For now, do not care about transient
+    
+%     [pkp,lcp] = findpeaks(v_B);
+%     zcp = zeros(size(lcp));
+% 
+%     [pkm,lcm] = findpeaks(-v_B);
+%     zcm = zeros(size(lcm));
+
+%     subplot(2,1,1)
+%     plot(t,v_B,t(lcp),pkp,'or',t(lcm),-pkm,'or')
+%     xlabel('Time (s)')
+%     ylabel('Displacement (cm)')
+%     grid
+% 
+%     subplot(2,1,2)
+%     plot(tt,vd,t(lcp),zcp,'or',t(lcm),zcm,'or')
+%     xlabel('Time (s)')
+%     ylabel('Speed (cm/s)')
+%     grid
+
+end
+
+function [acc_B] = calc_acc_body(t, state, input, acc_meas)
+    aircraft_properties; % Import g
+
+    % Read data
+    N = length(state);
+    q_NB = state(:,1:4);
+    w_B = state(:,5:7);
+    v_B = state(:,8:10);
+    u_mr = input(:,1:4);
+    u_fw = input(:,5:8);
+    
+    % Create rotation matrices
+    q_BN = quatinv(q_NB);
+    R_BN = quat2rotm(q_BN);
+    eul = quat2eul(q_NB);
+    
+    % Extract acceleration without graviational component
+    % (accelerometers always measure the gravitational acceleration)
+
+    % Calculate gravitational force in measurement frame
+    g_N = [0; 0; g]; % NED frame
+    g_M = zeros(N,3); % Measurement frame
+    R_MB = diag([1 -1 -1]); % Accelerometer measures in ENU body frame
+    R_BM = inv(R_MB); % NOTE not really needed, but kept for clarity.
+    for i = 1:N
+       g_M(i,:) = R_MB * R_BN(:,:,i) * g_N;
+    end
+    
+    acc_M = acc_meas - g_M;
+    
+    % Rotate acc to body frame
+    acc_B = zeros(N,3);
+    for i = 1:N
+       acc_B(i,:) = R_BM * acc_M(i,:)';
+    end
+end
+
+function [acc_filtered] = filter_accelerations(acc, t_acc, f_cutoff)
     % Filter data
     T_c = 1/f_cutoff;
-    temp = filloutliers(t_acc_raw(2:end) - t_acc_raw(1:end-1), 'linear');
+    temp = filloutliers(t_acc(2:end) - t_acc(1:end-1), 'linear');
     dt_acc = mean(temp);
     alpha = dt_acc / (T_c + dt_acc);
 
-    acc_raw_filtered = zeros(size(acc_raw));
-    acc_raw_filtered(1,:) = acc_raw(1,:);
-    for i = 2:length(acc_raw)
-       acc_raw_filtered(i,:) = alpha * acc_raw(i,:) + (1 - alpha) * acc_raw_filtered(i-1,:);
+    acc_filtered = zeros(size(acc));
+    acc_filtered(1,:) = acc(1,:);
+    for i = 2:length(acc)
+       acc_filtered(i,:) = alpha * acc(i,:) + (1 - alpha) * acc_filtered(i-1,:);
     end
 
     % Frequency analysis
     if 0
-        plot_fft(acc_raw, dt);
-        plot_fft(acc_raw_filtered, dt);
+        plot_fft(acc, dt);
+        plot_fft(acc_filtered, dt);
     end
-
-    % Fuse to common time horizon
-    acc_filtered = interp1q(t_acc_raw, acc_raw_filtered, t');
 end
 
 function [] = differentiate_signal()
@@ -1019,7 +1003,7 @@ function [] = plot_trajectory(maneuver_index, t, state, input, show_plot, save_p
 end
 
 function [] = plot_trajectory_static_details(maneuver_index, t, state, input, AoA, ...
-    acc_B, acc_B_filtered, bias_acc, acc_N, ...
+    L, D, acc_N, ...
     show_plot, save_plot, plot_output_location)
     
 % Figure details
@@ -1052,18 +1036,14 @@ function [] = plot_trajectory_static_details(maneuver_index, t, state, input, Ao
     title("Airspeed (assuming no wind)")
 
     subplot(num_plots,1,3);
-    plot(t, acc_B(:,1)); hold on
-    plot(t, acc_B_filtered(:,1)); hold on
-    plot(t, bias_acc(:,1));
-    legend('acc B', 'acc B filtered', 'bias');
-    title("a_x")
+    plot(t, L);
+    legend('L');
+    title("Lift")
 
     subplot(num_plots,1,4);
-    plot(t, acc_B(:,3)); hold on
-    plot(t, acc_B_filtered(:,3));
-    plot(t, bias_acc(:,3));
-    legend('acc B', 'acc B filtered', 'bias');
-    title("a_z")
+    plot(t, D);
+    legend('D');
+    title("Drag")
 
     subplot(num_plots,1,5);
     g = 9.81;
@@ -1080,7 +1060,7 @@ function [] = plot_trajectory_static_details(maneuver_index, t, state, input, Ao
     end
 end
 
-function [] = plot_accelerations(maneuver_index, t, acc_B, acc_B_unfiltered, bias_acc, ang_acc, ang_acc_unfiltered, show_plot, save_plot, plot_output_location)
+function [] = plot_accelerations(maneuver_index, t, acc_B, acc_B_unfiltered, ang_acc, ang_acc_unfiltered, show_plot, save_plot, plot_output_location)
     % Figure details
     fig = figure; 
     if ~show_plot
@@ -1092,22 +1072,19 @@ function [] = plot_accelerations(maneuver_index, t, acc_B, acc_B_unfiltered, bia
     subplot(num_plots,1,1);
     plot(t, acc_B_unfiltered(:,1)); hold on
     plot(t, acc_B(:,1)); hold on
-    plot(t, bias_acc(:,1));
-    legend('a_x', 'a_x (filtered)', 'bias');
+    legend('a_x', 'a_x (filtered)');
     title("Linear acceleration")
     
     subplot(num_plots,1,2);
     plot(t, acc_B_unfiltered(:,2)); hold on
     plot(t, acc_B(:,2)); hold on
-    plot(t, bias_acc(:,2));
-    legend('a_y', 'a_y (filtered)', 'bias');
+    legend('a_y', 'a_y (filtered)');
     title("Linear acceleration")
     
     subplot(num_plots,1,3);
     plot(t, acc_B_unfiltered(:,3)); hold on
     plot(t, acc_B(:,3)); hold on
-    plot(t, bias_acc(:,3));
-    legend('a_z', 'a_z (filtered)', 'bias');
+    legend('a_z', 'a_z (filtered)');
     title("Linear acceleration")
 
     subplot(num_plots,1,4);

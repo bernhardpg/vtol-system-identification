@@ -27,14 +27,14 @@ scatter_drag(AoA_rad, c_D, q);
 scatter_pitch_moment(AoA_rad, c_m, q);
 
 %% Fift lift and drag as a function of AoA and q
-[c_L0, c_Lalpha, c_Lq] = calculate_lift_curve(AoA_rad, c_L, q, nondim_constant_long);
-[c_Dp, c_Dalpha, c_Dq] = calculate_drag_curve(AoA_rad, c_D, q, nondim_constant_long);
+[c_L_0, c_L_alpha, c_L_q] = calculate_lift_curve(AoA_rad, c_L, q, nondim_constant_lon)
+[c_D_p, c_D_alpha_sq, c_D_q] = calculate_drag_curve(AoA_rad, c_D, q, nondim_constant_lon)
 
-plot_lift_surface(c_L0, c_Lalpha, c_Lq, AoA_deg, q, c_L, nondim_constant_long)
-plot_drag_surface(c_Dp, c_Dalpha, c_Dq, AoA_deg, q, c_D, nondim_constant_long)
+plot_lift_surface(c_L_0, c_L_alpha, c_L_q, AoA_deg, q, c_L, nondim_constant_lon)
+plot_drag_surface(c_D_p, c_D_alpha_sq, c_D_q, AoA_deg, q, c_D, nondim_constant_lon)
 
-c_L_estimated = c_L0 + c_Lalpha .* AoA_rad + c_Lq * nondim_constant_long .* q;
-c_D_estimated = c_Dp + c_Dalpha * AoA_rad .^2 + c_Dq * nondim_constant_long .* q;
+c_L_estimated = c_L_0 + c_L_alpha .* AoA_rad + c_L_q * nondim_constant_lon .* q;
+c_D_estimated = c_D_p + c_D_alpha_sq * AoA_rad .^2 + c_D_q * nondim_constant_lon .* q;
 
 c_L_rmse = calculate_rmse(c_L, c_L_estimated)
 c_L_r_sq = calculate_r_sq(c_L, c_L_estimated)
@@ -43,27 +43,47 @@ c_D_r_sq = calculate_r_sq(c_D, c_D_estimated)
 
 %print_results(c_L0, c_Lalpha, c_Lq, c_Dp, c_Dalpha, c_Dq);
 
+%% Add linear term to drag for comparison
+[c_L_0, c_L_alpha, c_L_q] = calculate_lift_curve(AoA_rad, c_L, q, nondim_constant_lon);
+[c_D_p, c_Dalpha, c_D_alpha_sq, c_D_q] = calculate_drag_curve_quadratic(AoA_rad, c_D, q, nondim_constant_lon);
+
+plot_lift_surface(c_L_0, c_L_alpha, c_L_q, AoA_deg, q, c_L, nondim_constant_lon)
+plot_drag_surface_w_linear_term(c_D_p, c_Dalpha, c_D_alpha_sq, c_D_q, AoA_deg, q, c_D, nondim_constant_lon)
+
+c_L_estimated = c_L_0 + c_L_alpha .* AoA_rad + c_L_q * nondim_constant_lon .* q;
+c_D_estimated = c_D_p + c_Dalpha * AoA_rad + c_D_alpha_sq * AoA_rad .^2 + c_D_q * nondim_constant_lon .* q;
+
+c_L_rmse = calculate_rmse(c_L, c_L_estimated)
+c_L_r_sq = calculate_r_sq(c_L, c_L_estimated)
+c_D_rmse = calculate_rmse(c_D, c_D_estimated)
+c_D_r_sq = calculate_r_sq(c_D, c_D_estimated)
+
+%print_results(c_L0, c_Lalpha, c_Lq, c_Dp, c_Dalpha, c_Dq);
+
+% Linear term doesn't do much, so do not use this.
+
+
 %% Fit lift and drag as a function of only AoA
-[c_L0, c_Lalpha] = calculate_2d_lift_curve(AoA_rad, c_L);
-c_L_estimated = c_L0 + c_Lalpha .* AoA_rad;
+[c_L_0, c_L_alpha] = calculate_2d_lift_curve(AoA_rad, c_L);
+c_L_estimated = c_L_0 + c_L_alpha .* AoA_rad;
 c_L_rmse = calculate_rmse(c_L, c_L_estimated)
 c_L_r_sq = calculate_r_sq(c_L, c_L_estimated)
 
 % Purely quadratic drag
-[c_Dp, c_Dalpha] = calculate_2d_drag_curve(AoA_rad, c_D);
-c_D_estimated = c_Dp + c_Dalpha .* AoA_rad .^2;
-plot_drag_curve(c_Dp, 0, c_Dalpha, AoA_deg, c_D);
+[c_D_p, c_Dalpha] = calculate_2d_drag_curve(AoA_rad, c_D);
+c_D_estimated = c_D_p + c_Dalpha .* AoA_rad .^2;
+plot_drag_curve(c_D_p, 0, c_Dalpha, AoA_deg, c_D);
 c_D_rmse = calculate_rmse(c_D, c_D_estimated)
 c_D_r_sq = calculate_r_sq(c_D, c_D_estimated)
 
 % Drag with both linear and quadratic term
-[c_Dp, c_Dalpha, c_Dalpha_sq] = calculate_2d_drag_curve_full_quadratic(AoA_rad, c_D);
-c_D_estimated = c_Dp + c_Dalpha .* AoA_rad + c_Dalpha_sq .* AoA_rad .^ 2;
+[c_D_p, c_Dalpha, c_D_alpha_sq] = calculate_2d_drag_curve_full_quadratic(AoA_rad, c_D);
+c_D_estimated = c_D_p + c_Dalpha .* AoA_rad + c_D_alpha_sq .* AoA_rad .^ 2;
 c_D_rmse = calculate_rmse(c_D, c_D_estimated)
 c_D_r_sq = calculate_r_sq(c_D, c_D_estimated)
 
-plot_lift_curve(c_L0, c_Lalpha, AoA_deg, c_L);
-plot_drag_curve(c_Dp, c_Dalpha, c_Dalpha_sq, AoA_deg, c_D);
+plot_lift_curve(c_L_0, c_L_alpha, AoA_deg, c_L);
+plot_drag_curve(c_D_p, c_Dalpha, c_D_alpha_sq, AoA_deg, c_D);
 
 %% Fit pitch moment as a function of both AoA and q
 [c_m0, c_malpha, c_mq] = calculate_pitch_moment_surface(AoA_rad, q, c_m, nondim_constant_long);
@@ -205,6 +225,22 @@ function [c_Dp, c_Dalpha, c_Dq] = calculate_drag_curve(AoA_rad, c_D, q, q_consta
     c_Dq = theta(3);
 end
 
+function [c_Dp, c_Dalpha, c_Dalpha_sq, c_Dq] = calculate_drag_curve_quadratic(AoA_rad, c_D, q, q_constant)
+    N = length(AoA_rad);
+    
+    Phi = [ones(1,N);
+           AoA_rad';
+           AoA_rad'.^2;
+           q_constant * q'];
+    Y = c_D;
+    theta = least_squares_est(Phi, Y);
+
+    c_Dp = theta(1);
+    c_Dalpha = theta(2);
+    c_Dalpha_sq = theta(3);
+    c_Dq = theta(4);
+end
+
 function [c_Dp, c_Dalpha] = calculate_2d_drag_curve(AoA_rad, c_D)
     N = length(AoA_rad);
     
@@ -265,7 +301,7 @@ end
 
 
 function [] = plot_lift_surface(c_L0, c_Lalpha, c_Lq, AoA_deg_exp, q_exp, c_L_exp, constant_q)
-    AoA_deg = -2:0.5:9;
+    AoA_deg = -2:0.5:12;
     AoA_rad = AoA_deg .* (pi / 180);
     q = 0:0.05:0.45;
     [X,Y] = meshgrid(AoA_rad, q);
@@ -283,7 +319,7 @@ function [] = plot_lift_surface(c_L0, c_Lalpha, c_Lq, AoA_deg_exp, q_exp, c_L_ex
     ylabel("q [rad/s]")
     zlabel("c_L")
     zlim([0 1.15])
-    xlim([0 9])
+    xlim([0 12])
     title("Lift coefficient")
     
     filename = "lift_coeff_surface";
@@ -292,7 +328,7 @@ function [] = plot_lift_surface(c_L0, c_Lalpha, c_Lq, AoA_deg_exp, q_exp, c_L_ex
 end
 
 function [] = plot_drag_surface(c_Dp, c_Dalpha, c_Dq, AoA_deg_exp, q_exp, c_D_exp, constant_q)
-    AoA_deg = -2:0.5:9;
+    AoA_deg = -2:0.5:12;
     AoA_rad = AoA_deg .* (pi / 180);
     q = 0:0.05:0.45;
     [X,Y] = meshgrid(AoA_rad, q);
@@ -309,8 +345,35 @@ function [] = plot_drag_surface(c_Dp, c_Dalpha, c_Dq, AoA_deg_exp, q_exp, c_D_ex
     xlabel("\alpha [deg]")
     ylabel("q [rad/s]")
     zlabel("c_D")
-    zlim([0 0.1])
-    xlim([0 9])
+    zlim([0 0.25])
+    xlim([0 12])
+    title("Drag coefficient")
+    
+    filename = "drag_coeff_surface";
+    saveas(fig, "plots/" + filename, 'epsc')
+    savefig("plots/" + filename + '.fig')
+end
+
+function [] = plot_drag_surface_w_linear_term(c_Dp, c_Dalpha, c_Dalpha_sq, c_Dq, AoA_deg_exp, q_exp, c_D_exp, constant_q)
+    AoA_deg = -2:0.5:12;
+    AoA_rad = AoA_deg .* (pi / 180);
+    q = 0:0.05:0.45;
+    [X,Y] = meshgrid(AoA_rad, q);
+    [X_deg,Y_deg] = meshgrid(AoA_deg, q);
+
+    c_D_estimated = c_Dp + c_Dalpha * X + c_Dalpha_sq * X .^2 + ...
+        constant_q * c_Dq .* Y;
+
+    fig = figure;
+    fig.Position = [100 100 500 300];
+    surf(X_deg,Y_deg,c_D_estimated); hold on; alpha(0.7)
+    s = scatter3(AoA_deg_exp, q_exp, c_D_exp);
+    alpha(s, 0.4);
+    xlabel("\alpha [deg]")
+    ylabel("q [rad/s]")
+    zlabel("c_D")
+    zlim([0 0.25])
+    xlim([0 12])
     title("Drag coefficient")
     
     filename = "drag_coeff_surface";
@@ -431,7 +494,7 @@ function [] = scatter_drag(AoA_rad, c_D, q)
     xlabel("\alpha [deg]")
     ylabel("c_D")
     title("Drag coefficients obtained from experimental data")
-    ylim([0 0.1])
+    ylim([0 0.2])
     filename = "drag_coeff_experiments";
     saveas(fig, "plots/" + filename, 'epsc')
     savefig("plots/" + filename + '.fig')

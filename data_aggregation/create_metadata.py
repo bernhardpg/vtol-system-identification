@@ -16,69 +16,66 @@ def create_maneuver_dict(maneuver_type="not_set", maneuver_start=-1, maneuver_en
 exp1 = {}
 exp1["LogName"] = "06_31_21"
 exp1["Number"] = 1
-exp1["Maneuvers"] = {str(i): create_maneuver_dict() for i in range(1, 32)}
+exp1["Maneuvers"] = {str(i): create_maneuver_dict("sweep") for i in range(1, 32)}
 
 exp1_static_times = {
     "1": [0, 0],
-    "2": [687.3, 688],
-    "3": [747, 747.7],
-    "4": [809.5, 810.3],
-    "5": [0, 0],
-    "6": [925, 926],
-    "7": [0, 0],  # too high c_L
-    "8": [0, 0],
-    "9": [1129.5, 1131],
-    "10": [0, 0],
-    "11": [0, 0],
-    "12": [0, 0],  # too high c_L
-    "13": [0, 0],
-    "14": [0, 0],
-    "15": [0, 0],
-    "16": [0, 0],
-    "17": [0, 0],
-    "18": [0, 0],
-    "19": [0, 0],
-    "20": [0, 0],
-    "21": [0, 0],
-    "22": [0, 0],
-    "23": [1838.7, 1839.6],
-    "24": [1894.2, 1896],
-    "25": [1950.3, 1950.6],
-    "26": [0, 0],
-    "27": [0, 0],
-    "28": [0, 0],
-    "29": [2158.5, 2159.4],
-    "30": [2216.5, 2217.6],
-    "31": [2277, 2278],
+    "2": [687, 689],
+    "3": [747, 749],
+    "4": [809, 812],
+    "5": [869, 871],  # a bit unclear signal
+    "6": [924.5, 928],
+    "7": [994, 997],  # unclear signal
+    "8": [1065, 1067],  # logging dropout after 1068
+    "9": [1129, 1132],
+    "10": [0, 0],  # high disturbances
+    "11": [0, 0],  # high disturbance
+    "12": [0, 0],  # high disturbance
+    "13": [0, 0],  # unrealistically high c_L and high disturbance
+    "14": [0, 0],  # high disturbance
+    "15": [0, 0],  # high disturbance
+    "16": [0, 0],  # high disturbance
+    "17": [0, 0],  # dropout
+    "18": [0, 0],  # high disturbance
+    "19": [0, 0],  # high disturbance
+    "20": [0, 0],  # high disturbance
+    "21": [0, 0],  # dropout
+    "22": [0, 0],  # high disturbance
+    "23": [0, 0], # high spread
+    "24": [0, 0], # high spread
+    "25": [0, 0],  # high disturbance
+    "26": [0, 0],  # high disturbance
+    "27": [0, 0],  # high disturbance
+    "28": [0, 0],  # high disturbance
+    "29": [0, 0], # high disturbance
+    "30": [0, 0], # high disturbance
+    "31": [0, 0], # high disturbance
 }
-
 
 for key, value in exp1_static_times.items():
     exp1["Maneuvers"][key] = create_maneuver_dict("sweep", value[0], value[1])
-
 
 exp2 = {}
 exp2["LogName"] = "07_24_19"
 exp2["Number"] = 2
 exp2["Maneuvers"] = {str(i): create_maneuver_dict() for i in range(1, 192)}
 
-# Static curves of exp 2
 exp2_static_times = {
-    "177": [3543.5, 3545],
-    "178": [0, 0],
-    "179": [3653, 3654.5],
-    "180": [0, 0],
-    "181": [3728, 3730],
-    "182": [0, 0],
-    "183": [3801.3, 3802.6],
-    "184": [0, 0],
-    "185": [3872, 3873.5],
-    "186": [0, 0],
-    "187": [0, 0],
-    "188": [0, 0],
+    "177": [3543, 3546],
+    "178": [0, 0], # high spread in drag
+    "179": [3653, 3655],
+    "180": [0, 0], # unrealistically high c_L value
+    "181": [3728, 3731],
+    "182": [3760, 3762],
+    "183": [3801.5, 3804],
+    "184": [0, 0], # high spread
+    "185": [0, 0], # high spread
+    "186": [0, 0], # high spread
+    "187": [3931, 3933], # a bit noisy
+    "188": [0, 0], # high spread
     "189": [3992, 3993.2],
-    "190": [0, 0],
-    "191": [0, 0],
+    "190": [0, 0], # something very strange going on
+    "191": [0, 0], # same
 }
 
 for key, value in exp2_static_times.items():
