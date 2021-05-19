@@ -41,23 +41,25 @@ for i = 1:length(experiment_names)
 end
 
 %% Simulate model
-% Load experiment
+% Loa
 exp_number = 6;
 [t, angle_deg, max_deflection] = load_data(exp_number);
 plot(t, angle_deg); hold on;
 
-% Simulate system
+
 u = max_deflection;
 
 delta_e_0 = 0;
-tspan = [0 0.5];
-T = 0.026;
-rate_lim_deg_s = 230;
-[t,y] = ode45(@(t,y) f(t,y,u,rate_lim_deg_s,T), tspan, delta_e_0);
-plot(t,y);
+tspan = [0 3];
+T = 0.06268;
+rate_lim = 25;
+[t,y] = ode45(@(t,y) f(t,y,u,rate_lim,T), tspan, delta_e_0);
+plot(t,y); hold on;
+
 
 function delta_e_dot = f(t, delta_e, delta_e_sp, rate_lim, T)
     delta_e_dot = bound(-1/T * delta_e + 1/T * delta_e_sp, -rate_lim, rate_lim);
+    disp(delta_e_dot);
 end
 
 function y = bound(x,bl,bu)
