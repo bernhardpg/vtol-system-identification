@@ -140,7 +140,7 @@ void compute_dx(
 		delta_e = x[7];
 
     double delta_e_sp, n_t_fw;
-    delta_e_sp = u[0];
+    delta_e_sp = u[0] - elevator_trim[0];
     n_t_fw = u[1];
 
     // ******
@@ -221,8 +221,10 @@ void compute_dx(
 
 		// NOTE: Elevator is not an output, as it is not measured
 		double delta_e_dot;
-		delta_e_dot = bound(-1 / servo_time_const[0] * delta_e + 1 / servo_time_const[0] * delta_e_sp, -servo_rate_lim[0], servo_rate_lim[0]);
-
+		delta_e_dot = bound(
+				-1 / servo_time_const[0] * delta_e + 1 / servo_time_const[0] * delta_e_sp,
+				-servo_rate_lim[0],
+				servo_rate_lim[0]);
     dx[7] = delta_e_dot;
 }
 

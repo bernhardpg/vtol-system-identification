@@ -16,16 +16,18 @@ state_size = 8;
 num_experiments = length(data.Experiment);
 
 %% Load previous model
-model_number_to_load = 3;
+model_number_to_load = 6;
 model_load_path = "nlgr_models/" + "model_" + model_number_to_load + "/";
 load(model_load_path + "model.mat");
+
+
 old_parameters = nlgr_model.Parameters;
 
 %% Create new nlgr object
 parameters = create_lon_parameter_struct();
 
 % Create model path
-model_number = 4;
+model_number = 7;
 model_path = "nlgr_models/" + "model_" + model_number + "/";
 
 experiments_to_use = [6:10];
@@ -34,19 +36,30 @@ initial_states = create_initial_states_struct(data, state_size, experiments_to_u
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
 [nlgr_model] = load_parameters(nlgr_model, old_parameters);
 
-%nlgr_model = fix_parameters([9 10 13 14 15], nlgr_model);
+%%
+params_to_fix = [1:24];
+nlgr_model = fix_parameters(params_to_fix, nlgr_model);
+%%
+params_to_unfix = [12:24];
+nlgr_model = unfix_parameters(params_to_unfix, nlgr_model);
 
+%%
+nlgr_model = reset_static_curve_params(nlgr_model);
 
 %%
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
 
 weight = diag(ones(7,1));
+% do not weigh attitude angle at all, as these have a purely kinematic
+% relationship with the model
 weight(1,1) = 0;
 weight(2,2) = 0;
 weight(3,3) = 0;
 weight(4,4) = 0;
 weight(5,5) = 1;
+weight(6,6) = 1;
+weight(7,7) = 1;
 opt.OutputWeight = weight;
 
 %% Estimate NLGR model
@@ -57,7 +70,8 @@ print_parameters(nlgr_model.Parameters);
 
 %%
 print_parameters(nlgr_model.Parameters);
-%compare(nlgr_model, data(:,:,:,3));
+print_nonfixed_params(nlgr_model.Parameters)
+%compare(nlgr_model, data);
 sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
 %compare(data(:,:,:,experiments_to_use), nlgr_model)
 %% Save model
@@ -67,6 +81,7 @@ save(model_path + "model.mat", 'nlgr_model');
 
 %%
 print_parameters(nlgr_model.Parameters);
+print_nonfixed_params(nlgr_model.Parameters)
 
 %%
 %nlgr.SimulationOptions.RelTol = 1e-5;
@@ -83,6 +98,27 @@ print_parameters(nlgr_model.Parameters);
 
 %%
 
+function [nlgr_model] = reset_static_curve_params(nlgr_model)
+    %static_param_indices = [12 13 14 16 17 18 19];
+    %nlgr_model = fix_parameters(static_param_indices, nlgr_model);
+    lift_drag_properties;
+    nlgr_model.Parameters(12).Value = c_L_0;
+    nlgr_model.Parameters(12).Fixed = 1;
+    nlgr_model.Parameters(13).Value = c_L_alpha;
+    nlgr_model.Parameters(13).Fixed = 1;
+    nlgr_model.Parameters(14).Value = c_L_q;
+    nlgr_model.Parameters(14).Fixed = 1;
+    
+    nlgr_model.Parameters(16).Value = c_D_p;
+    nlgr_model.Parameters(16).Fixed = 1;
+    nlgr_model.Parameters(17).Value = c_D_alpha;
+    nlgr_model.Parameters(17).Fixed = 1;
+    nlgr_model.Parameters(18).Value = c_D_alpha_sq;
+    nlgr_model.Parameters(18).Fixed = 1;
+    nlgr_model.Parameters(19).Value = c_D_q;
+    nlgr_model.Parameters(19).Fixed = 1;
+end
+
 function [nlgr_model] = load_parameters(nlgr_model, params)
     for i = 1:length(nlgr_model.Parameters)
         for j = 1:length(params)
@@ -96,16 +132,31 @@ end
 function [] = print_parameters(parameters)
     num_parameters = length(parameters);
     disp(" ")
-    disp("=== Parameter values ===")
+    disp("=== All parameter values ===")
     for i = 1:num_parameters
        param_fixed = parameters(i).Fixed;
-       if i > 8
+       if i > 1
            param_name = parameters(i).Name;
            param_value = parameters(i).Value;
            disp(param_name + " = " + param_value);
        end
     end
 end
+
+
+function [] = print_nonfixed_params(parameters)
+    num_parameters = length(parameters);
+    disp(" ")
+    disp("=== Non-fixed parameter values ===")
+    for i = 1:num_parameters
+       if ~parameters(i).Fixed
+           param_name = parameters(i).Name;
+           param_value = parameters(i).Value;
+           disp(param_name + " = " + param_value);
+       end
+    end
+end
+
 
 
 function [nlgr_model] = fix_parameters(parameters_to_fix, nlgr_model)
@@ -296,10 +347,10 @@ function [parameters] = create_lon_parameter_struct()
         -Inf,... % elevator_trim_rad
         approx_zero,... % c_L_0,				...
         approx_zero,... % c_L_alpha,      	...
-        approx_zero,... % c_L_q,          	...
+        -Inf,... % c_L_q,          	...
         approx_zero,... % c_L_delta_e,    	...
         approx_zero, ... % c_D_p,				...
-        approx_zero, ...% c_D_alpha,          ...
+        0, ...% c_D_alpha,          ...
         approx_zero, ...% c_D_alpha_sq,          ...
         approx_zero,... % c_D_q,          	...
         approx_zero,... % c_D_delta_e,    	...
@@ -424,6 +475,7 @@ end
 
 function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, save_plots)
     num_experiments = length(experiments_to_use);
+    elevator_trim = nlgr_model.Parameters(11).Value;
     if num_experiments == 1
         exp_i = experiments_to_use;
         y = sim(nlgr_model, data);
@@ -431,7 +483,7 @@ function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, sav
         state = data.y;
         input = data.u;
         dt = data.Ts;
-        plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
+        plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
     else
         for i = 1:num_experiments
             exp_i = experiments_to_use(i);
@@ -440,12 +492,12 @@ function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, sav
             state = cell2mat(data.y(i));
             input = cell2mat(data.u(i));
             dt = cell2mat(data.Ts(i));
-            plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
+            plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
         end
     end
 end
 
-function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actual_trajectory, model_path, save_plots)
+function [] = plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, plot_actual_trajectory, model_path, save_plots)
     tf = length(state) * dt - dt;
     t = 0:dt:tf;
         
@@ -499,8 +551,8 @@ function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actua
     legend("w (estimated)", "w")
 
     subplot(6,1,5)
-    plot(t, input(:,1));
-    legend("\delta_e")
+    plot(t, input(:,1) - elevator_trim);
+    legend("\delta_e (trim subtracted)")
 
     subplot(6,1,6)
     plot(t, input(:,2));

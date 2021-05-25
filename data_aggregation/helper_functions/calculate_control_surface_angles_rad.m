@@ -15,11 +15,11 @@ function [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = calculate_c
     aileron_input_to_aileron_deg = 28.171; % See control_surface_scaling.m
     % NOTE: Signs are flipped to comply with standard aviation notation, as
     % in Beard & McClain
-    elevator_input_to_tail_deg = -65.661; % See control_surface_scaling.m
+    elevator_input_to_tail_deg = -26.3083; % See control_surface_scaling.m
     rudder_input_to_tail_deg = -57.454; % See control_surface_scaling.m
     
     % Found from manual measurements
-    max_elevator_angle_deg = 25;
+    max_elevator_angle_deg = 26;
     % NOTE: It is still unclear what the real max rudder angle is,
     % as this has not been measured experimentally. This may not
     % matter that much though, as we are not using the max angle.
@@ -46,5 +46,5 @@ end
 
 function y = bound(x,bl,bu)
   % return bounded value clipped between bl and bu
-  y=min(max(x,bl),bu);
+  y = min(max(x,bl),bu);
 end

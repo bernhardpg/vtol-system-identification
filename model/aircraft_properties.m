@@ -115,7 +115,7 @@ rudder_trim_px4_input = 0.1;
 aileron_input_to_aileron_deg = 28.171; % See control_surface_scaling.m
 % NOTE: Signs are flipped to comply with standard aviation notation, as
 % in Beard & McClain
-elevator_input_to_tail_deg = -65.661; % See control_surface_scaling.m
+elevator_input_to_tail_deg = -26.3083; % See control_surface_scaling.m
 rudder_input_to_tail_deg = -57.454; % See control_surface_scaling.m
 
 elevator_trim_deg = elevator_trim_px4_input * elevator_input_to_tail_deg;

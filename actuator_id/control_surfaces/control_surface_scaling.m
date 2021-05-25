@@ -1,6 +1,8 @@
 clc; clear all; close all;
 
-dt = 1/200; % Frame rate
+dt = 1/80; % Frame rate
+% NOTE: It seems that data was recorded on this rate, by comparing
+% elevator_down_both_ways.csv with the recorded PX4 input.
 
 kDEG_OFFSET = 90;
 
@@ -172,7 +174,7 @@ RMSE = sqrt(mean((y_hat - y).^2));
 input_test = min(total_fused_input):0.01:max(total_fused_input);
 angle_deg_est = theta(1) * input_test + theta(2); % Linear approximation
 plot(input_test, angle_deg_est);
-legend("Data","Estimated: y = " + theta + "x")
+legend("Data","Estimated: y = " + theta(1) + "x" + " + " + theta(2))
 title(filename + ", RMSE: " + RMSE);
 
 disp("Tail deflection from elevator input:")
