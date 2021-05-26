@@ -116,11 +116,11 @@ print_parameters(nlgr_model.Parameters);
 %% Evaluate performance of model
 print_parameters(nlgr_model.Parameters);
 print_nonfixed_params(nlgr_model.Parameters)
-sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, true);
+%sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, true);
 
 
 %compare(nlgr_model, data);
-%compare(data(:,:,:,experiments_to_use), nlgr_model)
+compare(data(:,:,:,experiments_to_use), nlgr_model)
 %% Save model
 
 mkdir(model_path)
@@ -563,7 +563,7 @@ end
 
 function [nlgr] = create_nlgr_object(parameters, initial_states)
     % Create model
-    FileName = 'longitudinal_model_w_actuator_dynamics_c';
+    FileName = 'longitudinal_model_c';
     Nx = 6; % number of states
     Ny = 5; % number of outputs
     Nu = 2; % number of inputs
@@ -653,7 +653,7 @@ function [] = plot_response(exp_i, state, predicted_output, input, dt, elevator_
         hold on
         plot(t, roll);
     end
-    legend("\phi (estimated)", "\phi")
+    legend("\phi (not part of model)", "\phi")
     
     subplot(8,1,2)
     plot(t, pitch_pred); 
@@ -669,7 +669,7 @@ function [] = plot_response(exp_i, state, predicted_output, input, dt, elevator_
         hold on
         plot(t, yaw);
     end
-    legend("\psi (estimated)", "\psi")
+    legend("\psi (not part of model)", "\psi")
 
     subplot(8,1,4)
     plot(t, q_pred);
@@ -701,7 +701,7 @@ function [] = plot_response(exp_i, state, predicted_output, input, dt, elevator_
 
     subplot(8,1,8)
     plot(t, input(:,2));
-    legend("\n_p")
+    legend("n_p")
     
     sgtitle("experiment index: " + exp_i)
     
