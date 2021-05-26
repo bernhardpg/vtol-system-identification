@@ -10,13 +10,13 @@ metadata = read_metadata(metadata_filename);
 aircraft_properties;
 
 % Create ID data from each experiment
-[data] = create_iddata(full_state, full_input, maneuver_start_indices, t);
+[data] = create_iddata_lon_model(full_state, full_input, maneuver_start_indices, t);
 
 state_size = 8;
 num_experiments = length(data.Experiment);
 
 %% Load previous model
-model_number_to_load = 6;
+model_number_to_load = 8;
 model_load_path = "nlgr_models/" + "model_" + model_number_to_load + "/";
 load(model_load_path + "model.mat");
 
@@ -27,40 +27,82 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_lon_parameter_struct();
 
 % Create model path
-model_number = 7;
+model_number = 9;
 model_path = "nlgr_models/" + "model_" + model_number + "/";
 
-experiments_to_use = [6:10];
+experiments_to_use = [1:10];
 initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
 
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
 [nlgr_model] = load_parameters(nlgr_model, old_parameters);
 
 %%
-params_to_fix = [16:18];
+params_to_fix = [1:24];
 nlgr_model = fix_parameters(params_to_fix, nlgr_model);
 %%
 params_to_unfix = [12:24];
 nlgr_model = unfix_parameters(params_to_unfix, nlgr_model);
 
 %%
-nlgr_model = reset_static_curve_params(nlgr_model);
+nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %%
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
 
-weight = diag(ones(7,1));
-% do not weigh attitude angle at all, as these have a purely kinematic
-% relationship with the model
-weight(1,1) = 0;
-weight(2,2) = 0;
-weight(3,3) = 0;
-weight(4,4) = 0;
-weight(5,5) = 1;
-weight(6,6) = 1;
-weight(7,7) = 0;
-opt.OutputWeight = weight;
+% Prediction error weight
+% Only weigh states q, u, w
+state_weights = diag([0 0 0 0 1 1 1]);
+opt.OutputWeight = state_weights;
+
+% Regularization
+opt.Regularization.Lambda = 200;
+% Specify that the second parameter better known than the first.
+opt.Regularization.R = [
+        1,... % g,                  ...
+        1,... % half_rho_planform, ...
+        1,... % mass_kg,					...
+        1,... % mean_chord_length,              ...
+        1,... % wingspan,					...
+        1,... %nondim_constant_lon
+        1,... % lam,				...
+        1,... % Jyy, ...
+        1,... % servo_time_const,...
+        1,... % servo_rate_lim_rad_s,...
+        1,... % elevator_trim_rad
+        1,... % c_L_0,				...
+        1,... % c_L_alpha,      	...
+        0.1,... % c_L_q,          	...
+        0,... % c_L_delta_e,    	...
+        1,... % c_D_p,				...
+        1,... % c_D_alpha,          ...
+        1,... % c_D_alpha_sq,          ...
+        0.1,... % c_D_q,          	...
+        0,... % c_D_delta_e,    	...
+        0,... % c_m_0,				...
+        0,... % c_m_alpha,          ...
+        0,... % c_m_q,				...
+        0,... % c_m_delta_e,		...
+];
+
+opt.Regularization.R = [
+        1,... % c_L_0,				...
+        1,... % c_L_alpha,      	...
+        0,... % c_L_q,          	...
+        0,... % c_L_delta_e,    	...
+        1,... % c_D_p,				...
+        1,... % c_D_alpha,          ...
+        1,... % c_D_alpha_sq,          ...
+        0,... % c_D_q,          	...
+        0,... % c_D_delta_e,    	...
+        0,... % c_m_0,				...
+        0,... % c_m_alpha,          ...
+        0,... % c_m_q,				...
+        0,... % c_m_delta_e,		...
+];
+
+% Specify initial  guess as Nominal. 
+opt.Regularization.Nominal = 'model';
 
 %% Estimate NLGR model
 nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
@@ -98,25 +140,27 @@ print_nonfixed_params(nlgr_model.Parameters)
 
 %%
 
-function [nlgr_model] = reset_static_curve_params(nlgr_model)
-    %static_param_indices = [12 13 14 16 17 18 19];
-    %nlgr_model = fix_parameters(static_param_indices, nlgr_model);
+function [nlgr_model] = reset_static_curve_params(nlgr_model, fix)
     lift_drag_properties;
     nlgr_model.Parameters(12).Value = c_L_0;
-    nlgr_model.Parameters(12).Fixed = 1;
     nlgr_model.Parameters(13).Value = c_L_alpha;
-    nlgr_model.Parameters(13).Fixed = 1;
-%     nlgr_model.Parameters(14).Value = c_L_q;
-%     nlgr_model.Parameters(14).Fixed = 1;
+    nlgr_model.Parameters(14).Value = c_L_q;
+    
+    if fix
+        nlgr_model.Parameters(12).Fixed = 1;
+        nlgr_model.Parameters(13).Fixed = 1;
+        nlgr_model.Parameters(14).Fixed = 1;
+        nlgr_model.Parameters(16).Fixed = 1;
+        nlgr_model.Parameters(17).Fixed = 1;
+        nlgr_model.Parameters(18).Fixed = 1;
+        nlgr_model.Parameters(19).Fixed = 1;
+    end
     
     nlgr_model.Parameters(16).Value = c_D_p;
-    nlgr_model.Parameters(16).Fixed = 1;
     nlgr_model.Parameters(17).Value = c_D_alpha;
-    nlgr_model.Parameters(17).Fixed = 1;
     nlgr_model.Parameters(18).Value = c_D_alpha_sq;
-    nlgr_model.Parameters(18).Fixed = 1;
-%     nlgr_model.Parameters(19).Value = c_D_q;
-%     nlgr_model.Parameters(19).Fixed = 1;
+    nlgr_model.Parameters(19).Value = c_D_q;
+
 end
 
 function [nlgr_model] = load_parameters(nlgr_model, params)
@@ -205,7 +249,7 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
     disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
 end
 
-function [data] = create_iddata(full_state, full_input, maneuver_start_indices, t)
+function [data] = create_iddata_lon_model(full_state, full_input, maneuver_start_indices, t)
     num_maneuvers = length(maneuver_start_indices);
     dt = t(2) - t(1);
 
@@ -216,7 +260,7 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
     InputUnit =  {'rad', 'rpm'};
 
     % Describe state (which is equal to output)
-    OutputName = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w'};
+    OutputName = {'q0', 'q2', 'q', 'u', 'w'};
     OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
 
     for i = 1:num_maneuvers
@@ -475,6 +519,7 @@ end
 
 function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, save_plots)
     num_experiments = length(experiments_to_use);
+    elevator_trim = nlgr_model.Parameters(11).Value;
     if num_experiments == 1
         exp_i = experiments_to_use;
         y = sim(nlgr_model, data);
@@ -482,7 +527,7 @@ function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, sav
         state = data.y;
         input = data.u;
         dt = data.Ts;
-        plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
+        plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
     else
         for i = 1:num_experiments
             exp_i = experiments_to_use(i);
@@ -491,12 +536,12 @@ function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, sav
             state = cell2mat(data.y(i));
             input = cell2mat(data.u(i));
             dt = cell2mat(data.Ts(i));
-            plot_response(exp_i, state, predicted_state, input, dt, true, model_path, save_plots);
+            plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
         end
     end
 end
 
-function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actual_trajectory, model_path, save_plots)
+function [] = plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, plot_actual_trajectory, model_path, save_plots)
     tf = length(state) * dt - dt;
     t = 0:dt:tf;
         
@@ -550,8 +595,8 @@ function [] = plot_response(exp_i, state, predicted_state, input, dt, plot_actua
     legend("w (estimated)", "w")
 
     subplot(6,1,5)
-    plot(t, input(:,1));
-    legend("\delta_e")
+    plot(t, input(:,1) - elevator_trim);
+    legend("\delta_e (trim subtracted)")
 
     subplot(6,1,6)
     plot(t, input(:,2));

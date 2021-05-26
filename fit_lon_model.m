@@ -10,57 +10,102 @@ metadata = read_metadata(metadata_filename);
 aircraft_properties;
 
 % Create ID data from each experiment
-[data] = create_iddata(full_state, full_input, maneuver_start_indices, t);
+[data_full_state] = create_iddata_full_state(full_state, full_input, maneuver_start_indices, t);
+[data] = create_iddata_lon_model(full_state, full_input, maneuver_start_indices, t);
 
-state_size = 8;
+state_size = 6;
 num_experiments = length(data.Experiment);
 
-%% Load previous model
-model_number_to_load = 6;
+%% Load previous model parameters
+model_number_to_load = 8;
 model_load_path = "nlgr_models/" + "model_" + model_number_to_load + "/";
 load(model_load_path + "model.mat");
 
-
 old_parameters = nlgr_model.Parameters;
-
 %% Create new nlgr object
 parameters = create_lon_parameter_struct();
 
 % Create model path
-model_number = 7;
+model_number = 9;
 model_path = "nlgr_models/" + "model_" + model_number + "/";
 
-experiments_to_use = [6:10];
+experiments_to_use = [1:10];
 initial_states = create_initial_states_struct(data, state_size, experiments_to_use);
 
 [nlgr_model] = create_nlgr_object(parameters, initial_states);
+
+%% Load parameters from old model
 [nlgr_model] = load_parameters(nlgr_model, old_parameters);
 
-%%
+%% Fix parameters
 params_to_fix = [1:24];
 nlgr_model = fix_parameters(params_to_fix, nlgr_model);
-%%
+
+%% Unfix Parameters
 params_to_unfix = [12:24];
 nlgr_model = unfix_parameters(params_to_unfix, nlgr_model);
 
-%%
-nlgr_model = reset_static_curve_params(nlgr_model);
+%% Reset static curves
+nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
-%%
+%% Set optimization options
+
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
 
-weight = diag(ones(7,1));
-% do not weigh attitude angle at all, as these have a purely kinematic
-% relationship with the model
-weight(1,1) = 0;
-weight(2,2) = 0;
-weight(3,3) = 0;
-weight(4,4) = 0;
-weight(5,5) = 1;
-weight(6,6) = 1;
-weight(7,7) = 1;
-opt.OutputWeight = weight;
+% Prediction error weight
+% Only weigh states q, u, w
+state_weights = diag([0 0 0 0 1 1 1]);
+opt.OutputWeight = state_weights;
+
+% Regularization
+opt.Regularization.Lambda = 200;
+% Specify that the second parameter better known than the first.
+opt.Regularization.R = [
+        1,... % g,                  ...
+        1,... % half_rho_planform, ...
+        1,... % mass_kg,					...
+        1,... % mean_chord_length,              ...
+        1,... % wingspan,					...
+        1,... %nondim_constant_lon
+        1,... % lam,				...
+        1,... % Jyy, ...
+        1,... % servo_time_const,...
+        1,... % servo_rate_lim_rad_s,...
+        1,... % elevator_trim_rad
+        1,... % c_L_0,				...
+        1,... % c_L_alpha,      	...
+        0.1,... % c_L_q,          	...
+        0,... % c_L_delta_e,    	...
+        1,... % c_D_p,				...
+        1,... % c_D_alpha,          ...
+        1,... % c_D_alpha_sq,          ...
+        0.1,... % c_D_q,          	...
+        0,... % c_D_delta_e,    	...
+        0,... % c_m_0,				...
+        0,... % c_m_alpha,          ...
+        0,... % c_m_q,				...
+        0,... % c_m_delta_e,		...
+];
+
+opt.Regularization.R = [
+        1,... % c_L_0,				...
+        1,... % c_L_alpha,      	...
+        0,... % c_L_q,          	...
+        0,... % c_L_delta_e,    	...
+        1,... % c_D_p,				...
+        1,... % c_D_alpha,          ...
+        1,... % c_D_alpha_sq,          ...
+        0,... % c_D_q,          	...
+        0,... % c_D_delta_e,    	...
+        0,... % c_m_0,				...
+        0,... % c_m_alpha,          ...
+        0,... % c_m_q,				...
+        0,... % c_m_delta_e,		...
+];
+
+% Specify initial  guess as Nominal. 
+opt.Regularization.Nominal = 'model';
 
 %% Estimate NLGR model
 nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
@@ -68,11 +113,13 @@ parameters = nlgr_model.Parameters;
 print_parameters(nlgr_model.Parameters);
 
 
-%%
+%% Evaluate performance of model
 print_parameters(nlgr_model.Parameters);
 print_nonfixed_params(nlgr_model.Parameters)
+sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, true);
+
+
 %compare(nlgr_model, data);
-sim_response(experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), model_path, true);
 %compare(data(:,:,:,experiments_to_use), nlgr_model)
 %% Save model
 
@@ -98,25 +145,27 @@ print_nonfixed_params(nlgr_model.Parameters)
 
 %%
 
-function [nlgr_model] = reset_static_curve_params(nlgr_model)
-    %static_param_indices = [12 13 14 16 17 18 19];
-    %nlgr_model = fix_parameters(static_param_indices, nlgr_model);
+function [nlgr_model] = reset_static_curve_params(nlgr_model, fix)
     lift_drag_properties;
     nlgr_model.Parameters(12).Value = c_L_0;
-    nlgr_model.Parameters(12).Fixed = 1;
     nlgr_model.Parameters(13).Value = c_L_alpha;
-    nlgr_model.Parameters(13).Fixed = 1;
     nlgr_model.Parameters(14).Value = c_L_q;
-    nlgr_model.Parameters(14).Fixed = 1;
+    
+    if fix
+        nlgr_model.Parameters(12).Fixed = 1;
+        nlgr_model.Parameters(13).Fixed = 1;
+        nlgr_model.Parameters(14).Fixed = 1;
+        nlgr_model.Parameters(16).Fixed = 1;
+        nlgr_model.Parameters(17).Fixed = 1;
+        nlgr_model.Parameters(18).Fixed = 1;
+        nlgr_model.Parameters(19).Fixed = 1;
+    end
     
     nlgr_model.Parameters(16).Value = c_D_p;
-    nlgr_model.Parameters(16).Fixed = 1;
     nlgr_model.Parameters(17).Value = c_D_alpha;
-    nlgr_model.Parameters(17).Fixed = 1;
     nlgr_model.Parameters(18).Value = c_D_alpha_sq;
-    nlgr_model.Parameters(18).Fixed = 1;
     nlgr_model.Parameters(19).Value = c_D_q;
-    nlgr_model.Parameters(19).Fixed = 1;
+
 end
 
 function [nlgr_model] = load_parameters(nlgr_model, params)
@@ -205,14 +254,74 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
     disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
 end
 
-function [data] = create_iddata(full_state, full_input, maneuver_start_indices, t)
+function [data] = create_iddata_lon_model(full_state, full_input, maneuver_start_indices, t)
     num_maneuvers = length(maneuver_start_indices);
     dt = t(2) - t(1);
 
     data = iddata('Name', 'Longitudinal data');
 
     % Describe input
-    InputName = {'delta_e_sp','delta_t_fw'};
+    InputName = {'delta_e_sp','n_p'};
+    InputUnit =  {'rad', 'rpm'};
+
+    % Describe state (which is equal to output)
+    OutputName = {'q0', 'q2', 'q', 'u', 'w'};
+    OutputUnit = {'', '', 'rad/s', 'm/s', 'm/s'};
+
+    for i = 1:num_maneuvers
+        if i == 1
+            maneuver_start_index = 1;
+        else
+            maneuver_start_index = maneuver_start_indices(i - 1);
+        end
+        
+        maneuver_end_index = maneuver_start_indices(i) - 1;
+
+        % Extract only relevant maneuver data
+        t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
+        full_state_maneuver = full_state(maneuver_start_index:maneuver_end_index,:);
+        full_input_maneuver = full_input(maneuver_start_index:maneuver_end_index,:);
+
+        quat = full_state_maneuver(:,1:4);
+        quat_only_pitch = create_quat_w_only_pitch_movement(quat);
+        e0 = quat_only_pitch(:,1);
+        e2 = quat_only_pitch(:,3);
+        
+        q = full_state_maneuver(:,6);
+        u = full_state_maneuver(:,8);
+        w = full_state_maneuver(:,10);
+        delta_e = full_input_maneuver(:,6);
+        n_p = full_input_maneuver(:,8);
+
+        output = [e0 e2 q u w];
+        input = [delta_e n_p];
+
+        % Create sysid data object
+        z = iddata(output, input, dt, 'Name', 'Pitch 211 maneuvers');
+        z.TimeUnit = 's';
+        z.Tstart = 0;
+        z.InputName = InputName;
+        z.InputUnit = InputUnit;
+        z.OutputName = OutputName;
+        z.OutputUnit = OutputUnit;
+
+        if i == 1
+            data = z;
+        else
+            data = merge(data,z);
+        end
+    end
+end
+
+function [data] = create_iddata_full_state(full_state, full_input, maneuver_start_indices, t)
+% TODO: Not actually full state yet
+    num_maneuvers = length(maneuver_start_indices);
+    dt = t(2) - t(1);
+
+    data = iddata('Name', 'Full state model');
+
+    % Describe input
+    InputName = {'delta_e_sp','n_p'};
     InputUnit =  {'rad', 'rpm'};
 
     % Describe state (which is equal to output)
@@ -234,16 +343,19 @@ function [data] = create_iddata(full_state, full_input, maneuver_start_indices, 
         full_input_maneuver = full_input(maneuver_start_index:maneuver_end_index,:);
 
         quat = full_state_maneuver(:,1:4);
-        quat_only_pitch = create_quat_w_only_pitch_movement(quat);
+        e0 = quat(:,1);
+        e1 = quat(:,2);
+        e2 = quat(:,3);
+        e3 = quat(:,4);
         
         q = full_state_maneuver(:,6);
         u = full_state_maneuver(:,8);
         w = full_state_maneuver(:,10);
         delta_e = full_input_maneuver(:,6);
-        delta_t_fw = full_input_maneuver(:,8);
+        n_p = full_input_maneuver(:,8);
 
-        output = [quat_only_pitch q u w];
-        input = [delta_e delta_t_fw];
+        output = [e0 e1 e2 e3 q u w];
+        input = [delta_e n_p];
 
         % Create sysid data object
         z = iddata(output, input, dt, 'Name', 'Pitch 211 maneuvers');
@@ -425,6 +537,7 @@ end
 
 function [initial_states] = create_initial_states_struct(data, state_size, experiments_to_use)
     initial_states_values = {};
+    elevator_index = state_size; % elevator is last state
     if length(experiments_to_use) == 1
        for i = 1:state_size - 1
            initial_states_values(i) = {data(1,i,:,experiments_to_use).y};
@@ -435,14 +548,14 @@ function [initial_states] = create_initial_states_struct(data, state_size, exper
            initial_states_values(i) = {cell2mat(data(1,i,:,experiments_to_use).y)'};
         end
         % Load initial conditions for elevator
-        initial_states_values(8) = {cell2mat(data(1,:,1,experiments_to_use).u)'};
+        initial_states_values(state_size) = {cell2mat(data(1,:,1,experiments_to_use).u)'};
     end
     
 
 
     initial_states = struct(...
-        'Name', {'q0', 'q1', 'q2', 'q3', 'q','u', 'w','delta_e'},...
-        'Unit', {'', '', '', '', 'rad/s', 'm/s', 'm/s','rad'}, ...
+        'Name', {'q0', 'q2', 'q','u', 'w','delta_e'},...
+        'Unit', {'', '', 'rad/s', 'm/s', 'm/s','rad'}, ...
         'Value', initial_states_values, ...
         'Minimum', -Inf, 'Maximum', Inf, ...
         'Fixed', true);
@@ -451,18 +564,18 @@ end
 function [nlgr] = create_nlgr_object(parameters, initial_states)
     % Create model
     FileName = 'longitudinal_model_w_actuator_dynamics_c';
-    Nx = 8; % number of states
-    Ny = 7; % number of outputs
+    Nx = 6; % number of states
+    Ny = 5; % number of outputs
     Nu = 2; % number of inputs
     Order = [Ny Nu Nx];
 
     % Describe input
-    InputName = {'delta_e_sp','delta_t_fw'};
+    InputName = {'delta_e_sp','n_p'};
     InputUnit =  {'rad', 'rpm'};
 
     % Describe state (which is equal to output)
-    OutputName = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w'};
-    OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
+    OutputName = {'q0', 'q2', 'q', 'u', 'w'};
+    OutputUnit = {'', '','rad/s', 'm/s', 'm/s'};
 
     % Construct nlgr object
     Ts = 0; % Continuous system
@@ -473,31 +586,135 @@ function [nlgr] = create_nlgr_object(parameters, initial_states)
         'TimeUnit', 's');
 end
 
-function [] = sim_response(experiments_to_use, nlgr_model, data, model_path, save_plots)
+function [] = sim_response(experiments_to_use, nlgr_model, data, data_full_state, model_path, save_plots)
     num_experiments = length(experiments_to_use);
     elevator_trim = nlgr_model.Parameters(11).Value;
     if num_experiments == 1
         exp_i = experiments_to_use;
         y = sim(nlgr_model, data);
-        predicted_state = y.y;
-        state = data.y;
+        predicted_output = y.y;
+        full_state = data_full_state.y;
         input = data.u;
         dt = data.Ts;
-        plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
+        plot_response(exp_i, full_state, predicted_output, input, dt, elevator_trim, true, model_path, save_plots);
     else
         for i = 1:num_experiments
             exp_i = experiments_to_use(i);
             y = sim(nlgr_model, data);
-            predicted_state = cell2mat(y.y(i));
-            state = cell2mat(data.y(i));
+            predicted_output = cell2mat(y.y(i));
+            full_state = cell2mat(data_full_state.y(i));
             input = cell2mat(data.u(i));
             dt = cell2mat(data.Ts(i));
-            plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, true, model_path, save_plots);
+            plot_response(exp_i, full_state, predicted_output, input, dt, elevator_trim, true, model_path, save_plots);
         end
     end
 end
 
-function [] = plot_response(exp_i, state, predicted_state, input, dt, elevator_trim, plot_actual_trajectory, model_path, save_plots)
+function [] = plot_response(exp_i, state, predicted_output, input, dt, elevator_trim, plot_actual_trajectory, model_path, save_plots)
+    tf = length(state) * dt - dt;
+    t = 0:dt:tf;
+    
+    % Read measured state
+    e0 = state(:,1);
+    e1 = state(:,2);
+    e2 = state(:,3);
+    e3 = state(:,4);
+    q = state(:,5);
+    u = state(:,6);
+    w = state(:,7);
+    
+    quat = [e0 e1 e2 e3];
+    eul = quat2eul(quat);
+    yaw = eul(:,1);
+    pitch = eul(:,2);
+    roll = eul(:,3);
+    
+    % Read predicted state
+    e0_pred = predicted_output(:,1);
+    e2_pred = predicted_output(:,2);
+    q_pred = predicted_output(:,3);
+    u_pred = predicted_output(:,4);
+    w_pred = predicted_output(:,5);
+    
+    quat_pred = [e0_pred zeros(size(e0_pred)) e2_pred zeros(size(e0_pred))]; % Model assumes only pitch movement
+    eul_pred = quat2eul(quat_pred);
+
+    roll_pred = eul_pred(:,3);
+    pitch_pred = eul_pred(:,2);
+    yaw_pred = eul_pred(:,1);
+    
+    % Plot
+    fig = figure;
+    fig.Position = [100 100 600 600];
+    
+    subplot(8,1,1)
+    plot(t, roll_pred); 
+    if plot_actual_trajectory
+        hold on
+        plot(t, roll);
+    end
+    legend("\phi (estimated)", "\phi")
+    
+    subplot(8,1,2)
+    plot(t, pitch_pred); 
+    if plot_actual_trajectory
+        hold on
+        plot(t, pitch);
+    end
+    legend("\theta (estimated)", "\theta")
+    
+    subplot(8,1,3)
+    plot(t, yaw_pred); 
+    if plot_actual_trajectory
+        hold on
+        plot(t, yaw);
+    end
+    legend("\psi (estimated)", "\psi")
+
+    subplot(8,1,4)
+    plot(t, q_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, q);
+    end
+    legend("q (estimated)", "q")
+
+    subplot(8,1,5)
+    plot(t, u_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, u);
+    end
+    legend("u (estimated)", "u")
+
+    subplot(8,1,6)
+    plot(t, w_pred);
+    if plot_actual_trajectory
+        hold on
+        plot(t, w);
+    end
+    legend("w (estimated)", "w")
+
+    subplot(8,1,7)
+    plot(t, input(:,1) - elevator_trim);
+    legend("\delta_e (trim subtracted)")
+
+    subplot(8,1,8)
+    plot(t, input(:,2));
+    legend("\n_p")
+    
+    sgtitle("experiment index: " + exp_i)
+    
+    if save_plots
+        filename = exp_i + "_long";
+        plot_location = model_path + "plots/";
+        mkdir(plot_location);
+        saveas(fig, plot_location + filename, 'epsc')
+        savefig(plot_location + filename + '.fig')
+    end
+end
+
+function [] = plot_response_full_quat_state(exp_i, state, predicted_state, input, dt, elevator_trim, plot_actual_trajectory, model_path, save_plots)
     tf = length(state) * dt - dt;
     t = 0:dt:tf;
         
@@ -556,7 +773,7 @@ function [] = plot_response(exp_i, state, predicted_state, input, dt, elevator_t
 
     subplot(6,1,6)
     plot(t, input(:,2));
-    legend("\delta_t")
+    legend("\n_p")
     
     sgtitle("experiment index: " + exp_i)
     
