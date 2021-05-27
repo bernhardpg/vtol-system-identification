@@ -44,7 +44,7 @@ e397.dat
 
 #Cname   Cgain  Xhinge  HingeVec       SgnDup
 CONTROL
-aileron  1.0   0.76    0.0 1.0 0.0    -1.0
+aileron  -1.0   0.76    0.0 1.0 0.0    -1.0
 
 #-------Section 3----------------------
 #    Xle         Yle         Zle         chord       angle 
@@ -56,7 +56,7 @@ e397.dat
 
 #Cname   Cgain  Xhinge  HingeVec       SgnDup
 CONTROL
-aileron  1.0   0.75    0.0 1.0 0.0    -1.0
+aileron  -1.0   0.75    0.0 1.0 0.0    -1.0
 
 #-------Section 4----------------------
 #    Xle         Yle         Zle         chord       angle 
@@ -68,7 +68,7 @@ e397.dat
 
 #Cname   Cgain  Xhinge  HingeVec       SgnDup
 CONTROL
-aileron  1.0   0.74    0.0 1.0 0.0    -1.0
+aileron  -1.0   0.74    0.0 1.0 0.0    -1.0
 
 #-------Section 5----------------------
 #    Xle         Yle         Zle         chord       angle 
@@ -144,7 +144,7 @@ SECTION
 CONTROL
 elevator  1.0  0.70  0. 0. 0.   1.
 CONTROL
-rudder   -1.0  0.70  0. 0. 0.  -1.
+rudder   1.0  0.70  0. 0. 0.  -1.
 
 #-------------End section------------
 SECTION
@@ -153,7 +153,7 @@ SECTION
 CONTROL
 elevator  1.0  0.70  0. 0. 0.   1.
 CONTROL
-rudder   -1.0  0.70  0. 0. 0.  -1.
+rudder   1.0  0.70  0. 0. 0.  -1.
 
 #==============================================================
 

@@ -13,16 +13,16 @@ c_Y_delta_r = -0.005580;
 
 c_l_p = -0.472;
 c_l_r = 0.141;
-c_l_delta_a = -0.00494;
-c_l_delta_r = 0.000145;
+c_l_delta_a = 0.00494;
+c_l_delta_r = -0.000145;
 c_m_0 = 0.00970;
 c_m_alpha = -0.974;
 c_m_q = -11.882 ;
 c_m_delta_e = -0.0208;
 c_n_p = -0.0635;
 c_n_r = -0.0869;
-c_n_delta_a = -0.00018;
-c_n_delta_r = 0.0019;
+c_n_delta_a = 0.00018;
+c_n_delta_r = -0.0019;
 
 % Convert all control derivatives to rad instead of deg
 c_L_delta_e = c_L_delta_e * 180 / pi;
@@ -37,9 +37,4 @@ c_n_delta_r = c_n_delta_r * 180 / pi;
 % NOTE: The values from AVL are already dimensionless. See this post:
 % https://www.researchgate.net/post/Does-anyone-know-if-the-derivatives-output-from-AVL-Athena-Vortex-Lattice-are-dimensional-or-dimensionless
 
-% Flip axis to be correct
-% All damping derivatives seem to have the correct sign
-c_l_delta_a = abs(c_l_delta_a); % Pos deflection -> pos moment
-c_m_delta_e = -abs(c_m_delta_e); % Pos deflection -> neg moment
-c_n_delta_r = -abs(c_n_delta_r); % Pos deflection -> neg moment
 

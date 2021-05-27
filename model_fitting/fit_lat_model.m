@@ -30,7 +30,7 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_param_struct("lat");
 
 % Create model path
-model_number = 4;
+model_number = 1;
 model_path = "nlgr_models/lateral_models/" + "model_" + model_number + "/";
 
 experiments_to_use = 1;
@@ -56,6 +56,11 @@ opt.SearchOptions.MaxIterations = 100;
 % Only weigh states q, u, w
 output_weights = diag([0 0 0 0 1 10 1]);
 opt.OutputWeight = output_weights;
+
+%% Fix parameters
+rudder_params = [];
+nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
+
 
 %% Estimate NLGR model
 nlgr_model = nlgreyest(data_lat(:,:,:,experiments_to_use), nlgr_model, opt);
