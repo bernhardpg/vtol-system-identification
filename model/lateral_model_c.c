@@ -85,13 +85,24 @@ void compute_dx(
     lam = p[7]; // Vector of 8 elements
 		J_yy = p[8];
 
+		double lam_1, lam_2, lam_3, lam_4, lam_5, lam_6, lam_7, lam_8;
+		lam_1 = lam[0];
+		lam_2 = lam[1];
+		lam_3 = lam[2];
+		lam_4 = lam[3];
+		lam_5 = lam[4];
+		lam_6 = lam[5];
+		lam_7 = lam[6];
+		lam_8 = lam[7];
+
 		double *servo_time_const, *servo_rate_lim;
 		servo_time_const = p[9];
 		servo_rate_lim = p[10];
 
-		double *aileron_trim, *rudder_trim;
+		double *aileron_trim, *elevator_trim, *rudder_trim;
 		aileron_trim = p[11];
-		rudder_trim = p[12];
+		elevator_trim = p[12];
+		rudder_trim = p[13];
 
     // ********
     // Parameters
@@ -99,24 +110,24 @@ void compute_dx(
 
 		// Y-aerodynamic force
     double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r;
-    c_Y_p = p[13];
-    c_Y_r = p[14];
-    c_Y_delta_a = p[15];
-    c_Y_delta_r = p[16];
+    c_Y_p = p[14];
+    c_Y_r = p[15];
+    c_Y_delta_a = p[16];
+    c_Y_delta_r = p[17];
 
 		// Moment around x-axis
     double *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r;
-    c_l_p = p[17];
-    c_l_r = p[18];
-    c_l_delta_a = p[19];
-    c_l_delta_r = p[20];
+    c_l_p = p[18];
+    c_l_r = p[19];
+    c_l_delta_a = p[20];
+    c_l_delta_r = p[21];
 
 		// Moment around z-axis
     double *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r;
-    c_n_p = p[21];
-    c_n_r = p[22];
-    c_n_delta_a = p[23];
-    c_n_delta_r = p[24];
+    c_n_p = p[22];
+    c_n_r = p[23];
+    c_n_delta_a = p[24];
+    c_n_delta_r = p[25];
 
 
     // *******
@@ -171,7 +182,7 @@ void compute_dx(
     double f_G_y = m_times_g * (-e0 * e1 + e2 * e3);
 
     // Aerodynamic forces
-    double c_Y = c_Y_p[0 ] * nondim_constant_lat[0] * ang_p
+    double c_Y = c_Y_p[0] * nondim_constant_lat[0] * ang_p
 			+ c_Y_r[0] * nondim_constant_lat[0] * ang_r
 			+ c_Y_delta_a[0] * delta_a
 			+ c_Y_delta_r[0] * delta_r;
@@ -221,8 +232,8 @@ void compute_dx(
     // *******
 
     double ang_p_dot, ang_r_dot;
-    ang_p_dot = lam[2] * tau_x + lam[3] * tau_z;
-    ang_r_dot = lam[4] * tau_x + lam[8] * tau_z;
+    ang_p_dot = lam_3 * tau_x + lam_4 * tau_z;
+    ang_r_dot = lam_4 * tau_x + lam_8 * tau_z;
 
     dx[4] = ang_p_dot;
     dx[5] = ang_r_dot;
