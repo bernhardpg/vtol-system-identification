@@ -73,7 +73,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
 
         % Plot
         fig = figure;
-        fig.Position = [100 100 600 600];
+        fig.Position = [100 100 900 900];
 
         subplot(8,1,1)
         plot(t, roll_pred); 

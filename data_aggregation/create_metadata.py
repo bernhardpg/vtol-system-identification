@@ -200,7 +200,7 @@ roll_211_nt_maneuver_times = {
     "73": [1722, 1725.3],  # throttle
     "74": [1730, 1733.4],  # throttle
     "75": [1737, 1740],  # throttle
-    "76": [-1, 1778.7],  # throttle
+    "76": [-1, 1758.7],  # throttle
     "77": [0, 0],  # too early throttle
     "78": [0, 0],  # aborted
     "79": [0, 0],  # throttle
