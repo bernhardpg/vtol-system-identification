@@ -162,7 +162,7 @@
             "Number": 1
         },
         {
-            "LogName": "07_24_19",
+            "LogName": "07_12_32",
             "Maneuvers": {
                 "1": {
                     "end_s": -1,
@@ -174,14 +174,110 @@
                     "start_s": -1,
                     "type": "pitch_211"
                 },
-                "100": {
+                "11": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211"
+                },
+                "12": {
                     "end_s": -1,
                     "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "13": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "14": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "15": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "16": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "17": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211"
+                },
+                "18": {
+                    "end_s": 520,
+                    "start_s": 180,
+                    "type": "freehand"
+                },
+                "2": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "3": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "4": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "5": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "6": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "7": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211"
+                },
+                "8": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211"
+                },
+                "9": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                }
+            },
+            "Number": 2
+        },
+        {
+            "LogName": "07_24_19",
+            "Maneuvers": {
+                "1": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211"
+                },
+                "10": {
+                    "end_s": -1,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "100": {
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "101": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "102": {
@@ -190,8 +286,8 @@
                     "type": "yaw_211"
                 },
                 "103": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "104": {
@@ -200,28 +296,28 @@
                     "type": "yaw_211"
                 },
                 "105": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "106": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "107": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "108": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "109": {
                     "end_s": -1,
-                    "start_s": -1,
+                    "start_s": 2302,
                     "type": "yaw_211"
                 },
                 "11": {
@@ -245,38 +341,38 @@
                     "type": "yaw_211"
                 },
                 "113": {
-                    "end_s": -1,
+                    "end_s": 2368.5,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "114": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "115": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 2396,
+                    "start_s": 2391,
                     "type": "yaw_211_no_throttle"
                 },
                 "116": {
-                    "end_s": -1,
+                    "end_s": 2406.9,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "117": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "118": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "119": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "12": {
@@ -286,26 +382,26 @@
                 },
                 "120": {
                     "end_s": -1,
-                    "start_s": -1,
+                    "start_s": 2472.3,
                     "type": "yaw_211_no_throttle"
                 },
                 "121": {
                     "end_s": -1,
-                    "start_s": -1,
+                    "start_s": 2485,
                     "type": "yaw_211_no_throttle"
                 },
                 "122": {
-                    "end_s": -1,
+                    "end_s": 2508.7,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "123": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "124": {
-                    "end_s": -1,
+                    "end_s": 2536.5,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
@@ -315,28 +411,28 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "126": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "127": {
-                    "end_s": -1,
+                    "end_s": 2591,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "128": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "129": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "13": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211"
                 },
                 "130": {
@@ -350,8 +446,8 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "132": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "133": {
@@ -370,8 +466,8 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "136": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "137": {
@@ -380,8 +476,8 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "138": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211_no_throttle"
                 },
                 "139": {
@@ -395,7 +491,7 @@
                     "type": "pitch_211"
                 },
                 "140": {
-                    "end_s": -1,
+                    "end_s": 2868,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
@@ -455,8 +551,8 @@
                     "type": "yaw_211"
                 },
                 "151": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "152": {
@@ -500,8 +596,8 @@
                     "type": "yaw_211"
                 },
                 "16": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211"
                 },
                 "160": {
@@ -515,8 +611,8 @@
                     "type": "yaw_211"
                 },
                 "162": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "163": {
@@ -540,8 +636,8 @@
                     "type": "yaw_211"
                 },
                 "167": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "168": {
@@ -565,8 +661,8 @@
                     "type": "yaw_211"
                 },
                 "171": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "yaw_211"
                 },
                 "172": {
@@ -610,8 +706,8 @@
                     "type": "sweep"
                 },
                 "18": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211"
                 },
                 "180": {
@@ -679,9 +775,19 @@
                     "start_s": 0,
                     "type": "sweep"
                 },
+                "192": {
+                    "end_s": 4120,
+                    "start_s": 4070,
+                    "type": "freehand"
+                },
+                "193": {
+                    "end_s": 4325,
+                    "start_s": 4180,
+                    "type": "freehand"
+                },
                 "2": {
                     "end_s": -1,
-                    "start_s": -1,
+                    "start_s": 891,
                     "type": "pitch_211"
                 },
                 "20": {
@@ -695,43 +801,43 @@
                     "type": "pitch_211"
                 },
                 "22": {
-                    "end_s": -1,
+                    "end_s": 1077,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "23": {
-                    "end_s": -1,
+                    "end_s": 1080.7,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "24": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1109.8,
+                    "start_s": 1107,
                     "type": "pitch_211_no_throttle"
                 },
                 "25": {
-                    "end_s": -1,
+                    "end_s": 1117,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "26": {
-                    "end_s": -1,
+                    "end_s": 1137,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "27": {
-                    "end_s": -1,
+                    "end_s": 1142.7,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "28": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1148,
+                    "start_s": 1145,
                     "type": "pitch_211_no_throttle"
                 },
                 "29": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1167.5,
+                    "start_s": 1163,
                     "type": "pitch_211_no_throttle"
                 },
                 "3": {
@@ -740,67 +846,67 @@
                     "type": "pitch_211"
                 },
                 "30": {
-                    "end_s": -1,
+                    "end_s": 1188,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "31": {
-                    "end_s": -1,
-                    "start_s": -1,
-                    "type": "pitch_211_no_throttle"
-                },
-                "32": {
-                    "end_s": -1,
-                    "start_s": -1,
-                    "type": "pitch_211_no_throttle"
-                },
-                "33": {
                     "end_s": 0,
                     "start_s": 0,
                     "type": "pitch_211_no_throttle"
                 },
-                "34": {
-                    "end_s": -1,
+                "32": {
+                    "end_s": 0,
+                    "start_s": 0,
+                    "type": "pitch_211_no_throttle"
+                },
+                "33": {
+                    "end_s": 1231,
                     "start_s": -1,
+                    "type": "pitch_211_no_throttle"
+                },
+                "34": {
+                    "end_s": 1238,
+                    "start_s": 1234.5,
                     "type": "pitch_211_no_throttle"
                 },
                 "35": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211_no_throttle"
                 },
                 "36": {
-                    "end_s": -1,
+                    "end_s": 1265.5,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "37": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211"
                 },
                 "38": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1356.5,
+                    "start_s": 1352.3,
                     "type": "roll_211"
                 },
                 "39": {
-                    "end_s": -1,
+                    "end_s": 1360,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "4": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211"
                 },
                 "40": {
-                    "end_s": -1,
+                    "end_s": 1362.7,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "41": {
-                    "end_s": -1,
+                    "end_s": 1379.2,
                     "start_s": -1,
                     "type": "roll_211"
                 },
@@ -810,17 +916,17 @@
                     "type": "roll_211"
                 },
                 "43": {
-                    "end_s": -1,
+                    "end_s": 1390.5,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "44": {
-                    "end_s": -1,
+                    "end_s": 1394,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "45": {
-                    "end_s": -1,
+                    "end_s": 1397,
                     "start_s": -1,
                     "type": "roll_211"
                 },
@@ -830,13 +936,13 @@
                     "type": "roll_211"
                 },
                 "47": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211"
                 },
                 "48": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211"
                 },
                 "49": {
@@ -850,8 +956,8 @@
                     "type": "pitch_211"
                 },
                 "50": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1466,
+                    "start_s": 1460.4,
                     "type": "roll_211"
                 },
                 "51": {
@@ -860,7 +966,7 @@
                     "type": "roll_211"
                 },
                 "52": {
-                    "end_s": -1,
+                    "end_s": 1475,
                     "start_s": -1,
                     "type": "roll_211"
                 },
@@ -880,23 +986,23 @@
                     "type": "roll_211"
                 },
                 "56": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211"
                 },
                 "57": {
-                    "end_s": -1,
+                    "end_s": 1546,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "58": {
-                    "end_s": -1,
+                    "end_s": 1548.7,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "59": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1554.5,
+                    "start_s": 1550.8,
                     "type": "roll_211_no_throttle"
                 },
                 "6": {
@@ -905,52 +1011,52 @@
                     "type": "pitch_211"
                 },
                 "60": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1580.3,
+                    "start_s": 1577,
                     "type": "roll_211_no_throttle"
                 },
                 "61": {
-                    "end_s": -1,
+                    "end_s": 1586.3,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "62": {
-                    "end_s": -1,
+                    "end_s": 1591.7,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "63": {
-                    "end_s": -1,
+                    "end_s": 1608.5,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "64": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1613.5,
+                    "start_s": 1610.5,
                     "type": "roll_211_no_throttle"
                 },
                 "65": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1619.2,
+                    "start_s": 1616.5,
                     "type": "roll_211_no_throttle"
                 },
                 "66": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1640.5,
+                    "start_s": 1636.6,
                     "type": "roll_211_no_throttle"
                 },
                 "67": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1649,
+                    "start_s": 1645.4,
                     "type": "roll_211_no_throttle"
                 },
                 "68": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "69": {
-                    "end_s": -1,
+                    "end_s": 1675.3,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
@@ -961,106 +1067,106 @@
                 },
                 "70": {
                     "end_s": -1,
-                    "start_s": -1,
+                    "start_s": 1679,
                     "type": "roll_211_no_throttle"
                 },
                 "71": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1702.8,
+                    "start_s": 1699.8,
                     "type": "roll_211_no_throttle"
                 },
                 "72": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1711,
+                    "start_s": 1707.4,
                     "type": "roll_211_no_throttle"
                 },
                 "73": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1725.3,
+                    "start_s": 1722,
                     "type": "roll_211_no_throttle"
                 },
                 "74": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1733.4,
+                    "start_s": 1730,
                     "type": "roll_211_no_throttle"
                 },
                 "75": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1740,
+                    "start_s": 1737,
                     "type": "roll_211_no_throttle"
                 },
                 "76": {
-                    "end_s": -1,
+                    "end_s": 1778.7,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "77": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "78": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "79": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "8": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "pitch_211"
                 },
                 "80": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "81": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1821,
+                    "start_s": 1817.5,
                     "type": "roll_211_no_throttle"
                 },
                 "82": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "83": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1848.2,
+                    "start_s": 1844.5,
                     "type": "roll_211_no_throttle"
                 },
                 "84": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 1858,
+                    "start_s": 1854.5,
                     "type": "roll_211_no_throttle"
                 },
                 "85": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "86": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "87": {
-                    "end_s": -1,
+                    "end_s": 1903.7,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "88": {
-                    "end_s": -1,
+                    "end_s": 1918,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "89": {
-                    "end_s": -1,
+                    "end_s": 1941,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
@@ -1070,57 +1176,57 @@
                     "type": "pitch_211"
                 },
                 "90": {
-                    "end_s": -1,
+                    "end_s": 1951.5,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "91": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "92": {
-                    "end_s": -1,
+                    "end_s": 1977.8,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "93": {
-                    "end_s": -1,
+                    "end_s": 1987,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "94": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 0,
+                    "start_s": 0,
                     "type": "roll_211_no_throttle"
                 },
                 "95": {
-                    "end_s": -1,
+                    "end_s": 2014,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "96": {
-                    "end_s": -1,
+                    "end_s": 2023,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "97": {
-                    "end_s": -1,
+                    "end_s": 2035,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "98": {
-                    "end_s": -1,
-                    "start_s": -1,
+                    "end_s": 2050.4,
+                    "start_s": 2046.7,
                     "type": "roll_211_no_throttle"
                 },
                 "99": {
-                    "end_s": -1,
+                    "end_s": 2064.9,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 }
             },
-            "Number": 2
+            "Number": 3
         }
     ]
 }

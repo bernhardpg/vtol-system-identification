@@ -4,13 +4,15 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
     num_experiments = length(experiments_to_use);
     
     if model_type == 'lon'
-       input_trims = [nlgr_model.Parameters(11).Value]; % elevator
+       input_trims = [nlgr_model.Parameters(11).Value]; % elevator % TODO: This is not correct index!!
     elseif model_type == 'lat'
-        input_trims = [nlgr_model.Parameters(12).Value nlgr_model.Parameters(13).Value]; % aileron and rudder
+        aileron_trim = nlgr_model.Parameters(12).Value;
+        rudder_trim = nlgr_model.Parameters(14).Value;
+        input_trims = [aileron_trim rudder_trim]; % aileron and rudder
     end
     
     for i = 1:num_experiments
-        exp_i = experiments_to_use(i);
+        exp_i = experiments_to_use(i); % only used for plot name
         y = sim(nlgr_model, data);
 
         % Handle datatypes being different for single and multiple experiments

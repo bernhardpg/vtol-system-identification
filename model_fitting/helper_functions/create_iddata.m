@@ -1,6 +1,6 @@
 function [data] = create_iddata(t, full_state, full_input, maneuver_start_indices, data_type)
     num_maneuvers = length(maneuver_start_indices);
-    dt = t(2) - t(1);
+    dt = 0.01; % TODO: Consider not hardcoding this!
 
     if data_type == "full"
         data = iddata('Name', 'Full state model');
@@ -13,14 +13,14 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
         OutputName = {'q0', 'q1', 'q2', 'q3', 'p', 'q', 'r', 'u', 'v', 'w'};
         OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', 'm/s', 'm/s', 'm/s'};
 
-        for i = 1:num_maneuvers
-            if i == 1
+        for maneuver_i = 1:num_maneuvers
+            if maneuver_i == 1
                 maneuver_start_index = 1;
             else
-                maneuver_start_index = maneuver_start_indices(i - 1);
+                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
             end
 
-            maneuver_end_index = maneuver_start_indices(i) - 1;
+            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
 
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
@@ -62,7 +62,7 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
             z.OutputName = OutputName;
             z.OutputUnit = OutputUnit;
 
-            if i == 1
+            if maneuver_i == 1
                 data = z;
             else
                 data = merge(data,z);
@@ -80,14 +80,14 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
         OutputName = {'q0', 'q2', 'q', 'u', 'w'};
         OutputUnit = {'', '', 'rad/s', 'm/s', 'm/s'};
 
-        for i = 1:num_maneuvers
-            if i == 1
+        for maneuver_i = 1:num_maneuvers
+            if maneuver_i == 1
                 maneuver_start_index = 1;
             else
-                maneuver_start_index = maneuver_start_indices(i - 1);
+                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
             end
 
-            maneuver_end_index = maneuver_start_indices(i) - 1;
+            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
 
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
@@ -117,7 +117,7 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
             z.OutputName = OutputName;
             z.OutputUnit = OutputUnit;
 
-            if i == 1
+            if maneuver_i == 1
                 data = z;
             else
                 data = merge(data,z);
@@ -135,14 +135,14 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
         OutputName = {'q0', 'q1', 'q2', 'q3', 'p', 'r', 'v'};
         OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'm/s'};
 
-        for i = 1:num_maneuvers
-            if i == 1
+        for maneuver_i = 1:num_maneuvers
+            if maneuver_i == 1
                 maneuver_start_index = 1;
             else
-                maneuver_start_index = maneuver_start_indices(i - 1);
+                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
             end
 
-            maneuver_end_index = maneuver_start_indices(i) - 1;
+            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
 
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
@@ -170,7 +170,7 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
             z.OutputName = OutputName;
             z.OutputUnit = OutputUnit;
 
-            if i == 1
+            if maneuver_i == 1
                 data = z;
             else
                 data = merge(data,z);

@@ -5,7 +5,7 @@ metadata = read_metadata(metadata_filename);
 
 % Output data
 save_output_data = true;
-save_plot = true;
+save_plot = false;
 show_plot = false;
 
 % Set common data time resolution
@@ -482,9 +482,6 @@ end
 function [] = read_state_input_data_in_time_interval(start_time_s, end_time_s, csv_log_file_location, dt, save_plot, show_plot, plot_output_location, save_output_data, data_output_location)
     % Read data
     [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt);
-
-    % Cut data
-
 
     % Find indexes in t corresponding to start and end time
     start_index = round(interp1(t, 1:length(t), start_time_s));

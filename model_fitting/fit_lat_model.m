@@ -3,18 +3,16 @@ clc; clear all; close all;
 % Load airframe properties
 aircraft_properties;
 
+% Load metadata
 metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
-maneuver_type = "yaw_211_no_throttle";
-%maneuver_type = "roll_211_no_throttle";
 
-[full_state, full_input, t, maneuver_start_indices] = read_experiment_data(metadata, maneuver_type);
+% Create data for sysid
+maneuver_types = ["roll_211_no_throttle", "yaw_211_no_throttle"];
+maneuver_quantities = [10, 10];
 
-% Create ID data from each experiment
-[data_full_state] = create_iddata(t, full_state, full_input, maneuver_start_indices, "full");
-[data_lat] = create_iddata(t, full_state, full_input, maneuver_start_indices, "lat");
-
-num_experiments = length(data_lat.Experiment);
+model_type = "lat";
+[data_lat, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
 
 num_states_lat = 9;
 num_outputs_lat = 7;
@@ -31,10 +29,10 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_param_struct("lat");
 
 % Create model path
-model_number = 6;
+model_number = 7;
 model_path = "nlgr_models/lateral_models/" + "model_" + model_number + "/";
 
-experiments_to_use = 1:2;
+experiments_to_use = 1:20;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 
 [nlgr_model] = create_nlgr_object(num_states_lat, num_outputs_lat, num_inputs_lat, parameters, initial_states, "lat");
@@ -43,7 +41,7 @@ initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outp
 [nlgr_model] = load_parameters_into_model(nlgr_model, old_parameters);
 
 %% Print parameters
-%print_parameters(nlgr_model.Parameters, "all");
+print_parameters(nlgr_model.Parameters, "all");
 print_parameters(nlgr_model.Parameters, "free")
 
 %% Plot response of model

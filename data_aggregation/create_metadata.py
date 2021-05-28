@@ -85,6 +85,8 @@ pitch_211_maneuver_indices = np.arange(1, 18)
 pitch_211_maneuver_times = {
     "7": [0, 0],  # dropout
     "8": [0, 0],  # not still input
+    "11": [0, 0],  # dropout
+    "17": [0, 0],  # dropout
 }
 set_maneuver_times(
     exp2, pitch_211_maneuver_indices, pitch_211_maneuver_times, "pitch_211"
@@ -128,19 +130,21 @@ sweep_maneuver_indices = np.arange(177, 192)
 pitch_211_maneuver_times = {
     "1": [0, 0],  # disturbance
     "2": [891, -1],  # disturbance
+    "4": [0, 0],  # dropout
     "8": [0, 0],  # dropout
     "13": [0, 0],  # disturbance
     "16": [0, 0],  # disturbance
     "18": [0, 0],  # dropout
 }
 pitch_211_nt_maneuver_times = {
+    "22": [-1, 1077],  # not still input
     "23": [-1, 1080.7],  # throttle
     "24": [1107, 1109.8],  # throttle
     "25": [-1, 1117],  # throttle
     "26": [-1, 1137],  # throttle
     "27": [-1, 1142.7],  # throttle
     "28": [1145, 1148],  # throttle
-    "29": [1163, -1],  # throttle
+    "29": [1163, 1167.5],  # throttle
     "30": [-1, 1188],  # throttle
     "31": [0, 0],  # throttle
     "32": [0, 0],  # aborted
@@ -162,49 +166,64 @@ set_maneuver_times(
 
 # Correct roll maneuver times
 roll_211_maneuver_times = {
+    "37": [0, 0],  # nudge in input # TODO can use this
     "38": [1352.3, 1356.5],  # nudge in input
+    "39": [-1, 1360],  # nudge in input
     "40": [-1, 1362.7],  # nudge in input
+    "41": [-1, 1379.2],  # nudge in input
+    "43": [-1, 1390.5],  # nudge in input
+    "44": [-1, 1394],  # nudge in input
+    "45": [-1, 1397],  # nudge in input
     "47": [0, 0],  # not still
     "48": [0, 0],  # not still
-    "50": [1460.4, -1],  # not still
-    "50": [-1, 1469],  # not still
+    "50": [1460.4, 1466],  # not still
+    "52": [-1, 1475],  # nudge in input
     "56": [0, 0],  # dropout
 }
 roll_211_nt_maneuver_times = {
+    "57": [-1, 1546],  # nudge in input
     "58": [-1, 1548.7],  # throttle
-    "59": [1550.8, -1],  # throttle
-    "60": [-1, 1580.3],  # throttle
+    "59": [1550.8, 1554.5],  # throttle
+    "60": [1577, 1580.3],  # throttle
     "61": [-1, 1586.3],  # throttle
     "62": [-1, 1591.7],  # throttle
     "63": [-1, 1608.5],  # throttle
     "64": [1610.5, 1613.5],  # throttle
-    "65": [1610.5, 1619.2],  # throttle
-    "66": [1636.6, -1],  # throttle
-    "67": [1645.4, -1],  # throttle
+    "65": [1616.5, 1619.2],  # throttle
+    "66": [1636.6, 1640.5],  # throttle
+    "67": [1645.4, 1649],  # throttle
     "68": [0, 0],  # dropout
-    "69": [-1, 1875.3],  # throttle
+    "69": [-1, 1675.3],  # throttle
     "70": [1679, -1],  # throttle
-    "71": [1699.5, 1702.8],  # throttle
-    "72": [1707.4, -1],  # throttle
+    "71": [1699.8, 1702.8],  # throttle
+    "72": [1707.4, 1711],  # throttle
     "73": [1722, 1725.3],  # throttle
     "74": [1730, 1733.4],  # throttle
     "75": [1737, 1740],  # throttle
+    "76": [-1, 1778.7],  # throttle
     "77": [0, 0],  # too early throttle
     "78": [0, 0],  # aborted
-    "79": [1790.5, 1793],  # throttle
+    "79": [0, 0],  # throttle
     "80": [0, 0],  # throttle
-    "81": [1817.5, -1],  # throttle
+    "81": [1817.5, 1821],  # throttle
     "82": [0, 0],  # dropout
-    "83": [1844.5, -1],  # throttle
-    "84": [1854.5, -1],  # throttle
+    "83": [1844.5, 1848.2],  # throttle
+    "84": [1854.5, 1858],  # throttle
     "85": [0, 0],  # disturbance
     "86": [0, 0],  # throttle
+    "87": [-1, 1903.7],  # throttle
+    "88": [-1, 1918],  # throttle
+    "89": [-1, 1941],  # throttle
     "90": [-1, 1951.5],  # throttle
     "91": [0, 0],  # aborted
+    "92": [-1, 1977.8],  # throttle
     "93": [-1, 1987],  # throttle
-    "94": [-1, 1995.5],  # throttle
+    "94": [0, 0],  # throttle
     "95": [-1, 2014],  # throttle
-    "98": [2046.7, -1],  # throttle
+    "96": [-1, 2023],  # throttle
+    "97": [-1, 2035],  # throttle
+    "98": [2046.7, 2050.4],  # throttle
+    "99": [-1, 2064.9],  # throttle
 }
 set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
 set_maneuver_times(
@@ -222,8 +241,8 @@ yaw_211_maneuver_times = {
     "103": [0, 0],  # disturbance
     "105": [0, 0],  # disturbance
     "106": [0, 0],  # disturbance
-    "107": [2272.2, -1],  # disturbance
-    "108": [2294, -1],  # disturbance
+    "107": [0, 0],  # dropout 
+    "108": [0, 0],  # dropout 
     "109": [2302, -1],  # disturbance
     "151": [0, 0],  # disturbance
     "162": [0, 0],  # disturbance
@@ -231,7 +250,7 @@ yaw_211_maneuver_times = {
     "171": [0, 0],  # disturbance
 }
 yaw_211_nt_maneuver_times = {
-    "113": [-1, 2358.5],  # throttle
+    "113": [-1, 2368.5],  # throttle
     "114": [0, 0],  # throttle
     "115": [2391, 2396],  # throttle
     "116": [-1, 2406.9],  # throttle
