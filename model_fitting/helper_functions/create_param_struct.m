@@ -149,8 +149,8 @@ function [parameters] = create_param_struct(type)
         par_name_lat = {
             'c_Y_p', ... % should be close to zero/negligible
             'c_Y_r', ... % I guess this should be close to zero/negligible, by looking at values in McClain
-            'c_Y_delta_a', ...
-            'c_Y_delta_r', ...
+            'c_Y_delta_a', ... % Negative according to AVL
+            'c_Y_delta_r', ... % Positive according to AVL
             'c_l_p', ... % Roll damping. Always negative
             'c_l_r', ... % Cross-coupling, roll moment due to yawing. Should be positive
             'c_l_delta_a', ... % Roll moment due to ailerons. Always positive
@@ -165,21 +165,21 @@ function [parameters] = create_param_struct(type)
             -Inf,...% c_Y_p
             -Inf,...% c_Y_r
             -Inf,...% c_Y_delta_a
-            -Inf,...% c_Y_delta_r
+            approx_zero,...% c_Y_delta_r
             -Inf,...% c_l_p
             approx_zero,...% c_l_r
             approx_zero,...% c_l_delta_a
             -Inf,...% c_l_delta_r
             -Inf,...% c_n_p
             -Inf,...% c_n_r
-            -Inf,...% c_n_delta_a
+            approx_zero,...% c_n_delta_a
             -Inf,...% c_n_delta_r
         };
     
         par_max_lat = {
             Inf,...% c_Y_p
             Inf,...% c_Y_r
-            Inf,...% c_Y_delta_a
+            -approx_zero,...% c_Y_delta_a
             Inf,...% c_Y_delta_r
             -approx_zero,...% c_l_p
             Inf,...% c_l_r

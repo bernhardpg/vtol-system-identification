@@ -8,8 +8,8 @@ c_L_delta_e = 0.00632 ;
 c_D_delta_e = 0.000257; % Trefftz drag
 c_Y_p = 0.112085;
 c_Y_r = 0.258965;
-c_Y_delta_a = 0.000570;
-c_Y_delta_r = -0.005580;
+c_Y_delta_a = -0.000570;
+c_Y_delta_r = 0.005580;
 
 c_l_p = -0.472;
 c_l_r = 0.141;
