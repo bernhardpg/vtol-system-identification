@@ -1,6 +1,7 @@
 *.swp
 *.ulg
 data/log_files/*
+data/servo_tests/video_files/*
 #
 ### Mac
 *.DS_Store

@@ -19,7 +19,7 @@ num_outputs_lat = 7;
 num_inputs_lat = 4; % [delta_a_sp, delta_r_sp, u, w]
 
 %% Load previous model parameters
-model_name_to_load = "roll_and_yaw_7";
+model_name_to_load = "roll_and_yaw_8";
 model_load_path = "nlgr_models/lateral_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
@@ -33,7 +33,7 @@ model_name = "roll_and_yaw_9";
 model_path = "nlgr_models/lateral_models/" + "model_" + model_name + "/";
 
 %experiments_to_use = 1:sum(maneuver_quantities);
-experiments_to_use = 10:11;
+experiments_to_use = 11;
 %experiments_to_use = 11:20;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 
@@ -62,20 +62,21 @@ Pos = h_gcf.Position;
 h_gcf.Position = [Pos(1), Pos(2)-Pos(4)/2, Pos(3), Pos(4)*1.5];
 pe(data_lat, nlgr_model);
 
-%% Fix rolling params
+%% Fix params
 roll_param_indices = [15 17 19 21 23 25];
 yaw_param_indices = [16 18 20 22 24 26];
 
-nlgr_model = fix_parameters(roll_param_indices, nlgr_model, false);
+nlgr_model = fix_parameters(roll_param_indices, nlgr_model, true);
 %% Specify optimization options
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
+opt.SearchMethod = 'fmincon';
 
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([0 0 0 0 10 10 0.1]);
-%opt.Regularization.Lambda = 1;
+opt.OutputWeight = diag([0 0 0 0 1 10 0.1]);
+opt.Regularization.Lambda = 1;
 
 % opt_type = "neutral";
 % opt.Regularization.Lambda = 10;
