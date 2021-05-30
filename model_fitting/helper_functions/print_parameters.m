@@ -6,7 +6,7 @@ function [] = print_parameters(parameters, type)
         for i = 1:num_parameters
            param_name = parameters(i).Name;
            param_value = parameters(i).Value;
-           disp(param_name + " = " + param_value);
+           disp(i + ": " + param_name + " = " + param_value);
         end
     elseif type == "free"
         disp("=== Free (non-fixed) parameter values ===")
@@ -14,7 +14,7 @@ function [] = print_parameters(parameters, type)
            if ~parameters(i).Fixed
                param_name = parameters(i).Name;
                param_value = parameters(i).Value;
-               disp(param_name + " = " + param_value);
+               disp(i + ": " + param_name + " = " + param_value);
            end
         end 
     end

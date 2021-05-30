@@ -109,25 +109,28 @@ void compute_dx(
     // ********
 
 		// Y-aerodynamic force
-    double *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r;
-    c_Y_p = p[14];
-    c_Y_r = p[15];
-    c_Y_delta_a = p[16];
-    c_Y_delta_r = p[17];
+    double *c_Y_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r;
+    c_Y_beta = p[14];
+    c_Y_p = p[15];
+    c_Y_r = p[16];
+    c_Y_delta_a = p[17];
+    c_Y_delta_r = p[18];
 
 		// Moment around x-axis
-    double *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r;
-    c_l_p = p[18];
-    c_l_r = p[19];
-    c_l_delta_a = p[20];
-    c_l_delta_r = p[21];
+    double *c_l_beta, *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r;
+    c_l_beta = p[19];
+    c_l_p = p[20];
+    c_l_r = p[21];
+    c_l_delta_a = p[22];
+    c_l_delta_r = p[23];
 
 		// Moment around z-axis
-    double *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r;
-    c_n_p = p[22];
-    c_n_r = p[23];
-    c_n_delta_a = p[24];
-    c_n_delta_r = p[25];
+    double *c_n_beta, *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r;
+    c_n_beta = p[24];
+    c_n_p = p[25];
+    c_n_r = p[26];
+    c_n_delta_a = p[27];
+    c_n_delta_r = p[28];
 
 
     // *******
@@ -172,17 +175,19 @@ void compute_dx(
 		vel_w = u[3];
 
     // ******
-    // Forces 
+    // Forces
     // ******
 
     double V = sqrt(pow(vel_u,2) + pow(vel_v,2) + pow(vel_w,2));
+		double beta = asin(vel_v / V);
 
     // Gravitational force
 		double m_times_g = m[0] * g[0];
     double f_G_y = m_times_g * (-e0 * e1 + e2 * e3);
 
     // Aerodynamic forces
-    double c_Y = c_Y_p[0] * nondim_constant_lat[0] * ang_p
+    double c_Y = beta * c_Y_beta[0]
+			+ c_Y_p[0] * nondim_constant_lat[0] * ang_p
 			+ c_Y_r[0] * nondim_constant_lat[0] * ang_r
 			+ c_Y_delta_a[0] * delta_a
 			+ c_Y_delta_r[0] * delta_r;
@@ -198,12 +203,14 @@ void compute_dx(
     // ******
 
     // Aerodynamic moments
-    double c_l = c_l_p[0] * nondim_constant_lat[0] * ang_p
+    double c_l = beta * c_l_beta[0]
+			+ c_l_p[0] * nondim_constant_lat[0] * ang_p
 			+ c_l_r[0] * nondim_constant_lat[0] * ang_r
 			+ c_l_delta_a[0] * delta_a
 			+ c_l_delta_r[0] * delta_r;
 
-    double c_n = c_n_p[0] * nondim_constant_lat[0] * ang_p
+    double c_n = beta * c_n_beta[0]
+			+ c_n_p[0] * nondim_constant_lat[0] * ang_p
 			+ c_n_r[0] * nondim_constant_lat[0] * ang_r
 			+ c_n_delta_a[0] * delta_a
 			+ c_n_delta_r[0] * delta_r;
@@ -213,7 +220,7 @@ void compute_dx(
     tau_z = half_rho_planform[0] * pow(V, 2) * wingspan[0] * c_n;
 
     // *******
-    // Kinematics 
+    // Kinematics
     // *******
 
     double e0_dot, e1_dot, e2_dot, e3_dot;

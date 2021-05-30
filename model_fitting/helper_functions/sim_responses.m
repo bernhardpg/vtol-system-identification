@@ -47,6 +47,8 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
     u = full_state(:,8);
     v = full_state(:,9);
     w = full_state(:,10);
+    
+    V_a = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
     quat = [e0 e1 e2 e3];
     eul = quat2eul(quat);
@@ -152,11 +154,15 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         roll_pred = eul_pred(:,3);
         pitch_pred = eul_pred(:,2);
         yaw_pred = eul_pred(:,1);
+        
+        beta = asin(v ./ V_a);
+        V_a_pred = sqrt(u .^ 2 + v_pred .^ 2 + w .^ 2);
+        beta_pred = asin(v_pred ./ V_a_pred);
 
         % Plot
         fig = figure;
         fig.Position = [100 100 600 600];
-        num_plots = 8;
+        num_plots = 9;
 
         subplot(num_plots,1,1)
         plot(t, rad2deg(roll_pred)); 
@@ -184,8 +190,17 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         end
         legend("\psi (estimated)", "\psi")
         ylabel("[deg]")
-
+        
         subplot(num_plots,1,4)
+        plot(t, rad2deg(beta_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(beta));
+        end
+        legend("\beta (estimated)", "\beta")
+        ylabel("[deg]")
+
+        subplot(num_plots,1,5)
         plot(t, rad2deg(p_pred));
         if plot_actual_trajectory
             hold on
@@ -194,16 +209,16 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         legend("p (estimated)", "p")
         ylabel("[deg/s]")
 
-        subplot(num_plots,1,5)
+        subplot(num_plots,1,6)
         plot(t, rad2deg(r_pred));
         if plot_actual_trajectory
             hold on
-            plot(t, r);
+            plot(t, rad2deg(r));
         end
         legend("r (estimated)", "r")
         ylabel("[deg/s]")
 
-        subplot(num_plots,1,6)
+        subplot(num_plots,1,7)
         plot(t, v_pred);
         if plot_actual_trajectory
             hold on
@@ -212,12 +227,12 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         legend("v (estimated)", "v")
         ylabel("[m/s]")
 
-        subplot(num_plots,1,7)
+        subplot(num_plots,1,8)
         plot(t, rad2deg(input(:,1) - aileron_trim));
         legend("\delta_a (trim subtracted)")
         ylabel("[deg]");
 
-        subplot(num_plots,1,8)
+        subplot(num_plots,1,9)
         plot(t, rad2deg(input(:,2) - rudder_trim));
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");

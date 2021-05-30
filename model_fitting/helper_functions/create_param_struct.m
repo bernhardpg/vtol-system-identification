@@ -147,14 +147,17 @@ function [parameters] = create_param_struct(type)
         initial_guess_lat;
         
         par_name_lat = {
+            'c_Y_beta', ...
             'c_Y_p', ... % should be close to zero/negligible
             'c_Y_r', ... % I guess this should be close to zero/negligible, by looking at values in McClain
             'c_Y_delta_a', ... % Negative according to AVL
             'c_Y_delta_r', ... % Positive according to AVL
+            'c_l_beta', ... % Negative for static roll stability
             'c_l_p', ... % Roll damping. Always negative
             'c_l_r', ... % Cross-coupling, roll moment due to yawing. Should be positive
             'c_l_delta_a', ... % Roll moment due to ailerons. Always positive
             'c_l_delta_r', ... % Roll moment due to rudder. Should be small
+            'c_n_beta', ... % Positive for weathercock stability
             'c_n_p', ... % Cross-coupling, yaw moment due to rolling. Sign unknown
             'c_n_r', ... % Yaw damping. Always negative
             'c_n_delta_a', ... % Yaw moment due to ailerons. Would guess positive?
@@ -162,14 +165,17 @@ function [parameters] = create_param_struct(type)
         };
     
         par_min_lat = {
+            -Inf,...% c_Y_beta
             -Inf,...% c_Y_p
             -Inf,...% c_Y_r
             -Inf,...% c_Y_delta_a
             approx_zero,...% c_Y_delta_r
+            -Inf,...% c_l_beta
             -Inf,...% c_l_p
             approx_zero,...% c_l_r
             approx_zero,...% c_l_delta_a
             -Inf,...% c_l_delta_r
+            approx_zero,...% c_n_beta
             -Inf,...% c_n_p
             -Inf,...% c_n_r
             approx_zero,...% c_n_delta_a
@@ -177,14 +183,17 @@ function [parameters] = create_param_struct(type)
         };
     
         par_max_lat = {
+            Inf,...% c_Y_beta
             Inf,...% c_Y_p
             Inf,...% c_Y_r
             -approx_zero,...% c_Y_delta_a
             Inf,...% c_Y_delta_r
+            -approx_zero,...% c_l_beta
             -approx_zero,...% c_l_p
             Inf,...% c_l_r
             Inf,...% c_l_delta_a
             Inf,...% c_l_delta_r
+            Inf,...% c_n_beta
             Inf,...% c_n_p
             -approx_zero,...% c_n_r
             Inf,...% c_n_delta_a
@@ -192,14 +201,17 @@ function [parameters] = create_param_struct(type)
         };
     
         par_fixed_lat = {
+            false,...% c_Y_beta
             false,...% c_Y_p
             false,...% c_Y_r
             false,...% c_Y_delta_a
             false,...% c_Y_delta_r
+            false,...% c_l_beta
             false,...% c_l_p
             false,...% c_l_r
             false,...% c_l_delta_a
             false,...% c_l_delta_r
+            false,...% c_n_beta
             false,...% c_n_p
             false,...% c_n_r
             false,...% c_n_delta_a
@@ -207,14 +219,17 @@ function [parameters] = create_param_struct(type)
         };
     
     par_value_lat = {
+        c_Y_beta,...
         c_Y_p,...
         c_Y_r,...
         c_Y_delta_a,...
         c_Y_delta_r,...
+        c_l_beta,...
         c_l_p,...
         c_l_r,...
         c_l_delta_a,...
         c_l_delta_r,...
+        c_n_beta,...
         c_n_p,...
         c_n_r,...
         c_n_delta_a,...

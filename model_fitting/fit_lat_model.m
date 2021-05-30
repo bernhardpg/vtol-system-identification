@@ -29,11 +29,11 @@ old_parameters = nlgr_model.Parameters;
 parameters = create_param_struct("lat");
 
 % Create model path
-model_name = "roll_and_yaw_9";
+model_name = "sideslip_1";
 model_path = "nlgr_models/lateral_models/" + "model_" + model_name + "/";
 
-experiments_to_use = 1:sum(maneuver_quantities);
-%experiments_to_use = 1;
+%experiments_to_use = 1:sum(maneuver_quantities);
+experiments_to_use = 11;
 %experiments_to_use = 11:20;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 
@@ -48,8 +48,8 @@ print_parameters(nlgr_model.Parameters, "free")
 
 %% Plot response of model
 sim_responses(experiments_to_use, nlgr_model, data_lat(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, true, "lat");
+print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lat(:,:,:,experiments_to_use), nlgr_model)
-
 
 %%
 clf
@@ -63,19 +63,19 @@ h_gcf.Position = [Pos(1), Pos(2)-Pos(4)/2, Pos(3), Pos(4)*1.5];
 pe(data_lat, nlgr_model);
 
 %% Fix params
-roll_param_indices = [15 17 19 21 23 25];
-yaw_param_indices = [16 18 20 22 24 26];
+roll_param_indices = [16 18 20 21 23];
 
 nlgr_model = fix_parameters(roll_param_indices, nlgr_model, true);
+print_parameters(nlgr_model.Parameters, "free")
+
 %% Specify optimization options
 opt = nlgreyestOptions('Display', 'on');
 opt.SearchOptions.MaxIterations = 100;
-opt.SearchMethod = 'fmincon';
 
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([0 0 0 0 1 10 0.1]);
+opt.OutputWeight = diag([0 0 0 0 1 5 1]);
 opt.Regularization.Lambda = 1;
 
 % opt_type = "neutral";
@@ -88,9 +88,10 @@ opt.Regularization.Lambda = 1;
 
 
 %% Estimate NLGR model
+print_parameters(nlgr_model.Parameters, "free");
 nlgr_model = nlgreyest(data_lat(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
-print_parameters(nlgr_model.Parameters, "all");
+print_parameters(nlgr_model.Parameters, "free");
 
 %% Save model
 mkdir(model_path)

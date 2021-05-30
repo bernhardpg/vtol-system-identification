@@ -25,9 +25,9 @@ c_n_delta_a = 0.00018;
 c_n_delta_r = -0.0019;
 
 % Sideslip parameters
-c_Y_beta =  -0.351976;
-c_l_beta =  -0.024980;
-c_n_beta =   0.111040;
+C_Y_beta =  -0.351976;
+C_l_beta =  -0.024980;
+Cnb =   0.111040
 
 % Convert all control derivatives to rad instead of deg
 c_L_delta_e = c_L_delta_e * 180 / pi;
