@@ -159,44 +159,49 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         num_plots = 8;
 
         subplot(num_plots,1,1)
-        plot(t, roll_pred); 
+        plot(t, rad2deg(roll_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, roll);
+            plot(t, rad2deg(roll));
         end
         legend("\phi (estimated)", "\phi")
+        ylabel("[deg]")
 
         subplot(num_plots,1,2)
-        plot(t, pitch_pred); 
+        plot(t, rad2deg(pitch_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, pitch);
+            plot(t, rad2deg(pitch));
         end
         legend("\theta (estimated)", "\theta")
+        ylabel("[deg]")
 
         subplot(num_plots,1,3)
-        plot(t, yaw_pred); 
+        plot(t, rad2deg(yaw_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, yaw);
+            plot(t, rad2deg(yaw));
         end
         legend("\psi (estimated)", "\psi")
+        ylabel("[deg]")
 
         subplot(num_plots,1,4)
-        plot(t, p_pred);
+        plot(t, rad2deg(p_pred));
         if plot_actual_trajectory
             hold on
-            plot(t, p);
+            plot(t, rad2deg(p));
         end
         legend("p (estimated)", "p")
+        ylabel("[deg/s]")
 
         subplot(num_plots,1,5)
-        plot(t, r_pred);
+        plot(t, rad2deg(r_pred));
         if plot_actual_trajectory
             hold on
             plot(t, r);
         end
         legend("r (estimated)", "r")
+        ylabel("[deg/s]")
 
         subplot(num_plots,1,6)
         plot(t, v_pred);
@@ -205,14 +210,17 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             plot(t, v);
         end
         legend("v (estimated)", "v")
+        ylabel("[m/s]")
 
         subplot(num_plots,1,7)
-        plot(t, input(:,1) - aileron_trim);
+        plot(t, rad2deg(input(:,1) - aileron_trim));
         legend("\delta_a (trim subtracted)")
+        ylabel("[deg]");
 
         subplot(num_plots,1,8)
-        plot(t, input(:,2) - rudder_trim);
+        plot(t, rad2deg(input(:,2) - rudder_trim));
         legend("\delta_r (trim subtracted)")
+        ylabel("[deg]");
         
         sgtitle("experiment index: " + exp_i)
     end

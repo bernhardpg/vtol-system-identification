@@ -32,8 +32,8 @@ parameters = create_param_struct("lat");
 model_name = "roll_and_yaw_9";
 model_path = "nlgr_models/lateral_models/" + "model_" + model_name + "/";
 
-%experiments_to_use = 1:sum(maneuver_quantities);
-experiments_to_use = 11;
+experiments_to_use = 1:sum(maneuver_quantities);
+%experiments_to_use = 1;
 %experiments_to_use = 11:20;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 

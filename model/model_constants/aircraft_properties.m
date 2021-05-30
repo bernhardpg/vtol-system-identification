@@ -105,3 +105,4 @@ nondim_constant_lat = wingspan_m / (2 * V_cruise);
 
 % Load control surface properties
 control_surface_properties;
+steady_flight_trim;

@@ -1,25 +1,31 @@
-function [delta_a_rad, delta_e_rad, delta_r_rad] = calculate_control_surface_angles_rad(aileron_input, elevator_input, rudder_input)
+function [delta_a_rad, delta_e_rad, delta_r_rad] = calculate_control_surface_angles_rad(roll_input_raw, pitch_input_raw, yaw_input_raw)
     control_surface_properties; % See this file for a more detailed description
     
-    % 1. Saturate inputs at [-1,1]
-    aileron_input_saturated = bound(aileron_input, -1, 1);
-    elevator_input_saturated = bound(elevator_input, -1, 1);
-    rudder_input_saturated = bound(rudder_input, -1, 1);
+    % 1. Saturate raw px4 inputs at [-1,1], as these will be
+    %    saturated by PX4.
+    roll_input_raw_sat = sat(roll_input_raw);
+    pitch_input_raw_sat = sat(pitch_input_raw);
+    yaw_input_raw_saw = sat(yaw_input_raw);
     
-    % 2. Subtract trim values
-    aileron_input_saturated_wo_trim = aileron_input_saturated - trim_for_zero_deg_roll;
-    elevator_input_saturated_wo_trim = elevator_input_saturated - trim_for_zero_deg_pitch;
-    rudder_input_saturated_wo_trim = rudder_input_saturated - trim_for_zero_deg_yaw;
+    % 2. Subtract PX4 trim params to obtain absolute inputs
+    % (zero input => zero deflection angle)
+    roll_input_abs = roll_input_raw_sat - trim_for_zero_deg_roll;
+    pitch_input_abs = pitch_input_raw_sat - trim_for_zero_deg_pitch;
+    yaw_input_abs = yaw_input_raw_saw - trim_for_zero_deg_yaw;
     
     % 3. Convert inputs to degrees
-    delta_a_deg = linear_term_aileron * aileron_input_saturated_wo_trim + offset_aileron;
-    delta_e_deg = linear_term_elevator * elevator_input_saturated_wo_trim + offset_elevator;
-    delta_r_deg = linear_term_rudder * rudder_input_saturated_wo_trim + offset_rudder;
+    delta_a_deg = linear_term_aileron * roll_input_abs + offset_aileron;
+    delta_e_deg = linear_term_elevator * pitch_input_abs + offset_elevator;
+    delta_r_deg = linear_term_rudder * yaw_input_abs + offset_rudder;
     
     % Convert degrees to radians
     delta_a_rad = deg2rad(delta_a_deg);
     delta_e_rad = deg2rad(delta_e_deg);
     delta_r_rad = deg2rad(delta_r_deg);
+end
+
+function y = sat(x)
+    y = bound(x,-1,1);
 end
 
 function y = bound(x,bl,bu)

@@ -1,14 +1,12 @@
-% Trim values for steady flight
-% These are absolute, i.e. in raw PX4 inputs. Trims needs to be
-% subtracted from these before converting to degrees
-aileron_trim_px4_input = -0.03; % 06_31_21.ulg 12:55 to 13:08
-elevator_trim_px4_input = 0.12; % 06_31_21.ulg 17:20-17:26
-rudder_trim_px4_input = -0.12; % 06_31_21.ulg 12:55 to 13:05
+% Raw PX4 inputs required for steady flight
+aileron_input_trim = -0.03; % 06_31_21.ulg 12:55 to 13:08
+elevator_input_trim = 0.12; % 06_31_21.ulg 17:20-17:26
+rudder_input_trim = -0.12; % 06_31_21.ulg 12:55 to 13:05
 
 % load control surface properties
 control_surface_properties;
 
-% 1. Subtract trims hardcoded in PX4
+% 1. Subtract PX4 trims to obtain trim values in absolute inputs (zero => zero deflections)
 aileron_trim_px4_input_wo_trim = aileron_trim_px4_input - trim_for_zero_deg_roll;
 elevator_trim_px4_input_wo_trim = elevator_trim_px4_input - trim_for_zero_deg_pitch;
 rudder_trim_px4_input_wo_trim = rudder_trim_px4_input - trim_for_zero_deg_yaw;
