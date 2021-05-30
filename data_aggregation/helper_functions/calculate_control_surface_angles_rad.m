@@ -15,8 +15,10 @@ function [delta_a_rad, delta_e_rad, delta_r_rad] = calculate_control_surface_ang
     
     % 3. Convert inputs to degrees
     delta_a_deg = linear_term_aileron * roll_input_abs + offset_aileron;
-    delta_e_deg = linear_term_elevator * pitch_input_abs + offset_elevator;
-    delta_r_deg = linear_term_rudder * yaw_input_abs + offset_rudder;
+    % Flip signs on rudder and elevator to match standard aerospace
+    % conventions (for some reason PX4 does not do this)
+    delta_e_deg = -(linear_term_elevator * pitch_input_abs + offset_elevator);
+    delta_r_deg = -(linear_term_rudder * yaw_input_abs + offset_rudder);
     
     % Convert degrees to radians
     delta_a_rad = deg2rad(delta_a_deg);
