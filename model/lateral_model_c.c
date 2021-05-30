@@ -246,7 +246,7 @@ void compute_dx(
     dx[5] = ang_r_dot;
 
     double vel_v_dot;
-    vel_v_dot = (1/m[0]) * F_tot_y;
+    vel_v_dot = - ang_r * vel_u + (1/m[0]) * F_tot_y;
 
     dx[6] = vel_v_dot;
 

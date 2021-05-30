@@ -183,7 +183,7 @@ function [parameters] = create_param_struct(type)
         };
     
         par_max_lat = {
-            Inf,...% c_Y_beta
+            -approx_zero,...% c_Y_beta
             Inf,...% c_Y_p
             Inf,...% c_Y_r
             -approx_zero,...% c_Y_delta_a
