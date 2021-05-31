@@ -164,7 +164,7 @@ void compute_dx(
     // Gravitational force
 		double m_times_g = m[0] * g[0];
     double F_g_x, F_g_z;
-    F_g_x = 2 *  m_times_g * q0 * q2;
+    F_g_x = - 2 *  m_times_g * q0 * q2;
     F_g_z = m_times_g * (pow(q0, 2) - pow(q2, 2));
 
     // Aerodynamic forces

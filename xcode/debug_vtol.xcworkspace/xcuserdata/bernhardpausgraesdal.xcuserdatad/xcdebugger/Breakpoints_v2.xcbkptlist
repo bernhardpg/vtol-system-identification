@@ -39,7 +39,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D27110B9-3B55-4211-836F-3D45BC99AFE2"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../model/vtol_linear_c.c"
@@ -54,15 +54,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F227C2D4-6606-44F9-B199-97670F830647"
+            uuid = "37802323-B8A9-4D83-92CF-F5BE887BC573"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../model/longitudinal_model_c.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "105"
-            endingLineNumber = "105"
+            startingLineNumber = "63"
+            endingLineNumber = "63"
             landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
             landmarkType = "9">
          </BreakpointContent>
@@ -70,15 +70,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "FA19B06F-7A23-4F76-89AC-DBC21EDA13AD"
+            uuid = "00A705A9-798A-431F-A5CA-92A27ADE363C"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../model/longitudinal_model_w_actuator_dynamics_c.c"
+            filePath = "../model/longitudinal_model_c.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "108"
-            endingLineNumber = "108"
+            startingLineNumber = "69"
+            endingLineNumber = "69"
             landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
             landmarkType = "9">
          </BreakpointContent>
@@ -86,17 +86,64 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "C9DF8F65-13EC-47C1-B0CA-527083AB4A18"
+            uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../model/longitudinal_model_w_actuator_dynamics_c.c"
+            filePath = "../model/longitudinal_model_c.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "210"
-            endingLineNumber = "210"
+            startingLineNumber = "232"
+            endingLineNumber = "232"
             landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
             landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "compute_dx"
+                  moduleName = "longitudinal_model_c.mexmaci64"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "233"
+                  endingLineNumber = "233"
+                  offsetFromSymbolStart = "2341">
+               </Location>
+               <Location
+                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "compute_dx"
+                  moduleName = "longitudinal_model_c.mexmaci64"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "233"
+                  endingLineNumber = "233"
+                  offsetFromSymbolStart = "2529">
+               </Location>
+               <Location
+                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "compute_dx"
+                  moduleName = "longitudinal_model_c.mexmaci64"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "233"
+                  endingLineNumber = "233"
+                  offsetFromSymbolStart = "2643">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

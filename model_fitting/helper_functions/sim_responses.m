@@ -4,7 +4,7 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
     num_experiments = length(experiments_to_use);
     
     if model_type == 'lon'
-       input_trims = [nlgr_model.Parameters(11).Value]; % elevator % TODO: This is not correct index!!
+       input_trims = [nlgr_model.Parameters(13).Value]; % elevator
     elseif model_type == 'lat'
         aileron_trim = nlgr_model.Parameters(12).Value;
         rudder_trim = nlgr_model.Parameters(14).Value;
@@ -64,6 +64,9 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         u_pred = predicted_output(:,4);
         w_pred = predicted_output(:,5);
         
+        alpha_pred = atan2(w_pred, u_pred);
+        alpha = atan2(w, u);
+        
         elevator_trim = input_trims;
 
         quat_pred = [e0_pred zeros(size(e0_pred)) e2_pred zeros(size(e0_pred))]; % Model assumes only pitch movement
@@ -79,60 +82,77 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             fig.Visible = 'off';
         end
         fig.Position = [100 100 900 900];
+        numplots = 9;
 
-        subplot(8,1,1)
-        plot(t, roll_pred); 
+        subplot(numplots,1,1)
+        plot(t, rad2deg(roll_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, roll);
+            plot(t, rad2deg(roll));
         end
         legend("\phi (not part of model)", "\phi")
+        ylabel("[deg]")
 
-        subplot(8,1,2)
-        plot(t, pitch_pred); 
+        subplot(numplots,1,2)
+        plot(t, rad2deg(pitch_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, pitch);
+            plot(t, rad2deg(pitch));
         end
-        legend("\theta (estimated)", "\theta")
-
-        subplot(8,1,3)
-        plot(t, yaw_pred); 
+        legend("\theta (predicted)", "\theta")
+        ylabel("[deg]")
+        
+        subplot(numplots,1,3)
+        plot(t, rad2deg(yaw_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, yaw);
+            plot(t, rad2deg(yaw));
         end
         legend("\psi (not part of model)", "\psi")
-
-        subplot(8,1,4)
-        plot(t, q_pred);
+        ylabel("[deg]")
+        
+        subplot(numplots,1,4)
+        plot(t, rad2deg(alpha_pred)); 
         if plot_actual_trajectory
             hold on
-            plot(t, q);
+            plot(t, rad2deg(alpha));
         end
-        legend("q (estimated)", "q")
+        legend("\alpha (predicted)", "\alpha")
+        ylabel("[deg]")
 
-        subplot(8,1,5)
+        subplot(numplots,1,5)
+        plot(t, rad2deg(q_pred))
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(q));
+        end
+        legend("q (predicted)", "q")
+        ylabel("[deg/s]")
+
+        subplot(numplots,1,6)
         plot(t, u_pred);
         if plot_actual_trajectory
             hold on
             plot(t, u);
         end
-        legend("u (estimated)", "u")
+        legend("u (predicted)", "u")
+        ylabel("[m/s]")
 
-        subplot(8,1,6)
+        subplot(numplots,1,7)
         plot(t, w_pred);
         if plot_actual_trajectory
             hold on
             plot(t, w);
         end
-        legend("w (estimated)", "w")
-
-        subplot(8,1,7)
-        plot(t, input(:,1) - elevator_trim);
+        legend("w (predicted)", "w")
+        ylabel("[deg]")
+        
+        subplot(numplots,1,8)
+        plot(t, rad2deg(input(:,1) - elevator_trim));
         legend("\delta_e (trim subtracted)")
+        ylabel("[deg]")
 
-        subplot(8,1,8)
+        subplot(numplots,1,9)
         plot(t, input(:,2));
         legend("n_p")
 
@@ -176,7 +196,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(roll));
         end
-        legend("\phi (estimated)", "\phi")
+        legend("\phi (predicted)", "\phi")
         ylabel("[deg]")
 
         subplot(num_plots,1,2)
@@ -185,7 +205,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(pitch));
         end
-        legend("\theta (estimated)", "\theta")
+        legend("\theta (predicted)", "\theta")
         ylabel("[deg]")
 
         subplot(num_plots,1,3)
@@ -194,7 +214,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(yaw));
         end
-        legend("\psi (estimated)", "\psi")
+        legend("\psi (predicted)", "\psi")
         ylabel("[deg]")
         
         subplot(num_plots,1,4)
@@ -203,7 +223,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(beta));
         end
-        legend("\beta (estimated)", "\beta")
+        legend("\beta (predicted)", "\beta")
         ylabel("[deg]")
 
         subplot(num_plots,1,5)
@@ -212,7 +232,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(p));
         end
-        legend("p (estimated)", "p")
+        legend("p (predicted)", "p")
         ylabel("[deg/s]")
 
         subplot(num_plots,1,6)
@@ -221,7 +241,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, rad2deg(r));
         end
-        legend("r (estimated)", "r")
+        legend("r (predicted)", "r")
         ylabel("[deg/s]")
 
         subplot(num_plots,1,7)
@@ -230,7 +250,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             hold on
             plot(t, v);
         end
-        legend("v (estimated)", "v")
+        legend("v (predicted)", "v")
         ylabel("[m/s]")
 
         subplot(num_plots,1,8)
