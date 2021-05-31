@@ -51,9 +51,11 @@ print_parameters(nlgr_model.Parameters, "free")
 
 %% Plot response of model
 close all;
+save_plot = true;
+show_plot = false;
 sim_responses(...
     experiments_to_use, nlgr_model, data_lat(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
-    true, "lat", false);
+    save_plot, "lat", show_plot);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lat(:,:,:,experiments_to_use), nlgr_model)
 
@@ -176,8 +178,3 @@ function [output_weights] = create_cost_fn(opt_type)
     end
 end
 
-function [nlgr_model] = reset_parameters(nlgr_model, param_indices, params)
-    for i = param_indices
-        nlgr_model.Parameters(i).Value = params(i).Value;
-    end
-end

@@ -71,47 +71,57 @@ void compute_dx(
     // Airframe
     double *m; // Mass
     double *chord; // Mean chord length
-    double *b; // Wingspan
-    double *nondim_constant_lon; // Wingspan
+    double *wingspan;
+    double *nondim_constant_lon;
+    double *nondim_constant_lat;
     double *lam; // Intermediate constants calculated from inertia matrix
     double *J_yy; // Moment of inertia around y axis
 
     m = p[2];
     chord = p[3];
-    b = p[4];
+    wingspan = p[4];
 		nondim_constant_lon = p[5];
-    lam = p[6]; // Vector of 8 elements
-		J_yy = p[7];
+		nondim_constant_lat = p[6];
+    lam = p[7]; // Vector of 8 elements
+		J_yy = p[8];
+
+		double lam_1, lam_2, lam_3, lam_4, lam_5, lam_6, lam_7, lam_8;
+		lam_1 = lam[0];
+		lam_2 = lam[1];
+		lam_3 = lam[2];
+		lam_4 = lam[3];
+		lam_5 = lam[4];
+		lam_6 = lam[5];
+		lam_7 = lam[6];
+		lam_8 = lam[7];
 
 		double *servo_time_const, *servo_rate_lim;
-		servo_time_const = p[8];
-		servo_rate_lim = p[9];
+		servo_time_const = p[9];
+		servo_rate_lim = p[10];
 
-		double *elevator_trim;
-		elevator_trim = p[10];
-
-    // ********
-    // Parameters
-    // ********
+		double *aileron_trim, *elevator_trim, *rudder_trim;
+		aileron_trim = p[11];
+		elevator_trim = p[12];
+		rudder_trim = p[13];
 
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[11];
-    c_L_alpha = p[12];
-    c_L_q = p[13];
-    c_L_delta_e = p[14];
+    c_L_0 = p[14];
+    c_L_alpha = p[15];
+    c_L_q = p[16];
+    c_L_delta_e = p[17];
 
     double *c_D_p, *c_D_alpha, *c_D_alpha_sq, *c_D_q, *c_D_delta_e; // Drag parameters
-    c_D_p = p[15];
-    c_D_alpha = p[16];
-    c_D_alpha_sq = p[17];
-    c_D_q = p[18];
-    c_D_delta_e = p[19];
+    c_D_p = p[18];
+    c_D_alpha = p[19];
+    c_D_alpha_sq = p[20];
+    c_D_q = p[21];
+    c_D_delta_e = p[22];
 
     double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[20];
-    c_m_alpha = p[21];
-    c_m_q = p[22];
-    c_m_delta_e = p[23];
+    c_m_0 = p[23];
+    c_m_alpha = p[24];
+    c_m_q = p[25];
+    c_m_delta_e = p[26];
 
     // *******
     // State and input
@@ -119,7 +129,7 @@ void compute_dx(
     // State: [q_attitude, ang_v_body, vel_body]
 
     // q_attitude = q0, q1, q2, q3
-    double q0, q1, q2, q3;
+    double q0, q2;
     q0 = x[0];
     q2 = x[1];
 
@@ -144,7 +154,7 @@ void compute_dx(
     n_p = u[1];
 
     // ******
-    // Forces 
+    // Forces
     // ******
 
     // Calculate AoA, assuming no wind
@@ -153,10 +163,9 @@ void compute_dx(
 
     // Gravitational force
 		double m_times_g = m[0] * g[0];
-    double F_g[3];
-    F_g[0] = 2 *  m_times_g * q0 * q2;
-    F_g[1] = 0;
-    F_g[2] = m_times_g * (pow(q0, 2) - pow(q2, 2));
+    double F_g_x, F_g_z;
+    F_g_x = 2 *  m_times_g * q0 * q2;
+    F_g_z = m_times_g * (pow(q0, 2) - pow(q2, 2));
 
     // Aerodynamic forces
     double c_L = c_L_0[0] + c_L_alpha[0] * alpha
@@ -169,16 +178,16 @@ void compute_dx(
       + c_D_delta_e[0] * delta_e;
     double F_drag = half_rho_planform[0] * pow(V, 2) * c_D;
 
-    double F_aero[3];
+    double X, Z;
 
     // Rotate from stability frame to body frame
-    F_aero[0] = -cos(alpha) * F_drag + sin(alpha) * F_lift;
-    F_aero[2] = -sin(alpha) * F_drag - cos(alpha) * F_lift;
+    X = -cos(alpha) * F_drag + sin(alpha) * F_lift;
+    Z = -sin(alpha) * F_drag - cos(alpha) * F_lift;
 
     // Sum all forces
-    double F_tot[3];
-    F_tot[0] = F_g[0] + F_aero[0];
-    F_tot[2] = F_g[2] + F_aero[2];
+    double F_tot_x, F_tot_z;
+    F_tot_x = F_g_x + X;
+    F_tot_z = F_g_z + Z;
 
     // ******
     // Moments
@@ -190,8 +199,8 @@ void compute_dx(
       + c_m_q[0] * nondim_constant_lon[0] * ang_q
       + c_m_delta_e[0] * delta_e;
 
-    double m_moment;
-    m_moment = half_rho_planform[0] * pow(V, 2) * chord[0] * c_m;
+    double M;
+    M = half_rho_planform[0] * pow(V, 2) * chord[0] * c_m;
 
     // *******
     // Dynamics
@@ -204,13 +213,13 @@ void compute_dx(
     dx[1] = q2_dot;
 
     double ang_q_dot;
-    ang_q_dot = (1 / J_yy[0]) * m_moment;
+    ang_q_dot = (1 / J_yy[0]) * M;
 
     dx[2] = ang_q_dot;
 
     double vel_u_dot, vel_w_dot;
-    vel_u_dot = (1/m[0]) * F_tot[0] - ang_q * vel_w;
-    vel_w_dot = (1/m[0]) * F_tot[2] + ang_q * vel_u;
+    vel_u_dot = (1/m[0]) * F_tot_x - ang_q * vel_w;
+    vel_w_dot = (1/m[0]) * F_tot_z + ang_q * vel_u;
 
     dx[3] = vel_u_dot;
     dx[4] = vel_w_dot;
