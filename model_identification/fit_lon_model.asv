@@ -20,7 +20,7 @@ num_inputs_lon = 2;
 num_experiments = length(data_lon.Experiment);
 
 %% Load previous model parameters
-model_name_to_load = "final2";
+model_name_to_load = "final";
 model_load_path = "fitted_models/longitudinal_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
@@ -29,10 +29,10 @@ old_parameters = nlgr_model.Parameters;
 initial_parameters = create_param_struct("lon");
 
 % Create model path
-model_name = "final3";
+model_name = "final2";
 model_path = "fitted_models/longitudinal_models/" + "model_" + model_name + "/";
 
-experiments_to_use = [1:12];
+experiments_to_use = [1 3 4 10];
 initial_states = create_initial_states_struct(data_lon, num_states_lon, num_outputs_lon, experiments_to_use, "lon");
 
 [nlgr_model] = create_nlgr_object(num_states_lon, num_outputs_lon, num_inputs_lon, initial_parameters, initial_states, "lon");
@@ -47,7 +47,7 @@ print_parameters(nlgr_model.Parameters, "free")
 %% Plot response of model
 close all;
 save_plot = true;
-show_plot = false;
+show_plot = true;
 sim_responses(...
     experiments_to_use, nlgr_model, data_lon(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
     save_plot, "lon", show_plot);
@@ -59,7 +59,7 @@ nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %% Fix params
 params_to_fix = [1:27];
-params_to_unfix = [15:27];
+params_to_unfix = [2];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
 nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
@@ -79,12 +79,11 @@ opt.SearchOptions.MaxIterations = 100;
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([1 1 1 0.01 0.01]);
+opt.OutputWeight = diag([1 1 1 1 1]);
 opt.Regularization.Lambda = 10;
-%opt.Regularization.R = [1 1 0.01 0];
-%opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];
-%opt.Regularization.R = [50 2000 1 1 1 1 1 1 1];
-opt.Regularization.Nominal = 'model';
+%opt.Regularization.R = [1 1 0.01 1];
+opt.Regularization.R = [50 50 1 1 10 100 1 1 1];
+%opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %         100,... % c_L_0,				...
 %         100,... % c_L_alpha,      	...
