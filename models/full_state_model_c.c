@@ -31,7 +31,7 @@
 #include "math.h"
 
 /* Specify the number of outputs here. */
-#define NY 7
+#define NY 10
 // Taken from this page: https://stackoverflow.com/questions/3437404/min-and-max-in-c
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -108,6 +108,8 @@ void compute_dx(
     // Parameters
     // ********
 
+		// Longitudinal parameters
+
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
     c_L_0 = p[14];
     c_L_alpha = p[15];
@@ -126,6 +128,8 @@ void compute_dx(
     c_m_alpha = p[24];
     c_m_q = p[25];
     c_m_delta_e = p[26];
+
+		// Lateral parameters
 
 		// Y-aerodynamic force
     double *c_Y_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r;
@@ -188,9 +192,9 @@ void compute_dx(
 		delta_r = x[12];
 
     double delta_a_sp, delta_e_sp, delta_r_sp;
-    delta_a_sp = u[0] - aileron_trim[0];
-    delta_e_sp = u[1] - elevator_trim[0];
-    delta_r_sp = u[2] - rudder_trim[0];
+    delta_a_sp = u[4] - aileron_trim[0];
+    delta_e_sp = u[5] - elevator_trim[0];
+    delta_r_sp = u[6] - rudder_trim[0];
 
     // ******
     // Forces
@@ -360,6 +364,9 @@ void compute_y(
     y[4] = x[4];
     y[5] = x[5];
     y[6] = x[6];
+    y[7] = x[7];
+    y[8] = x[8];
+    y[9] = x[9];
 		// Control surface deflections are not outputs, as these are not measured
 }
 

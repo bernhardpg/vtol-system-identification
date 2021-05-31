@@ -2,7 +2,13 @@ function [nlgr] = create_nlgr_object(Nx, Ny, Nu, parameters, initial_states, typ
     Order = [Ny Nu Nx];
 
     if type == "full"
-        disp("not yet implemented")
+        FileName = 'full_state_model_c';
+        
+        InputName = {'nt1', 'nt2', 'nt3', 'nt4', 'delta_a_sp', 'delta_e_sp', 'delta_r_sp', 'n_p'};
+        InputUnit =  {'rpm', 'rpm', 'rpm', 'rpm', 'rad', 'rad', 'rad', 'rpm'};
+
+        OutputName = {'q0', 'q1', 'q2', 'q3', 'p', 'q', 'r', 'u', 'v', 'w'};
+        OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', 'm/s', 'm/s', 'm/s'};
         
         
     elseif type == "lon"

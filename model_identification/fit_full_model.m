@@ -8,34 +8,34 @@ metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Create data for sysid
-maneuver_types = ["pitch_211_no_throttle"];
-maneuver_quantities = [12];
+maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
+maneuver_quantities = [2 2 2];
 
-model_type = "lon";
-[data_lon, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
+model_type = "full";
+[~, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
 
-num_states_lon = 6;
-num_outputs_lon = 5;
-num_inputs_lon = 2;
-num_experiments = length(data_lon.Experiment);
+num_states = 13;
+num_outputs = 10;
+num_inputs = 8;
+num_experiments = length(data_full_state.Experiment);
 
 %% Load previous model parameters
-model_name_to_load = "final";
-model_load_path = "fitted_models/longitudinal_models/" + "model_" + model_name_to_load + "/";
+model_name_to_load = "1";
+model_load_path = "fitted_models/full_state_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
-initial_parameters = create_param_struct("lon");
+initial_parameters = create_param_struct("full");
 
 % Create model path
-model_name = "final2";
-model_path = "fitted_models/longitudinal_models/" + "model_" + model_name + "/";
+model_name = "1";
+model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 
-experiments_to_use = [1 3 4 10];
-initial_states = create_initial_states_struct(data_lon, num_states_lon, num_outputs_lon, experiments_to_use, "lon");
+experiments_to_use = [1:6];
+initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full");
 
-[nlgr_model] = create_nlgr_object(num_states_lon, num_outputs_lon, num_inputs_lon, initial_parameters, initial_states, "lon");
+[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, initial_parameters, initial_states, "full");
 
 %% Load parameters from old model
 [nlgr_model] = load_parameters_into_model(nlgr_model, old_parameters);
@@ -49,8 +49,8 @@ close all;
 save_plot = true;
 show_plot = true;
 sim_responses(...
-    experiments_to_use, nlgr_model, data_lon(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
-    save_plot, "lon", show_plot);
+    experiments_to_use, nlgr_model, data_full_state(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
+    save_plot, "full", show_plot);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lon(:,:,:,experiments_to_use), nlgr_model)
 
@@ -59,7 +59,7 @@ nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %% Fix params
 params_to_fix = [1:27];
-params_to_unfix = [2];
+params_to_unfix = [15:27];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
 nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
@@ -79,11 +79,12 @@ opt.SearchOptions.MaxIterations = 100;
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([1 1 1 1 1]);
+opt.OutputWeight = diag([1 1 1 0.01 0.01]);
 opt.Regularization.Lambda = 10;
-%opt.Regularization.R = [1 1 0.01 1];
-opt.Regularization.R = [50 50 1 1 10 100 1 1 1];
-%opt.Regularization.Nominal = 'model';
+%opt.Regularization.R = [1 1 0.01 0];
+%opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];
+%opt.Regularization.R = [50 2000 1 1 1 1 1 1 1];
+opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %         100,... % c_L_0,				...
 %         100,... % c_L_alpha,      	...

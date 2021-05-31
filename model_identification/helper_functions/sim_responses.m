@@ -3,13 +3,11 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
     % experiment numbers
     num_experiments = length(experiments_to_use);
     
-    if model_type == 'lon'
-       input_trims = [nlgr_model.Parameters(13).Value]; % elevator
-    elseif model_type == 'lat'
-        aileron_trim = nlgr_model.Parameters(12).Value;
-        rudder_trim = nlgr_model.Parameters(14).Value;
-        input_trims = [aileron_trim rudder_trim]; % aileron and rudder
-    end
+    % Subtract trims before plotting, to plot what the model sees
+    aileron_trim = nlgr_model.Parameters(12).Value;
+    elevator_trim = nlgr_model.Parameters(13).Value;
+    rudder_trim = nlgr_model.Parameters(14).Value;
+    input_trims = [aileron_trim elevator_trim rudder_trim];
     
     for i = 1:num_experiments
         exp_i = experiments_to_use(i); % only used for plot name
@@ -55,6 +53,10 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
     yaw = eul(:,1);
     pitch = eul(:,2);
     roll = eul(:,3);
+
+    aileron_trim = input_trims(1);
+    elevator_trim = input_trims(2);
+    rudder_trim = input_trims(3);
     
     if model_type == "lon"
         % Read predicted state
@@ -66,8 +68,6 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         
         alpha_pred = atan2(w_pred, u_pred);
         alpha = atan2(w, u);
-        
-        elevator_trim = input_trims;
 
         quat_pred = [e0_pred zeros(size(e0_pred)) e2_pred zeros(size(e0_pred))]; % Model assumes only pitch movement
         eul_pred = quat2eul(quat_pred);
@@ -167,11 +167,8 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         p_pred = predicted_output(:,5);
         r_pred = predicted_output(:,6);
         v_pred = predicted_output(:,7);
-        
-        aileron_trim = input_trims(1);
-        rudder_trim = input_trims(2);
 
-        quat_pred = [e0_pred e1_pred e2_pred e3_pred]; % Model assumes only pitch movement
+        quat_pred = [e0_pred e1_pred e2_pred e3_pred];
         eul_pred = quat2eul(quat_pred);
 
         roll_pred = eul_pred(:,3);
@@ -188,7 +185,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
             fig.Visible = 'off';
         end
         fig.Position = [100 100 600 600];
-        num_plots = 9;
+        num_plots = 15;
 
         subplot(num_plots,1,1)
         plot(t, rad2deg(roll_pred)); 
@@ -260,6 +257,157 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
 
         subplot(num_plots,1,9)
         plot(t, rad2deg(input(:,2) - rudder_trim));
+        legend("\delta_r (trim subtracted)")
+        ylabel("[deg]");
+        
+        sgtitle("experiment index: " + exp_i)
+        
+    elseif model_type == "full"
+        % Read predicted state
+        e0_pred = predicted_output(:,1);
+        e1_pred = predicted_output(:,2);
+        e2_pred = predicted_output(:,3);
+        e3_pred = predicted_output(:,4);
+        p_pred = predicted_output(:,5);
+        q_pred = predicted_output(:,6);
+        r_pred = predicted_output(:,7);
+        u_pred = predicted_output(:,8);
+        v_pred = predicted_output(:,9);
+        w_pred = predicted_output(:,10);
+
+        quat_pred = [e0_pred e1_pred e2_pred e3_pred];
+        eul_pred = quat2eul(quat_pred);
+
+        roll_pred = eul_pred(:,3);
+        pitch_pred = eul_pred(:,2);
+        yaw_pred = eul_pred(:,1); 
+                
+        alpha_pred = atan2(w_pred, u_pred);
+        alpha = atan2(w, u);
+        
+        beta = asin(v ./ V_a);
+        V_a_pred = sqrt(u_pred .^ 2 + v_pred .^ 2 + w_pred .^ 2);
+        beta_pred = asin(v_pred ./ V_a_pred);
+
+        % Plot
+        fig = figure;
+        if ~show_plot
+            fig.Visible = 'off';
+        end
+        fig.Position = [100 100 1000 1000];
+        num_plots = 9;
+
+        subplot(num_plots,2,1)
+        plot(t, rad2deg(roll_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(roll));
+        end
+        legend("\phi (predicted)", "\phi")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,3)
+        plot(t, rad2deg(pitch_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(pitch));
+        end
+        legend("\theta (predicted)", "\theta")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,5)
+        plot(t, rad2deg(yaw_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(yaw));
+        end
+        legend("\psi (predicted)", "\psi")
+        ylabel("[deg]")
+        
+        subplot(num_plots,2,2)
+        plot(t, rad2deg(alpha_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(alpha));
+        end
+        legend("\alpha (predicted)", "\alpha")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,4)
+        plot(t, rad2deg(beta_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(beta));
+        end
+        legend("\beta (predicted)", "\beta")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,7)
+        plot(t, rad2deg(p_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(p));
+        end
+        legend("p (predicted)", "p")
+        ylabel("[deg/s]")
+        
+        subplot(num_plots,2,9)
+        plot(t, rad2deg(q_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(q));
+        end
+        legend("q (predicted)", "q")
+        ylabel("[deg/s]")
+
+        subplot(num_plots,2,11)
+        plot(t, rad2deg(r_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(r));
+        end
+        legend("r (predicted)", "r")
+        ylabel("[deg/s]")
+
+        subplot(num_plots,2,13)
+        plot(t, u_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, u);
+        end
+        legend("u (predicted)", "u")
+        ylabel("[m/s]")
+        
+        subplot(num_plots,2,15)
+        plot(t, v_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, v);
+        end
+        legend("v (predicted)", "v")
+        ylabel("[m/s]")
+        
+        subplot(num_plots,2,17)
+        plot(t, w_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, w);
+        end
+        legend("w (predicted)", "w")
+        ylabel("[m/s]")
+
+        subplot(num_plots,2,6)
+        plot(t, rad2deg(input(:,5) - aileron_trim));
+        legend("\delta_a (trim subtracted)")
+        ylabel("[deg]");
+        
+        subplot(num_plots,2,8)
+        plot(t, rad2deg(input(:,6) - elevator_trim));
+        legend("\delta_e (trim subtracted)")
+        ylabel("[deg]");
+
+        subplot(num_plots,2,10)
+        plot(t, rad2deg(input(:,7) - rudder_trim));
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");
         
