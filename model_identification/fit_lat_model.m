@@ -19,8 +19,8 @@ num_outputs_lat = 7;
 num_inputs_lat = 4; % [delta_a_sp, delta_r_sp, u, w]
 
 %% Load previous model parameters
-model_name_to_load = "good_w_correct_trim_2";
-model_load_path = "nlgr_models/lateral_models/" + "model_" + model_name_to_load + "/";
+model_name_to_load = "final3";
+model_load_path = "fitted_models/lateral_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
@@ -29,14 +29,14 @@ old_parameters = nlgr_model.Parameters;
 initial_parameters = create_param_struct("lat");
 
 % Create model path
-model_name = "00_chosen_model";
-model_path = "nlgr_models/lateral_models/" + "model_" + model_name + "/";
+model_name = "final3";
+model_path = "fitted_models/lateral_models/" + "model_" + model_name + "/";
 
 %experiments_to_use = 1:sum(maneuver_quantities);
 
 % TODO: Fix experiment number 19
 % TODO: Fix experiment number 42
-experiments_to_use = [1:15 26:40];
+experiments_to_use = [1:5 26:30];
 %experiments_to_use = 26:27;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 
@@ -52,7 +52,7 @@ print_parameters(nlgr_model.Parameters, "free")
 %% Plot response of model
 close all;
 save_plot = true;
-show_plot = false;
+show_plot = true;
 sim_responses(...
     experiments_to_use, nlgr_model, data_lat(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
     save_plot, "lat", show_plot);
@@ -72,7 +72,7 @@ pe(data_lat, nlgr_model);
 
 %% Fix params
 params_to_fix = [1:29];
-params_to_unfix = [25:29];
+params_to_unfix = [15:29];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
 nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
@@ -93,7 +93,7 @@ opt.SearchOptions.MaxIterations = 100;
 % Only weigh states p, r, v
 
 opt.OutputWeight = diag([0 0 0 0 1 1 1]);
-opt.Regularization.Lambda = 10;
+opt.Regularization.Lambda = 100;
 opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %     1,...% c_Y_beta
@@ -131,6 +131,7 @@ print_parameters(nlgr_model.Parameters, "free");
 %% Save model
 mkdir(model_path)
 save(model_path + "model.mat", 'nlgr_model');
+disp("Saved " + model_name);
 
 %% Functions
 

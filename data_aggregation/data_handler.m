@@ -616,7 +616,11 @@ function [t, state, input] = read_state_and_input_from_log(csv_log_file_location
     u_mr = interp1q(t_u_mr, u_mr_raw, t');
     % TODO: Convert these from PX4 inputs to actual RPMs of each motor
 
-    t_u_fw = actuator_controls_fw.timestamp / 1e6;
+    input_offset_s = 0.035;
+    % There seems to be a delay between the time the input is commanded and
+    % the time it takes before before the system reacts. Either that, or
+    % there is some delay in the logging (which is not documented anywhere)
+    t_u_fw = actuator_controls_fw.timestamp / 1e6 + input_offset_s;
     % Inputs in [0,1] interval
     fw_aileron_input = actuator_controls_fw.control_0_;
     fw_elevator_input = actuator_controls_fw.control_1_;

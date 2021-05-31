@@ -129,7 +129,7 @@ function [parameters] = create_param_struct(type)
             approx_zero,...% c_n_beta
             -Inf,...% c_n_p
             -Inf,...% c_n_r
-            approx_zero,...% c_n_delta_a
+            -Inf,...% c_n_delta_a
             -Inf,...% c_n_delta_r
         };
     
