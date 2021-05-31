@@ -294,7 +294,159 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         if ~show_plot
             fig.Visible = 'off';
         end
-        fig.Position = [100 100 1000 1000];
+        fig.Position = [100 100 1500 1000];
+        num_plots = 9;
+
+        subplot(num_plots,2,1)
+        plot(t, rad2deg(roll_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(roll));
+        end
+        legend("\phi (predicted)", "\phi")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,3)
+        plot(t, rad2deg(pitch_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(pitch));
+        end
+        legend("\theta (predicted)", "\theta")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,5)
+        plot(t, rad2deg(yaw_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(yaw));
+        end
+        legend("\psi (predicted)", "\psi")
+        ylabel("[deg]")
+        
+        subplot(num_plots,2,2)
+        plot(t, rad2deg(alpha_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(alpha));
+        end
+        legend("\alpha (predicted)", "\alpha")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,4)
+        plot(t, rad2deg(beta_pred)); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(beta));
+        end
+        legend("\beta (predicted)", "\beta")
+        ylabel("[deg]")
+
+        subplot(num_plots,2,7)
+        plot(t, rad2deg(p_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(p));
+        end
+        legend("p (predicted)", "p")
+        ylabel("[deg/s]")
+        
+        subplot(num_plots,2,9)
+        plot(t, rad2deg(q_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(q));
+        end
+        legend("q (predicted)", "q")
+        ylabel("[deg/s]")
+
+        subplot(num_plots,2,11)
+        plot(t, rad2deg(r_pred));
+        if plot_actual_trajectory
+            hold on
+            plot(t, rad2deg(r));
+        end
+        legend("r (predicted)", "r")
+        ylabel("[deg/s]")
+
+        subplot(num_plots,2,13)
+        plot(t, u_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, u);
+        end
+        legend("u (predicted)", "u")
+        ylabel("[m/s]")
+        
+        subplot(num_plots,2,15)
+        plot(t, v_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, v);
+        end
+        legend("v (predicted)", "v")
+        ylabel("[m/s]")
+        
+        subplot(num_plots,2,17)
+        plot(t, w_pred);
+        if plot_actual_trajectory
+            hold on
+            plot(t, w);
+        end
+        legend("w (predicted)", "w")
+        ylabel("[m/s]")
+
+        subplot(num_plots,2,6)
+        plot(t, rad2deg(input(:,5) - aileron_trim));
+        legend("\delta_a (trim subtracted)")
+        ylabel("[deg]");
+        
+        subplot(num_plots,2,8)
+        plot(t, rad2deg(input(:,6) - elevator_trim));
+        legend("\delta_e (trim subtracted)")
+        ylabel("[deg]");
+
+        subplot(num_plots,2,10)
+        plot(t, rad2deg(input(:,7) - rudder_trim));
+        legend("\delta_r (trim subtracted)")
+        ylabel("[deg]");
+        
+        sgtitle("experiment index: " + exp_i)
+    
+    elseif model_type == "full_lat_fixed"
+        % Read predicted state
+        e0_pred = predicted_output(:,1);
+        e1_pred = predicted_output(:,2);
+        e2_pred = predicted_output(:,3);
+        e3_pred = predicted_output(:,4);
+        q_pred = predicted_output(:,5);
+        u_pred = predicted_output(:,6);
+        w_pred = predicted_output(:,7);
+        
+        p_pred = input(:,9);
+        r_pred = input(:,10);
+        v_pred = input(:,11);
+
+        quat_pred = [e0_pred e1_pred e2_pred e3_pred];
+        eul_pred = quat2eul(quat_pred);
+
+        roll_pred = eul_pred(:,3);
+        pitch_pred = eul_pred(:,2);
+        yaw_pred = eul_pred(:,1); 
+                
+        alpha_pred = atan2(w_pred, u_pred);
+        alpha = atan2(w, u);
+        
+        beta = asin(v ./ V_a);
+        V_a_pred = sqrt(u_pred .^ 2 + v_pred .^ 2 + w_pred .^ 2);
+        beta_pred = asin(v_pred ./ V_a_pred);
+
+        % Plot
+        fig = figure;
+        if ~show_plot
+            fig.Visible = 'off';
+        end
+        fig.Position = [100 100 1500 1000];
         num_plots = 9;
 
         subplot(num_plots,2,1)

@@ -68,6 +68,74 @@ function [data] = create_iddata(t, full_state, full_input, maneuver_start_indice
                 data = merge(data,z);
             end
         end
+    
+    elseif data_type == "full_lat_fixed"
+        data = iddata('Name', 'Full state model with lateral states fixed');
+
+        % Describe input
+        InputName = {'nt1', 'nt2', 'nt3', 'nt4', 'delta_a_sp', 'delta_e_sp', 'delta_r_sp', 'n_p', 'p', 'r', 'v'};
+        InputUnit =  {'rpm', 'rpm', 'rpm', 'rpm', 'rad', 'rad', 'rad', 'rpm', 'rad/s', 'rad/s', 'm/s'};
+
+        % Describe state (which is equal to output)
+        OutputName = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w'};
+        OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
+
+        for maneuver_i = 1:num_maneuvers
+            if maneuver_i == 1
+                maneuver_start_index = 1;
+            else
+                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
+            end
+
+            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
+
+            % Extract only relevant maneuver data
+            t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
+            full_state_maneuver = full_state(maneuver_start_index:maneuver_end_index,:);
+            full_input_maneuver = full_input(maneuver_start_index:maneuver_end_index,:);
+
+            quat = full_state_maneuver(:,1:4);
+            e0 = quat(:,1);
+            e1 = quat(:,2);
+            e2 = quat(:,3);
+            e3 = quat(:,4);
+
+            p = full_state_maneuver(:,5);
+            q = full_state_maneuver(:,6);
+            r = full_state_maneuver(:,7);
+            u = full_state_maneuver(:,8);
+            v = full_state_maneuver(:,9);
+            w = full_state_maneuver(:,10);
+            
+            n_t1 = full_input_maneuver(:,1);
+            n_t2 = full_input_maneuver(:,2);
+            n_t3 = full_input_maneuver(:,3);
+            n_t4 = full_input_maneuver(:,4);
+            delta_a = full_input_maneuver(:,5);
+            delta_e = full_input_maneuver(:,6);
+            delta_r = full_input_maneuver(:,7);
+            n_p = full_input_maneuver(:,8);
+
+            output = [e0 e1 e2 e3 q u w];
+            input = [n_t1 n_t2 n_t4 n_t4 ...
+                     delta_a delta_e delta_r n_p...
+                     p r v];
+
+            % Create sysid data object
+            z = iddata(output, input, dt, 'Name', 'Full state data with lat fixed');
+            z.TimeUnit = 's';
+            z.Tstart = 0;
+            z.InputName = InputName;
+            z.InputUnit = InputUnit;
+            z.OutputName = OutputName;
+            z.OutputUnit = OutputUnit;
+
+            if maneuver_i == 1
+                data = z;
+            else
+                data = merge(data,z);
+            end
+        end
         
     elseif data_type == "lon"
         data = iddata('Name', 'Longitudinal data');

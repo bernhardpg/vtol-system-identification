@@ -11,13 +11,13 @@ metadata = read_metadata(metadata_filename);
 maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
 maneuver_quantities = [0 5 0];
 
-model_type = "full";
-[~, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
+model_type = "full_lat_fixed";
+[data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
 
-num_states = 13;
-num_outputs = 10;
-num_inputs = 8;
-num_experiments = length(data_full_state.Experiment);
+num_states = 10; % [e0 e1 e2 e3 q u w delta_a delta_e delta_r]
+num_outputs = 7; % [e0 e1 e2 e3 q u w]
+num_inputs = 11; % [nt1 nt2 nt3 nt4 delta_a_sp delta_e_sp delta_r_sp np p r v]
+num_experiments = length(data.Experiment);
 
 %% Load previous model parameters
 model_name_to_load = "1";
@@ -26,7 +26,6 @@ load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
-
 % Load params from other models
 model_paths_to_load = ["fitted_models/longitudinal_models/model_final2/", "fitted_models/lateral_models/model_final3/"];
 [collected_params] = create_collected_params(model_paths_to_load);
@@ -36,9 +35,9 @@ model_name = "1";
 model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 
 experiments_to_use = 1:sum(maneuver_quantities);
-initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full");
+initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full_lat_fixed");
 
-[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, "full");
+[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, "full_lat_fixed");
 
 %% Print parameters
 print_parameters(nlgr_model.Parameters, "all");
@@ -49,8 +48,8 @@ close all;
 save_plot = true;
 show_plot = true;
 sim_responses(...
-    experiments_to_use, nlgr_model, data_full_state(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
-    save_plot, "full", show_plot);
+    experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
+    save_plot, "full_lat_fixed", show_plot);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lon(:,:,:,experiments_to_use), nlgr_model)
 

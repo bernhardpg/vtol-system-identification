@@ -9,6 +9,15 @@ function [nlgr] = create_nlgr_object(Nx, Ny, Nu, parameters, initial_states, typ
 
         OutputName = {'q0', 'q1', 'q2', 'q3', 'p', 'q', 'r', 'u', 'v', 'w'};
         OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', 'm/s', 'm/s', 'm/s'};
+    
+    elseif type == "full_lat_fixed"
+        FileName = 'full_state_model_lat_fixed_c';
+        
+        InputName = {'nt1', 'nt2', 'nt3', 'nt4', 'delta_a_sp', 'delta_e_sp', 'delta_r_sp', 'n_p', 'p', 'r', 'v'};
+        InputUnit =  {'rpm', 'rpm', 'rpm', 'rpm', 'rad', 'rad', 'rad', 'rpm', 'rad/s', 'rad/s', 'm/s'};
+
+        OutputName = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w'};
+        OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
         
         
     elseif type == "lon"

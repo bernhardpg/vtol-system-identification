@@ -51,6 +51,34 @@ function [initial_states] = create_initial_states_struct(data, num_states, num_o
             initial_states_values(num_outputs + rudder_input_index) = {cell2mat(data(1,:,rudder_input_index,experiments_to_use).u)'};
         end
         
+    elseif type == "full_lat_fixed"
+        state_names = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w', 'delta_a', 'delta_e', 'delta_r'};
+        state_units = {'', '', '', '', 'rad/s', 'm/s', 'm/s', 'rad', 'rad', 'rad'};
+        
+        if length(experiments_to_use) == 1
+            % Load initial conditions for aileron, elevator and rudder states which
+            % are actually inputs
+            aileron_input_index = 1;
+            elevator_input_index = 2;
+            rudder_input_index = 3;
+            num_inputs_before_control_surfaces = 4;
+            
+            initial_states_values(num_outputs + aileron_input_index) = {data(1,:,num_inputs_before_control_surfaces + aileron_input_index,experiments_to_use).u};
+            initial_states_values(num_outputs + elevator_input_index) = {data(1,:,num_inputs_before_control_surfaces + elevator_input_index,experiments_to_use).u};
+            initial_states_values(num_outputs + rudder_input_index) = {data(1,:,num_inputs_before_control_surfaces + rudder_input_index,experiments_to_use).u};
+        else
+            % Load initial conditions for aileron and rudder states which
+            % are actually inputs
+            aileron_input_index = 1;
+            elevator_input_index = 2;
+            rudder_input_index = 3;
+            num_inputs_before_control_surfaces = 4;
+            
+            initial_states_values(num_outputs + aileron_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + aileron_input_index,experiments_to_use).u)'};
+            initial_states_values(num_outputs + elevator_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + elevator_input_index,experiments_to_use).u)'};
+            initial_states_values(num_outputs + rudder_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + rudder_input_index,experiments_to_use).u)'};
+        end
+        
     elseif type == "full"
         % Describe state (which is equal to output)
         state_names = {'q0', 'q1', 'q2', 'q3', 'p', 'q', 'r', 'u', 'v', 'w', 'delta_a', 'delta_e', 'delta_r'};
