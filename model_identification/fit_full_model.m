@@ -26,7 +26,10 @@ load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
-initial_parameters = create_param_struct("full");
+
+% Load params from other models
+model_paths_to_load = ["fitted_models/longitudinal_models/model_final2/", "fitted_models/lateral_models/model_final3/"];
+[collected_params] = create_collected_params(model_paths_to_load);
 
 % Create model path
 model_name = "1";
@@ -35,10 +38,7 @@ model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 experiments_to_use = [1:6];
 initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full");
 
-[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, initial_parameters, initial_states, "full");
-
-%% Load parameters from old model
-[nlgr_model] = load_parameters_into_model(nlgr_model, old_parameters);
+[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, "full");
 
 %% Print parameters
 print_parameters(nlgr_model.Parameters, "all");
