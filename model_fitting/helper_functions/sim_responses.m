@@ -1,4 +1,4 @@
-function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_state, model_path, save_plots, model_type)
+function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_state, model_path, save_plots, model_type, show_plot)
     % Experiments to use is only used to label plots with correct
     % experiment numbers
     num_experiments = length(experiments_to_use);
@@ -28,11 +28,11 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
             dt = cell2mat(data.Ts(i));
         end
         
-        plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, true, model_path, save_plots, model_type);
+        plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, true, model_path, save_plots, model_type, show_plot);
     end
 end
 
-function [] = plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, plot_actual_trajectory, model_path, save_plots, model_type)
+function [] = plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, plot_actual_trajectory, model_path, save_plots, model_type, show_plot)
     tf = length(full_state) * dt - dt;
     t = 0:dt:tf;
     
@@ -75,6 +75,9 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
 
         % Plot
         fig = figure;
+        if ~show_plot
+            fig.Visible = 'off';
+        end
         fig.Position = [100 100 900 900];
 
         subplot(8,1,1)
@@ -161,6 +164,9 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
 
         % Plot
         fig = figure;
+        if ~show_plot
+            fig.Visible = 'off';
+        end
         fig.Position = [100 100 600 600];
         num_plots = 9;
 
@@ -245,6 +251,6 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         plot_location = model_path + "plots/";
         mkdir(plot_location);
         saveas(fig, plot_location + filename, 'epsc')
-        savefig(plot_location + filename + '.fig')
+        %savefig(plot_location + filename + '.fig')
     end
 end

@@ -147,7 +147,7 @@ function [parameters] = create_param_struct(type)
         initial_guess_lat;
         
         par_name_lat = {
-            'c_Y_beta', ...
+            'c_Y_beta', ... % Definitively negative, think about how a positive beta will give a negative y-axis force
             'c_Y_p', ... % should be close to zero/negligible
             'c_Y_r', ... % I guess this should be close to zero/negligible, by looking at values in McClain
             'c_Y_delta_a', ... % Negative according to AVL
@@ -169,7 +169,7 @@ function [parameters] = create_param_struct(type)
             -Inf,...% c_Y_p
             -Inf,...% c_Y_r
             -Inf,...% c_Y_delta_a
-            approx_zero,...% c_Y_delta_r
+            -Inf,...% c_Y_delta_r
             -Inf,...% c_l_beta
             -Inf,...% c_l_p
             approx_zero,...% c_l_r
@@ -186,7 +186,7 @@ function [parameters] = create_param_struct(type)
             -approx_zero,...% c_Y_beta
             Inf,...% c_Y_p
             Inf,...% c_Y_r
-            -approx_zero,...% c_Y_delta_a
+            Inf,...% c_Y_delta_a
             Inf,...% c_Y_delta_r
             -approx_zero,...% c_l_beta
             -approx_zero,...% c_l_p
@@ -197,7 +197,7 @@ function [parameters] = create_param_struct(type)
             Inf,...% c_n_p
             -approx_zero,...% c_n_r
             Inf,...% c_n_delta_a
-            -approx_zero,...% c_n_delta_r
+            Inf,...% c_n_delta_r
         };
     
         par_fixed_lat = {

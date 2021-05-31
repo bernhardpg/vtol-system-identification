@@ -19,25 +19,28 @@ num_outputs_lat = 7;
 num_inputs_lat = 4; % [delta_a_sp, delta_r_sp, u, w]
 
 %% Load previous model parameters
-model_name_to_load = "sideslip_new_1";
+model_name_to_load = "good_w_correct_trim_2";
 model_load_path = "nlgr_models/lateral_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
 
 %% Create new nlgr object
-parameters = create_param_struct("lat");
+initial_parameters = create_param_struct("lat");
 
 % Create model path
-model_name = "sideslip_new_2";
+model_name = "00_chosen_model";
 model_path = "nlgr_models/lateral_models/" + "model_" + model_name + "/";
 
-experiments_to_use = 1:sum(maneuver_quantities);
-%experiments_to_use = 10:11;
-%experiments_to_use = 11:20;
+%experiments_to_use = 1:sum(maneuver_quantities);
+
+% TODO: Fix experiment number 19
+% TODO: Fix experiment number 42
+experiments_to_use = [1:15 26:40];
+%experiments_to_use = 26:27;
 initial_states = create_initial_states_struct(data_lat, num_states_lat, num_outputs_lat, experiments_to_use, "lat");
 
-[nlgr_model] = create_nlgr_object(num_states_lat, num_outputs_lat, num_inputs_lat, parameters, initial_states, "lat");
+[nlgr_model] = create_nlgr_object(num_states_lat, num_outputs_lat, num_inputs_lat, initial_parameters, initial_states, "lat");
 
 %% Load parameters from old model
 [nlgr_model] = load_parameters_into_model(nlgr_model, old_parameters);
@@ -47,7 +50,10 @@ print_parameters(nlgr_model.Parameters, "all");
 print_parameters(nlgr_model.Parameters, "free")
 
 %% Plot response of model
-sim_responses(experiments_to_use, nlgr_model, data_lat(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, true, "lat");
+close all;
+sim_responses(...
+    experiments_to_use, nlgr_model, data_lat(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
+    true, "lat", false);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lat(:,:,:,experiments_to_use), nlgr_model)
 
@@ -63,9 +69,18 @@ h_gcf.Position = [Pos(1), Pos(2)-Pos(4)/2, Pos(3), Pos(4)*1.5];
 pe(data_lat, nlgr_model);
 
 %% Fix params
-params_to_fix = [16 18 20 21 22 24 23];
+params_to_fix = [1:29];
+params_to_unfix = [25:29];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
+nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
+print_parameters(nlgr_model.Parameters, "all")
+print_parameters(nlgr_model.Parameters, "free")
+
+%% Reset parameters to their initial values
+params_to_reset = [12 14];
+[nlgr_model] = reset_parameters(nlgr_model, params_to_reset, initial_parameters);
+print_parameters(nlgr_model.Parameters, "all");
 print_parameters(nlgr_model.Parameters, "free")
 
 %% Specify optimization options
@@ -76,7 +91,25 @@ opt.SearchOptions.MaxIterations = 100;
 % Only weigh states p, r, v
 
 opt.OutputWeight = diag([0 0 0 0 1 1 1]);
-opt.Regularization.Lambda = 1;
+opt.Regularization.Lambda = 10;
+opt.Regularization.Nominal = 'model';
+% opt.Regularization.R = [
+%     1,...% c_Y_beta
+%     1000,...% c_Y_p
+%     1000,...% c_Y_r
+%     1,...% c_Y_delta_a
+%     1,...% c_Y_delta_r
+%     1,...% c_l_beta
+%     1,...% c_l_p
+%     1,...% c_l_r
+%     1000,...% c_l_delta_a
+%     1,...% c_l_delta_r
+%     1000,...% c_n_beta
+%     1,...% c_n_p
+%     1000,...% c_n_r
+%     1,...% c_n_delta_a
+%     1000,...% c_n_delta_r
+% ];
 
 % opt_type = "neutral";
 % opt.Regularization.Lambda = 10;
@@ -140,5 +173,11 @@ function [output_weights] = create_cost_fn(opt_type)
         output_weights = diag([0 0 0 0 10 100 1]);
     elseif opt_type == "neutral"
         output_weights = diag([0 0 0 0 10 10 1]);
+    end
+end
+
+function [nlgr_model] = reset_parameters(nlgr_model, param_indices, params)
+    for i = param_indices
+        nlgr_model.Parameters(i).Value = params(i).Value;
     end
 end
