@@ -35,9 +35,9 @@ model_name = "1";
 model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 
 experiments_to_use = 1:sum(maneuver_quantities);
-initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full_lat_fixed");
+initial_states = create_initial_states_struct(data, num_states, num_outputs, experiments_to_use, model_type);
 
-[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, "full_lat_fixed");
+[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, model_type);
 
 %% Print parameters
 print_parameters(nlgr_model.Parameters, "all");
@@ -49,7 +49,7 @@ save_plot = true;
 show_plot = true;
 sim_responses(...
     experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
-    save_plot, "full_lat_fixed", show_plot);
+    save_plot, model_type, show_plot);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lon(:,:,:,experiments_to_use), nlgr_model)
 
@@ -57,7 +57,7 @@ print_parameters(nlgr_model.Parameters, "free")
 nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %% Fix params
-params_to_fix = [1:27];
+params_to_fix = [1:42];
 params_to_unfix = [15:27];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);

@@ -20,7 +20,7 @@ num_inputs_lon = 2;
 num_experiments = length(data_lon.Experiment);
 
 %% Load previous model parameters
-model_name_to_load = "final2";
+model_name_to_load = "final3";
 model_load_path = "fitted_models/longitudinal_models/" + "model_" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
@@ -29,7 +29,7 @@ old_parameters = nlgr_model.Parameters;
 initial_parameters = create_param_struct("lon");
 
 % Create model path
-model_name = "final3";
+model_name = "test_low_drag_3";
 model_path = "fitted_models/longitudinal_models/" + "model_" + model_name + "/";
 
 experiments_to_use = [1:12];
@@ -47,7 +47,7 @@ print_parameters(nlgr_model.Parameters, "free")
 %% Plot response of model
 close all;
 save_plot = true;
-show_plot = false;
+show_plot = true;
 sim_responses(...
     experiments_to_use, nlgr_model, data_lon(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
     save_plot, "lon", show_plot);
@@ -79,12 +79,15 @@ opt.SearchOptions.MaxIterations = 100;
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([1 1 1 0.01 0.01]);
-opt.Regularization.Lambda = 10;
+%opt.OutputWeight = diag([1 1 1 0.01 0.01]);
+opt.OutputWeight = diag([1 1 10 1 1]);
+opt.Regularization.Lambda = 100;
+opt.Regularization.Nominal = 'model';
+%opt.Regularization.R = [1 1 1 1 1];
 %opt.Regularization.R = [1 1 0.01 0];
 %opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];
 %opt.Regularization.R = [50 2000 1 1 1 1 1 1 1];
-opt.Regularization.Nominal = 'model';
+%opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %         100,... % c_L_0,				...
 %         100,... % c_L_alpha,      	...

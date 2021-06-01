@@ -42,6 +42,7 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 #define bound(x,bl,bu) (min(max(x,bl),bu))
+#define INF 99999
 
 /* State equations. */
 void compute_dx(
@@ -176,7 +177,7 @@ void compute_dx(
     double c_D = c_D_p[0] + c_D_alpha[0] * alpha + c_D_alpha_sq[0] * pow(alpha, 2)
       + c_D_q[0] * (nondim_constant_lon[0]) * ang_q
       + c_D_delta_e[0] * delta_e;
-    double F_drag = half_rho_planform[0] * pow(V, 2) * c_D;
+    double F_drag = bound(half_rho_planform[0] * pow(V, 2) * c_D, 0, INF); // Make sure drag never becomes negative
 
     double X, Z;
 

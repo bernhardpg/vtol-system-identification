@@ -9,7 +9,7 @@ metadata = read_metadata(metadata_filename);
 
 % Create data for sysid
 maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
-maneuver_quantities = [0 5 0];
+maneuver_quantities = [3  3 3];
 
 model_type = "full";
 [~, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
@@ -32,13 +32,16 @@ model_paths_to_load = ["fitted_models/longitudinal_models/model_final2/", "fitte
 [collected_params] = create_collected_params(model_paths_to_load);
 
 % Create model path
-model_name = "1";
+model_name = "full_1";
 model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 
 experiments_to_use = 1:sum(maneuver_quantities);
-initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, "full");
+initial_states = create_initial_states_struct(data_full_state, num_states, num_outputs, experiments_to_use, model_type);
 
-[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, "full");
+[nlgr_model] = create_nlgr_object(num_states, num_outputs, num_inputs, collected_params, initial_states, model_type);
+
+%% Load parameters from old model
+[nlgr_model] = load_parameters_into_model(nlgr_model, old_parameters);
 
 %% Print parameters
 print_parameters(nlgr_model.Parameters, "all");
@@ -50,7 +53,7 @@ save_plot = true;
 show_plot = true;
 sim_responses(...
     experiments_to_use, nlgr_model, data_full_state(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
-    save_plot, "full", show_plot);
+    save_plot, model_type, show_plot);
 print_parameters(nlgr_model.Parameters, "free")
 %compare(data_lon(:,:,:,experiments_to_use), nlgr_model)
 
@@ -58,8 +61,8 @@ print_parameters(nlgr_model.Parameters, "free")
 nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %% Fix params
-params_to_fix = [1:27];
-params_to_unfix = [15:27];
+params_to_fix = [1:42];
+params_to_unfix = [28:42];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
 nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
@@ -79,12 +82,12 @@ opt.SearchOptions.MaxIterations = 100;
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([1 1 1 0.01 0.01]);
+opt.OutputWeight = diag([1 1 1 1 1 1 1 1 1 1]); % e0 e1 e2 e3 p q r u v w
 opt.Regularization.Lambda = 10;
 %opt.Regularization.R = [1 1 0.01 0];
 %opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];
 %opt.Regularization.R = [50 2000 1 1 1 1 1 1 1];
-opt.Regularization.Nominal = 'model';
+%opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %         100,... % c_L_0,				...
 %         100,... % c_L_alpha,      	...
@@ -106,14 +109,14 @@ opt.Regularization.Nominal = 'model';
 
 %% Estimate NLGR model
 print_parameters(nlgr_model.Parameters, "free");
-nlgr_model = nlgreyest(data_lon(:,:,:,experiments_to_use), nlgr_model, opt);
+nlgr_model = nlgreyest(data_full_state(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
 print_parameters(nlgr_model.Parameters, "free");
 
 %% Save model
 mkdir(model_path)
 save(model_path + "model.mat", 'nlgr_model');
-disp("Saved " + model_name);
+disp("Saved model_" + model_name);
 %% Local functions
 
 function [nlgr_model] = reset_static_curve_params(nlgr_model, fix)
