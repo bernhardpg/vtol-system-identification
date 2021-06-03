@@ -4,8 +4,8 @@ metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Output data
-save_output_data = false;
-save_plot = true;
+save_output_data = true;
+save_plot = false;
 show_plot = false;
 
 % Set common data time resolution

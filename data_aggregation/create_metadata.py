@@ -292,7 +292,7 @@ set_maneuver_times(exp5, sweep_maneuver_indices, sweep_maneuver_times, skip, "sw
 
 # Create metadata object
 breakpoint()
-metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5], "dt": 0.01}
+metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5], "dt": 0.02}
 
 with open("../data/metadata.json", "w") as outfile:
     json.dump(metadata, outfile, indent=4, sort_keys=True)
