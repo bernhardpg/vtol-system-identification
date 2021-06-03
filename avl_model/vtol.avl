@@ -98,7 +98,7 @@ YDUPLICATE
 #
 # twist angle bias for whole surface
 ANGLE
-     0.000 
+     2.700 
 #
 # x,y,z bias for whole surface
 TRANSLATE
@@ -131,7 +131,7 @@ A-Tail
 YDUPLICATE
      0
 ANGLE
-     0.0 
+     2.7 
 
 # x,y,z bias for whole surface
 TRANSLATE

@@ -4,158 +4,189 @@
             "LogName": "06_31_21",
             "Maneuvers": {
                 "1": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "10": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "11": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "12": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "13": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "14": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "15": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "16": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "17": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "18": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "19": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "2": {
-                    "end_s": 689,
-                    "start_s": 687,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "20": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "21": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "22": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "23": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "24": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "25": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "26": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "27": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "28": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "29": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "3": {
-                    "end_s": 749,
-                    "start_s": 747,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "30": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "31": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "4": {
-                    "end_s": 812,
-                    "start_s": 809,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "5": {
-                    "end_s": 871,
-                    "start_s": 869,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "6": {
-                    "end_s": 928,
-                    "start_s": 924.5,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "7": {
-                    "end_s": 997,
-                    "start_s": 994,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "8": {
-                    "end_s": 1067,
-                    "start_s": 1065,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "9": {
-                    "end_s": 1132,
-                    "start_s": 1129,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 }
             },
@@ -166,91 +197,109 @@
             "Maneuvers": {
                 "1": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "10": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "11": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "12": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "13": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "14": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "15": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "16": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "17": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "18": {
                     "end_s": 520,
+                    "skip": false,
                     "start_s": 180,
                     "type": "freehand"
                 },
                 "2": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "3": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "4": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "5": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "6": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "7": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "8": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "9": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 }
@@ -261,972 +310,1363 @@
             "LogName": "07_24_19",
             "Maneuvers": {
                 "1": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "10": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "100": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "101": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "102": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "103": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "104": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "105": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "106": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "107": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "108": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "109": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": 2302,
                     "type": "yaw_211"
                 },
                 "11": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "110": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "111": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "112": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "113": {
                     "end_s": 2368.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "114": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "115": {
                     "end_s": 2396,
+                    "skip": false,
                     "start_s": 2391,
                     "type": "yaw_211_no_throttle"
                 },
                 "116": {
                     "end_s": 2406.9,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "117": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "118": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "119": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "12": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "120": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": 2472.3,
                     "type": "yaw_211_no_throttle"
                 },
                 "121": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": 2485,
                     "type": "yaw_211_no_throttle"
                 },
                 "122": {
                     "end_s": 2508.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "123": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": 2518.5,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "124": {
                     "end_s": 2536.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "125": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "126": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "127": {
                     "end_s": 2591,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "128": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "129": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "13": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "130": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "131": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "132": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "133": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "134": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "135": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "136": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "137": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "138": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "139": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "14": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "140": {
                     "end_s": 2868,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "141": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "142": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "143": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "144": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "145": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "146": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "147": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "148": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211_no_throttle"
                 },
                 "149": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "15": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "150": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "151": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "152": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "153": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "154": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "155": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "156": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "157": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "158": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "159": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "16": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "160": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "161": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "162": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "163": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "164": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "165": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "166": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "167": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "168": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "169": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "17": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "170": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "171": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "yaw_211"
                 },
                 "172": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "173": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "174": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "175": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "176": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "yaw_211"
                 },
                 "177": {
-                    "end_s": 3546,
-                    "start_s": 3543,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "178": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "179": {
-                    "end_s": 3655,
-                    "start_s": 3653,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "18": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "180": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "181": {
-                    "end_s": 3731,
-                    "start_s": 3728,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "182": {
-                    "end_s": 3762,
-                    "start_s": 3760,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "183": {
-                    "end_s": 3804,
-                    "start_s": 3801.5,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "184": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "185": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "186": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "187": {
-                    "end_s": 3933,
-                    "start_s": 3931,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "188": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "189": {
-                    "end_s": 3993.2,
-                    "start_s": 3992,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "19": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "190": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "191": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
                     "type": "sweep"
                 },
                 "192": {
                     "end_s": 4120,
+                    "skip": false,
                     "start_s": 4070,
                     "type": "freehand"
                 },
                 "193": {
                     "end_s": 4325,
+                    "skip": false,
                     "start_s": 4180,
                     "type": "freehand"
                 },
                 "2": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": 891,
                     "type": "pitch_211"
                 },
                 "20": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "21": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "22": {
                     "end_s": 1077,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "23": {
                     "end_s": 1080.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "24": {
                     "end_s": 1109.8,
+                    "skip": false,
                     "start_s": 1107,
                     "type": "pitch_211_no_throttle"
                 },
                 "25": {
                     "end_s": 1117,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "26": {
                     "end_s": 1137,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "27": {
                     "end_s": 1142.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "28": {
                     "end_s": 1148,
+                    "skip": false,
                     "start_s": 1145,
                     "type": "pitch_211_no_throttle"
                 },
                 "29": {
                     "end_s": 1167.5,
+                    "skip": false,
                     "start_s": 1163,
                     "type": "pitch_211_no_throttle"
                 },
                 "3": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "30": {
                     "end_s": 1188,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "31": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "32": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "33": {
                     "end_s": 1231,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "34": {
                     "end_s": 1238,
+                    "skip": false,
                     "start_s": 1234.5,
                     "type": "pitch_211_no_throttle"
                 },
                 "35": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "36": {
                     "end_s": 1265.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211_no_throttle"
                 },
                 "37": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211"
                 },
                 "38": {
                     "end_s": 1356.5,
+                    "skip": false,
                     "start_s": 1352.3,
                     "type": "roll_211"
                 },
                 "39": {
                     "end_s": 1360,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "4": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "40": {
                     "end_s": 1362.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "41": {
                     "end_s": 1379.2,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "42": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "43": {
                     "end_s": 1390.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "44": {
                     "end_s": 1394,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "45": {
                     "end_s": 1397,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "46": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "47": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211"
                 },
                 "48": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211"
                 },
                 "49": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "5": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "50": {
                     "end_s": 1466,
+                    "skip": false,
                     "start_s": 1460.4,
                     "type": "roll_211"
                 },
                 "51": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "52": {
                     "end_s": 1475,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "53": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "54": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "55": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211"
                 },
                 "56": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211"
                 },
                 "57": {
                     "end_s": 1546,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "58": {
                     "end_s": 1548.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "59": {
                     "end_s": 1554.5,
+                    "skip": false,
                     "start_s": 1550.8,
                     "type": "roll_211_no_throttle"
                 },
                 "6": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "60": {
                     "end_s": 1580.3,
+                    "skip": false,
                     "start_s": 1577,
                     "type": "roll_211_no_throttle"
                 },
                 "61": {
                     "end_s": 1586.3,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "62": {
                     "end_s": 1591.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "63": {
                     "end_s": 1608.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "64": {
                     "end_s": 1613.5,
+                    "skip": false,
                     "start_s": 1610.5,
                     "type": "roll_211_no_throttle"
                 },
                 "65": {
                     "end_s": 1619.2,
+                    "skip": false,
                     "start_s": 1616.5,
                     "type": "roll_211_no_throttle"
                 },
                 "66": {
                     "end_s": 1640.5,
+                    "skip": false,
                     "start_s": 1636.6,
                     "type": "roll_211_no_throttle"
                 },
                 "67": {
                     "end_s": 1649,
+                    "skip": false,
                     "start_s": 1645.4,
                     "type": "roll_211_no_throttle"
                 },
                 "68": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "69": {
                     "end_s": 1675.3,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "7": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "70": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": 1679,
                     "type": "roll_211_no_throttle"
                 },
                 "71": {
                     "end_s": 1702.8,
+                    "skip": false,
                     "start_s": 1699.8,
                     "type": "roll_211_no_throttle"
                 },
                 "72": {
                     "end_s": 1711,
+                    "skip": false,
                     "start_s": 1707.4,
                     "type": "roll_211_no_throttle"
                 },
                 "73": {
                     "end_s": 1725.3,
+                    "skip": false,
                     "start_s": 1722,
                     "type": "roll_211_no_throttle"
                 },
                 "74": {
                     "end_s": 1733.4,
+                    "skip": false,
                     "start_s": 1730,
                     "type": "roll_211_no_throttle"
                 },
                 "75": {
                     "end_s": 1740,
+                    "skip": false,
                     "start_s": 1737,
                     "type": "roll_211_no_throttle"
                 },
                 "76": {
-                    "end_s": 1778.7,
+                    "end_s": 1758.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "77": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "78": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "79": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "8": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "pitch_211"
                 },
                 "80": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "81": {
                     "end_s": 1821,
+                    "skip": false,
                     "start_s": 1817.5,
                     "type": "roll_211_no_throttle"
                 },
                 "82": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "83": {
                     "end_s": 1848.2,
+                    "skip": false,
                     "start_s": 1844.5,
                     "type": "roll_211_no_throttle"
                 },
                 "84": {
                     "end_s": 1858,
+                    "skip": false,
                     "start_s": 1854.5,
                     "type": "roll_211_no_throttle"
                 },
                 "85": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "86": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "87": {
                     "end_s": 1903.7,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "88": {
                     "end_s": 1918,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "89": {
                     "end_s": 1941,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "9": {
                     "end_s": -1,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
                 "90": {
                     "end_s": 1951.5,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "91": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "92": {
                     "end_s": 1977.8,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "93": {
                     "end_s": 1987,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "94": {
-                    "end_s": 0,
-                    "start_s": 0,
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "95": {
                     "end_s": 2014,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "96": {
                     "end_s": 2023,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "97": {
                     "end_s": 2035,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 },
                 "98": {
                     "end_s": 2050.4,
+                    "skip": false,
                     "start_s": 2046.7,
                     "type": "roll_211_no_throttle"
                 },
                 "99": {
                     "end_s": 2064.9,
+                    "skip": false,
                     "start_s": -1,
                     "type": "roll_211_no_throttle"
                 }
             },
             "Number": 3
+        },
+        {
+            "LogName": "2021_04_18_flight_1_static_curves",
+            "Maneuvers": {},
+            "Number": 4
+        },
+        {
+            "LogName": "2021_04_18_flight_2_static_curves_no_thrust_211_roll",
+            "Maneuvers": {
+                "1": {
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "10": {
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "11": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "12": {
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "13": {
+                    "end_s": -1,
+                    "skip": true,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "14": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "15": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "16": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "17": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "18": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "19": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "2": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "20": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "21": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "22": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "23": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "24": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "25": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "26": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "27": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "28": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "29": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "3": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "30": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "31": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "4": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "5": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "6": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "7": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "8": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                },
+                "9": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "sweep"
+                }
+            },
+            "Number": 5
         }
-    ]
+    ],
+    "dt": 0.01
 }

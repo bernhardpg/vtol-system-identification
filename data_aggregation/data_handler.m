@@ -9,16 +9,21 @@ save_plot = false;
 show_plot = false;
 
 % Set common data time resolution
-dt = 1/100;
+dt = metadata.dt;
 
 num_experiments = length(metadata.Experiments);
-for i = 1:num_experiments
-    parse_data_from_flight(metadata.Experiments(i), dt, save_output_data, save_plot, show_plot);
+experiments_to_parse = 1:num_experiments;
+%experiments_to_parse = [1 2 3 5];
+maneuver_types_to_parse = ["sweep"];
+
+for i = experiments_to_parse
+    parse_data_from_flight(metadata.Experiments(i), dt, save_output_data, save_plot, show_plot, maneuver_types_to_parse);
 end
 
 %% Functions
 
-function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot, show_plot)
+function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot, show_plot, maneuver_types_to_parse)
+    exp_num = experiment.Number;
     log_file = experiment.LogName;
     maneuver_metadata = experiment.Maneuvers;
     num_maneuvers = length(fieldnames(maneuver_metadata));
@@ -30,7 +35,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     aircraft_properties;
 
     % Read state and input data
-    [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt);
+    [t, state, input, v_N] = read_state_and_input_from_log(csv_log_file_location, dt);
     q_NB = state(:,1:4);
     w_B = state(:,5:7);
     v_B = state(:,8:10);
@@ -38,18 +43,14 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     u_fw = input(:,5:8);
     
     % Read accelerations
-    %[acc_B, acc_B_unfiltered] = read_accelerations_B(csv_log_file_location, t, state, input);
-    [acc_B] = differentiate_vel(dt, t, state);
+    diff_type = "filter";
+    [acc_B] = differentiate_vel(dt, v_B, diff_type);
+    [ang_acc_B] = differentiate_vel(dt, w_B, diff_type);
     acc_B_unfiltered = zeros(size(acc_B));
-    
-    % TODO: Angular acc data processing is horrible. Fix this!
-    [ang_acc_unfiltered, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t);
-    f_cutoff_ang_acc = 1000;
-    %ang_acc = filter_accelerations(t, dt, ang_acc_raw, t_ang_acc, f_cutoff_ang_acc);
-    ang_acc = ang_acc_unfiltered;
+    ang_acc_B_unfiltered = zeros(size(acc_B));
     
     % Calculate acceleration data in NED frame
-    acc_N = calculate_acc_N(acc_B, q_NB);
+    acc_N = differentiate_vel(dt, v_N, diff_type);
 
     % Calculate Angle of Attack
     AoA_rad = atan2(v_B(:,3),v_B(:,1));
@@ -58,10 +59,10 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     % Calculate lift and drag
     v_A = sqrt(v_B(:,1).^2 + v_B(:,2).^2 + v_B(:,3).^2);
     % TODO: Cont. here. Function needs to be updated
-    [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
+    [L, D, c_L, c_D, Fa_B] = calculate_lift_and_drag(state, input, AoA_rad, v_A, acc_B, mass_kg, g);
     
     % Calculate pitch moment
-    [c_m, Tau_y] = calculate_pitch_moment(state, v_A, ang_acc, lam_5, lam_6, Jyy, rho);
+    [c_m, Tau_y] = calculate_pitch_moment(state, v_A, ang_acc_B, lam_5, lam_6, Jyy, rho);
     
     % Get system identification maneuvers
     sysid_indices = get_sysid_indices(csv_log_file_location, t);
@@ -76,7 +77,9 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     output_data = intialize_empty_output_struct();
 
     % Normal maneuver length
-    default_maneuver_padding_s = 1;
+    % This is what is used for sweeps
+    default_maneuver_padding_start_s = 1;
+    default_maneuver_padding_end_s = 0;
 
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
@@ -93,6 +96,10 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
             curr_maneuver_metadata = maneuver_metadata.(curr_maneuver_name);
         end
         
+        if ~ismember(curr_maneuver_metadata.type, maneuver_types_to_parse)
+            continue;
+        end
+        
         [maneuver_length_s] = get_default_maneuver_length_s(curr_maneuver_metadata.type);
         
         if maneuver_i > length(sysid_indices)
@@ -103,7 +110,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         [maneuver_should_be_aggregated,...
             maneuver_start_index,...
             maneuver_end_index] = read_maneuver_metadata(...
-                curr_maneuver_metadata, default_maneuver_padding_s, t, dt, assumed_start_index, maneuver_length_s ...
+                curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, dt, assumed_start_index, maneuver_length_s ...
             );
 
         % Extract maneuver data
@@ -115,15 +122,17 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         acc_B_maneuver = acc_B(maneuver_start_index:maneuver_end_index,:);
         acc_B_unfiltered_maneuver = acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
         acc_N_maneuver = acc_N(maneuver_start_index:maneuver_end_index,:);
-        ang_acc_maneuver = ang_acc(maneuver_start_index:maneuver_end_index,:);
-        ang_acc_unfiltered_maneuver = ang_acc_unfiltered(maneuver_start_index:maneuver_end_index,:);
+        ang_acc_B_maneuver = ang_acc_B(maneuver_start_index:maneuver_end_index,:);
+        ang_acc_unfiltered_maneuver = ang_acc_B_unfiltered(maneuver_start_index:maneuver_end_index,:);
         L_maneuver = L(maneuver_start_index:maneuver_end_index);
         D_maneuver = D(maneuver_start_index:maneuver_end_index);
         Tau_y_maneuver = Tau_y(maneuver_start_index:maneuver_end_index);
         c_L_maneuver = c_L(maneuver_start_index:maneuver_end_index);
         c_D_maneuver = c_D(maneuver_start_index:maneuver_end_index);
         c_m_maneuver = c_m(maneuver_start_index:maneuver_end_index);
-
+        Fa_B_maneuver = Fa_B(maneuver_start_index:maneuver_end_index,:);
+        v_N_maneuver = v_N(maneuver_start_index:maneuver_end_index,:);
+        
         % Plot maneuver data
         if save_plot || show_plot
             % Determine output location
@@ -136,21 +145,25 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
             end
             
             if curr_maneuver_metadata.type == "sweep"
-                continue % TODO: For now, don't generate plot or aggregate data for sweep maneuvers
-                plot_trajectory_static_details(maneuver_i, t_maneuver, state_maneuver, input_maneuver,...
-                    AoA_deg_maneuver, L_maneuver, D_maneuver,...
-                    acc_N_maneuver, show_plot, save_plot, plot_output_location);
-                plot_accelerations(maneuver_i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, ang_acc_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
+                %plot_ned_frame_states(maneuver_i, t_maneuver, acc_N_maneuver, v_N_maneuver,...
+                %    show_plot, save_plot, plot_output_location);
+                %plot_accelerations(maneuver_i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, ang_acc_B_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
                 scatter_static_curves(maneuver_i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
+                plot_maneuver(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
             else % do not generate plots for 2-1-1 maneuvers for now
                 % continue
             end
-            plot_trajectory(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
+            %plot_maneuver(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
             
         end
         
         % Store data in aggregated data matrices
         if maneuver_should_be_aggregated
+            curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
+            output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
+                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices...
+                 curr_maneuver_index_in_aggregation_matrix];
+            
             output_data.(curr_maneuver_metadata.type).t = ...
                 [output_data.(curr_maneuver_metadata.type).t;
                  t_maneuver];
@@ -171,22 +184,18 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
                  AoA_rad_maneuver];
             output_data.(curr_maneuver_metadata.type).ang_acc = ...
                 [output_data.(curr_maneuver_metadata.type).ang_acc;
-                 ang_acc_maneuver];
+                 ang_acc_B_maneuver];
             output_data.(curr_maneuver_metadata.type).c_m = ...
                 [output_data.(curr_maneuver_metadata.type).c_m;
                  c_m_maneuver];
                 
-            curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
-            output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
-                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices...
-                 curr_maneuver_index_in_aggregation_matrix];
             output_data.(curr_maneuver_metadata.type).aggregated_maneuvers = ...
                 [output_data.(curr_maneuver_metadata.type).aggregated_maneuvers maneuver_i];
             num_aggregated_maneuvers = num_aggregated_maneuvers + 1;
         end
     end
 
-    disp("Succesfully aggregated " + num_aggregated_maneuvers + " maneuvers");
+    disp("Exp: " + exp_num + ": " + "Succesfully aggregated " + num_aggregated_maneuvers + " maneuvers");
 
     % Save to files
     if save_output_data
@@ -194,9 +203,29 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     end
 end
 
+function [] = animate_forces(dt, L, D, AoA_rad)
+    for i = 1:length(L)
+        alpha = AoA_rad(i);
+        
+        D_x = -D(i) * cos(alpha);
+        D_z = D(i) * sin(alpha);
+        L_x = -L(i) * sin(alpha);
+        L_z = -L(i) * cos(alpha);
+        
+        quiver(0,0,L_x,-L_z); hold on
+        quiver(0,0,D_x,-D_z);
+        quiver(0,0,30*cos(alpha),30*sin(alpha),"ShowArrowHead",'off','LineWidth',1.5);
+        hold off
+        axis equal;
+        xlim([-100 100])
+        ylim([-100 100])
+        pause(dt)
+    end
+end
+
 function [maneuver_length_s] = get_default_maneuver_length_s(maneuver_type) 
         if maneuver_type == "sweep"
-            maneuver_length_s = 6;
+            maneuver_length_s = 4;
         elseif (maneuver_type == "roll_211") || (maneuver_type == "roll_211_no_throttle")
             maneuver_length_s = 3;
         elseif (maneuver_type == "pitch_211") || (maneuver_type == "pitch_211_no_throttle")
@@ -454,25 +483,28 @@ end
 function [maneuver_should_be_aggregated,...
     maneuver_start_index,...
     maneuver_end_index] = read_maneuver_metadata(...
-        curr_maneuver_metadata, default_maneuver_padding_s, t, dt, assumed_start_index, maneuver_length_s ...
+        curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, dt, assumed_start_index, maneuver_length_s ...
     )
+        
+        maneuver_should_be_aggregated = ~curr_maneuver_metadata.skip;
+        
         % Use sysid index for maneuver if no maneuver start and end time is
         % set in metadata
         maneuver_start_time_not_set = curr_maneuver_metadata.start_s == -1;
         maneuver_end_time_not_set = curr_maneuver_metadata.end_s == -1;
-        maneuver_should_be_aggregated = ~((curr_maneuver_metadata.start_s == 0) || (curr_maneuver_metadata.start_s == 0));
+        
         % Use default maneuver start or end if not set, or if maneuver
         % should not be aggregated
         if maneuver_start_time_not_set || ~maneuver_should_be_aggregated
             maneuver_start_index = max(...
-                [assumed_start_index - round(default_maneuver_padding_s / dt)...
+                [assumed_start_index - round(default_maneuver_padding_start_s / dt)...
                 1]);
         else
             maneuver_start_index = round((curr_maneuver_metadata.start_s - t(1)) / dt);
         end
         if maneuver_end_time_not_set || ~maneuver_should_be_aggregated
             maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_s * 2) / dt)...
+                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_end_s) / dt)...
                 1]);
         else
             maneuver_end_index = round((curr_maneuver_metadata.end_s - t(1)) / dt);
@@ -505,7 +537,7 @@ function [] = read_state_input_data_in_time_interval(start_time_s, end_time_s, c
 
 end
 
-function [t, state, input] = read_state_and_input_from_log(csv_log_file_location, dt)
+function [t, state, input, v_N] = read_state_and_input_from_log(csv_log_file_location, dt)
     ekf_data = readtable(csv_log_file_location + '_' + "estimator_status_0" + ".csv");
     angular_velocity = readtable(csv_log_file_location + '_' + "vehicle_angular_velocity_0" + ".csv");
     actuator_controls_mr = readtable(csv_log_file_location + '_' + "actuator_controls_0_0" + ".csv");
@@ -647,18 +679,6 @@ function [t, state, input] = read_state_and_input_from_log(csv_log_file_location
     
 end
 
-function [ang_acc, ang_acc_raw, t_ang_acc] = read_ang_acc(csv_log_file_location, t)
-    % Load data
-    ang_acc_data = readtable(csv_log_file_location + '_' + "vehicle_angular_acceleration_0" + ".csv");
-    
-    % Read raw sensor data
-    ang_acc_raw = [ang_acc_data.xyz_0_ ang_acc_data.xyz_1_ ang_acc_data.xyz_2_];
-    t_ang_acc = ang_acc_data.timestamp / 1e6;
-    
-    % Fuse to common time horizon
-    ang_acc = interp1q(t_ang_acc, ang_acc_raw, t');
-end
-
 
 function [sysid_indices] = get_sysid_indices(csv_log_file_location, t)
     input_rc = readtable(csv_log_file_location + '_' + "input_rc_0" + ".csv");
@@ -698,30 +718,6 @@ function [sysid_indices] = get_sysid_indices(csv_log_file_location, t)
     sysid_indices = sysid_indices(1:sysid_maneuver_num - 1);
 end
 
-function [wind_B] = get_wind_body_frame(csv_log_file_location, state, t)
-    % Load data
-    wind_data = readtable(csv_log_file_location + '_' + "wind_estimate_1" + ".csv");
-    
-     % Read raw sensor data
-    t_wind = wind_data.timestamp / 1e6;
-    wind_N_raw = [wind_data.windspeed_north wind_data.windspeed_east zeros(size(wind_data.windspeed_north))];
-    
-    wind_N = interp1q(t_wind, wind_N_raw, t');
-
-    % Rotate to body frame
-    q_NB = state(:,1:4);
-
-    q_BN = quatinv(q_NB);
-    R_BN = quat2rotm(q_BN);
-    wind_B = zeros(size(wind_N));
-    for i = 1:length(wind_N)
-       % Notice how the Rotation matrix has to be inverted here to get the
-       % right result, indicating that q is in fact q_NB and not q_BN.
-       wind_B(i,:) = (R_BN(:,:,i) * wind_N(i,:)')';
-    end 
-end
-
-
 
 function [acc_B, acc_B_unfiltered] = read_accelerations_B(csv_log_file_location, t, state, input)
     % Load data
@@ -751,54 +747,37 @@ function [acc_B, acc_B_unfiltered] = read_accelerations_B(csv_log_file_location,
 end
 
 
-function [acc_B] = differentiate_vel(dt, t, state)
-    v_B = state(:,8:10);
-    Fs = 1 / dt;
-    %pwelch(rmmissing(v_B),[],[],[],Fs);
-    
-    Nf = 50; 
-    Fpass = 10; 
-    Fstop = 12.5;
-    
-    % From this source:
-    % https://se.mathworks.com/help/signal/ug/take-derivatives-of-a-signal.html#:~:text=You%20want%20to%20differentiate%20a,use%20a%20differentiator%20filter%20instead.
+function [acc] = differentiate_vel(dt, vel, type)
+    if type == "filter"
+        Fs = 1 / dt;
 
-    d = designfilt('differentiatorfir','FilterOrder',Nf, ...
-        'PassbandFrequency',Fpass,'StopbandFrequency',Fstop, ...
-        'SampleRate',Fs);
+        Nf = 50; 
+        Fpass = 15; 
+        Fstop = 17.5;
 
-    %fvtool(d,'MagnitudeDisplay','zero-phase','Fs',Fs)
-    
-    dv_Bdt = filter(d, v_B) / dt;
-    
-    % Filtered signal is delayed, find this delay
-    filter_delay = mean(grpdelay(d));
-    
-    % Compensate for delay by discarding samples
-    % Shift signal delay forward
-    acc_B = [dv_Bdt(filter_delay+1:end,:);
-             zeros(filter_delay,3)];
-         
-    % For now, do not care about transient
-    
-%     [pkp,lcp] = findpeaks(v_B);
-%     zcp = zeros(size(lcp));
-% 
-%     [pkm,lcm] = findpeaks(-v_B);
-%     zcm = zeros(size(lcm));
+        % From this source:
+        % https://se.mathworks.com/help/signal/ug/take-derivatives-of-a-signal.html#:~:text=You%20want%20to%20differentiate%20a,use%20a%20differentiator%20filter%20instead.
 
-%     subplot(2,1,1)
-%     plot(t,v_B,t(lcp),pkp,'or',t(lcm),-pkm,'or')
-%     xlabel('Time (s)')
-%     ylabel('Displacement (cm)')
-%     grid
-% 
-%     subplot(2,1,2)
-%     plot(tt,vd,t(lcp),zcp,'or',t(lcm),zcm,'or')
-%     xlabel('Time (s)')
-%     ylabel('Speed (cm/s)')
-%     grid
+        d = designfilt('differentiatorfir','FilterOrder',Nf, ...
+            'PassbandFrequency',Fpass,'StopbandFrequency',Fstop, ...
+            'SampleRate',Fs);
 
+        dv_dt = filter(d, vel) / dt;
+
+        % Filtered signal is delayed, find this delay
+        filter_delay = mean(grpdelay(d));
+
+        % Compensate for delay by discarding samples
+        % Shift signal delay forward
+        acc = [dv_dt(filter_delay+1:end,:);
+                 zeros(filter_delay,3)];
+             
+    elseif type == "numeric"
+        diff_order = 1;
+        acc = diff(vel, diff_order) / dt;
+        acc = [acc;
+               zeros(diff_order, 3)]; % TODO: 3 is state size, for now hardcoded
+    end
 end
 
 function [acc_B] = calc_acc_body(t, state, input, acc_meas)
@@ -858,204 +837,8 @@ function [acc_filtered] = filter_accelerations(acc, t_acc, f_cutoff)
     end
 end
 
-function [] = differentiate_signal()
-    % NOTE: Function not working, code snippet only kept here for reference
-    % Alternative way of obtaining ang acceleration data
-    Nf = 50; 
-    Fpass = 10; 
-    Fstop = 15;
 
-    dt = 1/100;
-    Fs = 1/dt;
-
-    %pwelch(q,[],[],[],Fs)
-
-    %
-    d = designfilt('differentiatorfir','FilterOrder',Nf, ...
-        'PassbandFrequency',Fpass,'StopbandFrequency',Fstop, ...
-        'SampleRate',Fs);
-
-
-    q = w_B(:,2);
-    vq = filter(d,q)/dt;
-    ang_acc = [zeros(length(vq),1) vq zeros(length(vq),1)];
-    
-end
-
-function [V_a, V_a_validated] = read_airspeed(csv_log_file_location, t)
-    airspeed_data = readtable(csv_log_file_location + '_' + "airspeed_0" + ".csv");
-    airspeed_validated_data = readtable(csv_log_file_location + '_' + "airspeed_validated_0" + ".csv");
-
-    t_airspeed = airspeed_data.timestamp / 1e6;
-    V_a_raw = airspeed_data.true_airspeed_m_s;
-    V_a = interp1q(t_airspeed, V_a_raw, t');
-
-    t_airspeed_validated = airspeed_validated_data.timestamp / 1e6;
-    V_a_validated_raw = airspeed_validated_data.true_airspeed_m_s;
-    V_a_validated = interp1q(t_airspeed_validated, V_a_validated_raw, t');
-end
-
-function [] = plot_state_input(t, state, input, show_plot, save_plot, plot_output_location, name)        
-    q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
-    
-    eul = quat2eul(q_NB);
-    eul_deg = rad2deg(eul);
-
-    fig = figure;
-    if ~show_plot
-        fig.Visible = 'off';
-    end
-    fig.Position = [100 100 1600 1000];
-    num_plots = 9; 
-   
-    subplot(num_plots,1,1);
-    plot(t, eul_deg(:,2:3));
-    legend('pitch','roll');
-    title("attitude")
-    
-    subplot(num_plots,1,2);
-    plot(t, eul_deg(:,1));
-    legend('yaw');
-    title("attitude")
-
-    subplot(num_plots,1,3);
-    plot(t, w_B);
-    legend('p','q','r');
-    max_ang_rate = max(max(max(abs(state(:,5:7)))), 1); % Never let ang rate axis be smaller than 1
-    ylim([-max_ang_rate max_ang_rate])
-    title("ang vel body")
-
-    subplot(num_plots,1,4);
-    plot(t, v_B(:,1));
-    legend('u');
-    title("vel body")
-    
-    subplot(num_plots,1,5);
-    plot(t, v_B(:,2));
-    legend('v');
-    title("vel body")
-    
-    subplot(num_plots,1,6);
-    plot(t, v_B(:,3));
-    legend('w');
-    title("vel body")
-
-    subplot(num_plots,1,7);
-    plot(t, u_mr);
-    legend('delta_a','delta_e','delta_r', 'T_mr');
-    title("mr inputs")
-    
-    subplot(num_plots,1,8);
-    plot(t, u_fw(:,1:3));
-    legend('delta_a','delta_e','delta_r');
-    title("fw inputs")
-    
-    subplot(num_plots,1,9);
-    plot(t, u_fw(:,4));
-    legend('T_fw');
-    title("fw inputs")
-    
-    figure_title = "state and input: " + name;
-    sgtitle(figure_title)
-
-    if save_plot
-        filename = name + "_state_input";
-        saveas(fig, plot_output_location + filename, 'epsc')
-        savefig(plot_output_location + filename + '.fig')
-    end
-end
-
-function [] = plot_trajectory(maneuver_index, t, state, input, show_plot, save_plot, plot_output_location)        
-    q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
-    
-    eul = quat2eul(q_NB);
-    eul_deg = rad2deg(eul);
-
-    fig = figure;
-    if ~show_plot
-        fig.Visible = 'off';
-    end
-    fig.Position = [100 100 1600 2000];
-    num_plots = 10;
-    
-    subplot(num_plots,1,1);
-    plot(t, eul_deg(:,3));
-    legend('roll');
-    title("attitude")
-    
-    
-    subplot(num_plots,1,2);
-    plot(t, eul_deg(:,2));
-    legend('pitch');
-    title("attitude")
-    
-
-    subplot(num_plots,1,3);
-    plot(t, eul_deg(:,1));
-    legend('yaw');
-    title("attitude")
-
-    subplot(num_plots,1,4);
-    plot(t, w_B(:,1));
-    legend('p')
-    max_ang_rate = 0.8;
-    ylim([-max_ang_rate max_ang_rate])
-    title("ang vel body")
-    
-    subplot(num_plots,1,5);
-    plot(t, w_B(:,2));
-    legend('q')
-    max_ang_rate = 0.8;
-    ylim([-max_ang_rate max_ang_rate])
-    title("ang vel body")
-    
-    subplot(num_plots,1,6);
-    plot(t, w_B(:,3));
-    legend('r')
-    max_ang_rate = 0.8;
-    ylim([-max_ang_rate max_ang_rate])
-    title("ang vel body")
-
-    subplot(num_plots,1,7);
-    plot(t, v_B(:,1)); hold on
-    legend('u');
-    title("vel body")
-    
-    subplot(num_plots,1,8);
-    plot(t, v_B(:,2:3)); hold on;
-    legend('v','w');
-    title("vel body")
-
-    subplot(num_plots,1,9);
-    plot(t, u_fw(:,1:3));
-    legend('delta_a','delta_e','delta_r');
-    title("inputs")
-    
-    subplot(num_plots,1,10);
-    plot(t, u_fw(:,4));
-    legend('T_fw');
-    title("inputs")
-    
-    figure_title = "state and input, maneuver: " + maneuver_index;
-    sgtitle(figure_title)
-
-    if save_plot
-        filename = maneuver_index + "_state_input";
-        saveas(fig, plot_output_location + filename, 'epsc')
-        %savefig(plot_output_location + filename + '.fig')
-    end
-end
-
-function [] = plot_trajectory_static_details(maneuver_index, t, state, input, AoA, ...
-    L, D, acc_N, ...
+function [] = plot_ned_frame_states(maneuver_index, t, acc_N, vel_N,...
     show_plot, save_plot, plot_output_location)
     
 % Figure details
@@ -1064,49 +847,30 @@ function [] = plot_trajectory_static_details(maneuver_index, t, state, input, Ao
         fig.Visible = 'off';
     end
     fig.Position = [100 100 1600 1000];
-    num_plots = 5; 
+    num_plots = 4; 
 
-    % Extract all state values
-    q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
-    V = sqrt(sum(v_B.^2'));
-
-    eul = quat2eul(q_NB);
-    eul_deg = rad2deg(eul);
-    
     subplot(num_plots,1,1);
-    plot(t, AoA);
-    legend('AoA');
-    title("Angle of Attack")
-
+    plot(t, vel_N(:,3));
+    title("vel z NED frame")
+    
     subplot(num_plots,1,2);
-    plot(t, V);
-    legend('V body');
-    title("Airspeed (assuming no wind)")
-
+    plot(t, acc_N(:,1));
+    title("acc x NED frame")
+    
     subplot(num_plots,1,3);
-    plot(t, L);
-    legend('L');
-    title("Lift")
+    plot(t, acc_N(:,3));
+    title("acc z NED frame")
 
     subplot(num_plots,1,4);
-    plot(t, D);
-    legend('D');
-    title("Drag")
-
-    subplot(num_plots,1,5);
     g = 9.81;
-    plot(t, abs(acc_N(:,3) + g));
-    title("acc z compared to 1 g")
+    plot(t, acc_N(:,3) + g);
+    title("acc z NED frame compared to 1 g")
     
-    figure_title = "Lift and drag details, maneuver: " + maneuver_index;
+    figure_title = "NED Accelerations, maneuver: " + maneuver_index;
     sgtitle(figure_title)
     
     if save_plot
-        filename = maneuver_index + "_details";
+        filename = maneuver_index + "_ned_states";
         saveas(fig, plot_output_location + filename, 'epsc')
         %savefig(plot_output_location + filename + '.fig')
     end
@@ -1247,55 +1011,6 @@ function [] = scatter_static_curves(maneuver_index, t, AoA_deg, L, D, Tau_y, c_L
         filename = maneuver_index + "_static_curves";
         saveas(fig, plot_output_location + filename, 'epsc')
         %savefig(plot_output_location + filename + '.fig')
-    end
-end
-
-
-function [maneuver_start_index] = find_exact_start_index_sweep_maneuver(input, guess_sysid_index, dt, maneuver_period)
-    % Find correct maneuver start index
-    time_to_search_before_maneuver = 1; %s
-    time_to_search_after_maneuver_start = 3; %s
-
-    indices_to_search_before_maneuver = time_to_search_before_maneuver / dt;
-    indices_to_search_after_maneuver_start = time_to_search_after_maneuver_start / dt;
-    max_start_index = guess_sysid_index - indices_to_search_before_maneuver;
-    max_end_index = guess_sysid_index + indices_to_search_after_maneuver_start;
-    % Move to correct start index
-    for j = 1:maneuver_period/dt
-        [~, maneuver_top_index] = max(input(max_start_index:max_end_index));
-        maneuver_top_index = max_start_index + maneuver_top_index; % What is this line doing??
-    end
-    
-    maneuver_start_index = maneuver_top_index - maneuver_period / dt;
-end
-
-
-% TODO
-function [maneuver_passed_data_test] = does_data_pass_validation_tests(state_maneuver, airspeed_maneuver, maneuver_index, AIRSPEED_TRESHOLD_MIN, AIRSPEED_TRESHOLD_MAX)  
-    q_NB = state_maneuver(:,1:4);
-    w_B = state_maneuver(:,5:7);
-    v_B = state_maneuver(:,8:10);
-    u_mr = state_maneuver(:,1:4);
-    u_fw = state_maneuver(:,5:8);
-    
-    maneuver_passed_data_test = true;    
-    if (airspeed_maneuver(1) < AIRSPEED_TRESHOLD_MIN)
-       display("skipping maneuver " + maneuver_index + ": airspeed too low");
-       maneuver_passed_data_test = false;
-    end
-    if (airspeed_maneuver(1) > AIRSPEED_TRESHOLD_MAX)
-       display("skipping maneuver " + maneuver_index + ": airspeed too high");
-       maneuver_passed_data_test = false;
-    end
-    
-    % Calculate data cleanliness
-    std_ang_rates = std(w_B);
-    std_body_vel = std(v_B);
-    total_std = std_ang_rates(1) + std_ang_rates(3 ) + std_body_vel(2);
-    
-    if (total_std > 0.7)
-       display("skipping maneuver " + maneuver_index + ": total std: " + total_std);
-       maneuver_passed_data_test = false;
     end
 end
 

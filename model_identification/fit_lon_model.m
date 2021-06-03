@@ -9,7 +9,7 @@ metadata = read_metadata(metadata_filename);
 
 % Create data for sysid
 maneuver_types = ["pitch_211_no_throttle"];
-maneuver_quantities = [12];
+maneuver_quantities = [4];
 
 model_type = "lon";
 [data_lon, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
@@ -20,8 +20,8 @@ num_inputs_lon = 2;
 num_experiments = length(data_lon.Experiment);
 
 %% Load previous model parameters
-model_name_to_load = "final3";
-model_load_path = "fitted_models/longitudinal_models/" + "model_" + model_name_to_load + "/";
+model_name_to_load = "final";
+model_load_path = "fitted_models/longitudinal_models/" + "" + model_name_to_load + "/";
 load(model_load_path + "model.mat");
 
 old_parameters = nlgr_model.Parameters;
@@ -29,10 +29,10 @@ old_parameters = nlgr_model.Parameters;
 initial_parameters = create_param_struct("lon");
 
 % Create model path
-model_name = "test_low_drag_3";
+model_name = "test_pitch_moment_negative";
 model_path = "fitted_models/longitudinal_models/" + "model_" + model_name + "/";
 
-experiments_to_use = [1:12];
+experiments_to_use = [1:5];
 initial_states = create_initial_states_struct(data_lon, num_states_lon, num_outputs_lon, experiments_to_use, "lon");
 
 [nlgr_model] = create_nlgr_object(num_states_lon, num_outputs_lon, num_inputs_lon, initial_parameters, initial_states, "lon");
@@ -80,9 +80,9 @@ opt.SearchOptions.MaxIterations = 100;
 % Only weigh states p, r, v
 
 %opt.OutputWeight = diag([1 1 1 0.01 0.01]);
-opt.OutputWeight = diag([1 1 10 1 1]);
-opt.Regularization.Lambda = 100;
-opt.Regularization.Nominal = 'model';
+opt.OutputWeight = diag([0 0 1 1 1]);
+opt.Regularization.Lambda = 1;
+%opt.Regularization.Nominal = 'model';
 %opt.Regularization.R = [1 1 1 1 1];
 %opt.Regularization.R = [1 1 0.01 0];
 %opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];

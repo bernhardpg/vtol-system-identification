@@ -1,13 +1,13 @@
-function [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, V_a, acc_B, m, g)
+function [L, D, c_L, c_D, Fa_B] = calculate_lift_and_drag(state, input, AoA_rad, V_a, acc_B, m, g)
     % Read data
     aircraft_properties;
     
     N = length(state);
     q_NB = state(:,1:4);
-    w_B = state(:,5:7);
-    v_B = state(:,8:10);
-    u_mr = input(:,1:4);
-    u_fw = input(:,5:8);
+    eul = quat2eul(q_NB);
+    psi = eul(:,1);
+    theta = eul(:,2);
+    phi = eul(:,3);
     
     % Create rotation matrices
     q_BN = quatinv(q_NB);
@@ -18,9 +18,15 @@ function [L, D, c_L, c_D] = calculate_lift_and_drag(state, input, AoA_rad, V_a, 
     
     % Rotate gravity to body frame
     g_B = zeros(N,3); % Measurement frame
+    g_B2 = zeros(N,3); % Measurement frame
     for i = 1:N
-       g_B(i,:) = R_BN(:,:,i) * g_N;
+       % g_B(i,:) = R_BN(:,:,i) * g_N;
+       % Same as:
+       g_B(i,:) = [-g * sin(theta(i));
+                    g * cos(theta(i)) * sin(phi(i));
+                    g * cos(theta(i)) * cos(phi(i))];
     end
+    
     
     % Calculate total aerodynamic forces
     % (Assumes no other forces present, i.e. no motor use)

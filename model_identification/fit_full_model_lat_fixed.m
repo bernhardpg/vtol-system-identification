@@ -9,7 +9,7 @@ metadata = read_metadata(metadata_filename);
 
 % Create data for sysid
 maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
-maneuver_quantities = [0 5 0];
+maneuver_quantities = [3 3 3];
 
 model_type = "full_lat_fixed";
 [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
@@ -27,11 +27,12 @@ load(model_load_path + "model.mat");
 old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
 % Load params from other models
-model_paths_to_load = ["fitted_models/longitudinal_models/model_final2/", "fitted_models/lateral_models/model_final3/"];
+%model_paths_to_load = [];
+model_paths_to_load = ["fitted_models/longitudinal_models/final/", "fitted_models/lateral_models/model_final3/"];
 [collected_params] = create_collected_params(model_paths_to_load);
 
 % Create model path
-model_name = "1";
+model_name = "wip_1";
 model_path = "fitted_models/full_state_models/" + "model_" + model_name + "/";
 
 experiments_to_use = 1:sum(maneuver_quantities);
@@ -58,7 +59,7 @@ nlgr_model = reset_static_curve_params(nlgr_model, 0);
 
 %% Fix params
 params_to_fix = [1:42];
-params_to_unfix = [15:27];
+params_to_unfix = [24:27];
 
 nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
 nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
@@ -78,12 +79,13 @@ opt.SearchOptions.MaxIterations = 100;
 % Prediction error weight
 % Only weigh states p, r, v
 
-opt.OutputWeight = diag([1 1 1 0.01 0.01]);
-opt.Regularization.Lambda = 10;
+opt.OutputWeight = diag([0 0 0 0 100 1 1]);
+%opt.Regularization.Lambda = 1;
+%opt.Regularization.R = [0 100 1 1 1 0 0 1 1 0 0 0 0];
 %opt.Regularization.R = [1 1 0.01 0];
-%opt.Regularization.R = [50 50 0.1 0.1 0.1 0.1 0.1 0.1 0.1];
+%opt.Regularization.R = [];
 %opt.Regularization.R = [50 2000 1 1 1 1 1 1 1];
-opt.Regularization.Nominal = 'model';
+%opt.Regularization.Nominal = 'model';
 % opt.Regularization.R = [
 %         100,... % c_L_0,				...
 %         100,... % c_L_alpha,      	...
@@ -105,7 +107,7 @@ opt.Regularization.Nominal = 'model';
 
 %% Estimate NLGR model
 print_parameters(nlgr_model.Parameters, "free");
-nlgr_model = nlgreyest(data_lon(:,:,:,experiments_to_use), nlgr_model, opt);
+nlgr_model = nlgreyest(data(:,:,:,experiments_to_use), nlgr_model, opt);
 parameters = nlgr_model.Parameters;
 print_parameters(nlgr_model.Parameters, "free");
 

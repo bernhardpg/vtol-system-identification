@@ -1,6 +1,5 @@
-function [data] = create_iddata(t, full_state, full_input, maneuver_start_indices, data_type)
+function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_indices, data_type)
     num_maneuvers = length(maneuver_start_indices);
-    dt = 0.01; % TODO: Consider not hardcoding this!
 
     if data_type == "full"
         data = iddata('Name', 'Full state model');

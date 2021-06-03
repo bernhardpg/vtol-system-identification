@@ -28,7 +28,7 @@ old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
 
 % Load params from other models
-model_paths_to_load = ["fitted_models/longitudinal_models/model_final2/", "fitted_models/lateral_models/model_final3/"];
+model_paths_to_load = ["fitted_models/longitudinal_models/final/", "fitted_models/lateral_models/model_final3/"];
 [collected_params] = create_collected_params(model_paths_to_load);
 
 % Create model path
