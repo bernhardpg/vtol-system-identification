@@ -1,0 +1,9 @@
+function [nlgr_model] = rand_augment_params(params_to_augment, nlgr_model, percent)
+    for i = params_to_augment
+        a 
+        r = a + (b-a).*rand(100,1);
+        new_value = nlgr_model.Parameters(i).Value * rand_gain;
+        
+        
+    end
+end

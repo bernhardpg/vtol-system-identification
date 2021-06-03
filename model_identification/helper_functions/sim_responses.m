@@ -1,16 +1,13 @@
-function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_state, model_path, save_plots, model_type, show_plot)
-    % Experiments to use is only used to label plots with correct
-    % experiment numbers
-    num_experiments = length(experiments_to_use);
-    
+function [] = sim_responses(nlgr_model, data, data_full_state, model_path, save_plots, model_type, show_plot)
     % Subtract trims before plotting, to plot what the model sees
     aileron_trim = nlgr_model.Parameters(16).Value;
     elevator_trim = nlgr_model.Parameters(17).Value;
     rudder_trim = nlgr_model.Parameters(18).Value;
     input_trims = [aileron_trim elevator_trim rudder_trim];
     
+    num_experiments = length(data.ExperimentName);
     for i = 1:num_experiments
-        exp_i = experiments_to_use(i); % only used for plot name
+        exp_name = string(data(:,:,:,1).ExperimentName);
         y = sim(nlgr_model, data);
 
         % Handle datatypes being different for single and multiple experiments
@@ -26,11 +23,11 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
             dt = cell2mat(data.Ts(i));
         end
         
-        plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, true, model_path, save_plots, model_type, show_plot);
+        plot_response(exp_name, full_state, predicted_output, input, dt, input_trims, true, model_path, save_plots, model_type, show_plot);
     end
 end
 
-function [] = plot_response(exp_i, full_state, predicted_output, input, dt, input_trims, plot_actual_trajectory, model_path, save_plots, model_type, show_plot)
+function [] = plot_response(exp_name, full_state, predicted_output, input, dt, input_trims, plot_actual_trajectory, model_path, save_plots, model_type, show_plot)
     tf = length(full_state) * dt - dt;
     t = 0:dt:tf;
     
@@ -149,14 +146,14 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         
         subplot(numplots,1,8)
         plot(t, rad2deg(input(:,1) - elevator_trim));
-        legend("\delta_e (trim subtracted)")
+        legend("\delta_e")
         ylabel("[deg]")
 
         subplot(numplots,1,9)
         plot(t, input(:,2));
         legend("n_p")
 
-        sgtitle("experiment index: " + exp_i)
+        sgtitle(exp_name)
         
     elseif model_type == "lat"
         % Read predicted state
@@ -260,7 +257,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");
         
-        sgtitle("experiment index: " + exp_i)
+        sgtitle(exp_name)
         
     elseif model_type == "full"
         % Read predicted state
@@ -403,7 +400,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         
         subplot(num_plots,2,8)
         plot(t, rad2deg(input(:,6) - elevator_trim));
-        legend("\delta_e (trim subtracted)")
+        legend("\delta_e")
         ylabel("[deg]");
 
         subplot(num_plots,2,10)
@@ -411,7 +408,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");
         
-        sgtitle("experiment index: " + exp_i)
+        sgtitle(exp_name)
     
     elseif model_type == "full_lat_fixed"
         % Read predicted state
@@ -555,7 +552,7 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         
         subplot(num_plots,2,8)
         plot(t, rad2deg(input(:,6) - elevator_trim));
-        legend("\delta_e (trim subtracted)")
+        legend("\delta_e")
         ylabel("[deg]");
 
         subplot(num_plots,2,10)
@@ -568,11 +565,11 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         legend("n_p");
         ylabel("[RPM]");
         
-        sgtitle("experiment index: " + exp_i)
+        sgtitle(exp_name)
     end
     
     if save_plots
-        filename = exp_i + model_type;
+        filename = exp_name;
         plot_location = model_path + "plots/";
         mkdir(plot_location);
         saveas(fig, plot_location + filename, 'epsc')

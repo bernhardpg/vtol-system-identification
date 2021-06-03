@@ -7,11 +7,18 @@ function [data, data_full_state] = create_combined_iddata(metadata, maneuver_typ
         if maneuver_quantity == 0
             continue
         end
+        
         maneuver_type = maneuver_types(maneuver_type_i);
-        choose_num_maneuvers = num_maneuver_types(maneuver_type_i);
         [full_state, full_input, t, maneuver_start_indices] = read_experiment_data(metadata, maneuver_type);
+        
+        % do not try to load more maneuvers than available
         total_num_maneuvers = length(maneuver_start_indices);
-
+        if maneuver_quantity > total_num_maneuvers
+            choose_num_maneuvers = total_num_maneuvers;
+        else
+            choose_num_maneuvers = maneuver_quantity;
+        end
+        
         curr_data_full_state = create_iddata(dt, t, full_state, full_input, maneuver_start_indices, "full", maneuver_type);
         curr_data = create_iddata(dt, t, full_state, full_input, maneuver_start_indices, model_type, maneuver_type);
 

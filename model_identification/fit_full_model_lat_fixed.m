@@ -1,23 +1,27 @@
 clc; clear all; close all;
 
-% Load airframe properties
-aircraft_properties;
+% Model type
+model_type = "full_lat_fixed";
+num_states = 10; % [e0 e1 e2 e3 q u w delta_a delta_e delta_r]
+num_outputs = 7; % [e0 e1 e2 e3 q u w]
+num_inputs = 11; % [nt1 nt2 nt3 nt4 delta_a_sp delta_e_sp delta_r_sp np p r v]
 
 % Load metadata
 metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
-% Create data for sysid
-maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
-maneuver_quantities = [2 2 2];
+% Select how to compose datasets
+maneuver_types = [...
+    "roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle",...
+    "roll_211", "pitch_211", "yaw_211"
+    ];
+maneuver_quantities = [0 1 0 0 1 0];
 
-model_type = "full_lat_fixed";
+num_models_to_create = 5;
+
 [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
 
-num_states = 10; % [e0 e1 e2 e3 q u w delta_a delta_e delta_r]
-num_outputs = 7; % [e0 e1 e2 e3 q u w]
-num_inputs = 11; % [nt1 nt2 nt3 nt4 delta_a_sp delta_e_sp delta_r_sp np p r v]
-num_experiments = length(data.Experiment);
+
 
 %% Load previous model parameters
 model_name_to_load = "1";
