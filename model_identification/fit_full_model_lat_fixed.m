@@ -9,7 +9,7 @@ metadata = read_metadata(metadata_filename);
 
 % Create data for sysid
 maneuver_types = ["roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle"];
-maneuver_quantities = [3 3 3];
+maneuver_quantities = [2 2 2];
 
 model_type = "full_lat_fixed";
 [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
@@ -27,8 +27,7 @@ load(model_load_path + "model.mat");
 old_parameters = nlgr_model.Parameters;
 %% Create new nlgr object
 % Load params from other models
-%model_paths_to_load = [];
-model_paths_to_load = ["fitted_models/longitudinal_models/final/", "fitted_models/lateral_models/model_final3/"];
+model_paths_to_load = [];
 [collected_params] = create_collected_params(model_paths_to_load);
 
 % Create model path
@@ -52,7 +51,6 @@ sim_responses(...
     experiments_to_use, nlgr_model, data(:,:,:,experiments_to_use), data_full_state(:,:,:,experiments_to_use), model_path, ...,
     save_plot, model_type, show_plot);
 print_parameters(nlgr_model.Parameters, "free")
-%compare(data_lon(:,:,:,experiments_to_use), nlgr_model)
 
 %% Reset static curves
 nlgr_model = reset_static_curve_params(nlgr_model, 0);

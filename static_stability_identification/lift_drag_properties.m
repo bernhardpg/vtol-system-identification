@@ -7,6 +7,8 @@ c_D_p = 0.0729;
 c_D_alpha = 0.3501;
 c_D_alpha_sq = 0.2621;
 
+c_m_0 = 0.0019;
+
 % Using 7410 datapoints, filtering on high pitch rates, strong rudder
 % movement, or too high NED-frame velocity downwards
 

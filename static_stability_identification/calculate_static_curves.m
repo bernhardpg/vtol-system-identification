@@ -152,7 +152,7 @@ c_m_rmse = calculate_rmse(c_m, c_m_estimated)
 c_m_r_sq = calculate_r_sq(c_m, c_m_estimated)
 
 %% Fit pitch moment as a function of only AoA
-[c_m_0, c_m_alpha] = calculate_pitch_moment_curve(AoA_rad, c_m);
+[c_m_0, c_m_alpha] = calculate_pitch_moment_curve(AoA_rad, c_m)
 
 c_m_estimated = c_m_0 + c_m_alpha * AoA_rad;
 plot_pitch_moment_curve(c_m_0, c_m_alpha, AoA_deg, c_m, plot_location);

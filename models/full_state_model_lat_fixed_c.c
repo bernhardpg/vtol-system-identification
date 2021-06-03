@@ -64,9 +64,15 @@ void compute_dx(
 
     double *g;
 		double *half_rho_planform;
+		double *rho_diam_top_pwr_four, *rho_diam_pusher_pwr_four,
+        *rho_diam_top_pwr_five, *rho_diam_pusher_pwr_five;
 
 		g = p[0];
 		half_rho_planform = p[1];
+		rho_diam_top_pwr_four = p[2];
+		rho_diam_pusher_pwr_four = p[3];
+    rho_diam_top_pwr_five = p[4];
+		rho_diam_pusher_pwr_five = p[5];
 
     // Airframe
     double *m; // Mass
@@ -77,13 +83,13 @@ void compute_dx(
     double *lam; // Intermediate constants calculated from inertia matrix
     double *J_yy; // Moment of inertia around y axis
 
-    m = p[2];
-    chord = p[3];
-    wingspan = p[4];
-		nondim_constant_lon = p[5];
-		nondim_constant_lat = p[6];
-    lam = p[7]; // Vector of 8 elements
-		J_yy = p[8];
+    m = p[6];
+    chord = p[7];
+    wingspan = p[8];
+		nondim_constant_lon = p[9];
+		nondim_constant_lat = p[10];
+    lam = p[11]; // Vector of 8 elements
+		J_yy = p[12];
 
 		double lam_1, lam_2, lam_3, lam_4, lam_5, lam_6, lam_7, lam_8;
 		lam_1 = lam[0];
@@ -96,13 +102,18 @@ void compute_dx(
 		lam_8 = lam[7];
 
 		double *servo_time_const, *servo_rate_lim;
-		servo_time_const = p[9];
-		servo_rate_lim = p[10];
+		servo_time_const = p[13];
+		servo_rate_lim = p[14];
 
 		double *aileron_trim, *elevator_trim, *rudder_trim;
-		aileron_trim = p[11];
-		elevator_trim = p[12];
-		rudder_trim = p[13];
+		aileron_trim = p[15];
+		elevator_trim = p[16];
+		rudder_trim = p[17];
+
+		double *c_T_pusher, *c_T_top, *c_Q_top;
+		c_T_pusher = p[18];
+		c_T_top = p[19];
+		c_Q_top = p[20];
 
     // ********
     // Parameters
@@ -111,49 +122,49 @@ void compute_dx(
 		// Longitudinal parameters
 
     double *c_L_0, *c_L_alpha, *c_L_q, *c_L_delta_e; // Lift parameters
-    c_L_0 = p[14];
-    c_L_alpha = p[15];
-    c_L_q = p[16];
-    c_L_delta_e = p[17];
+    c_L_0 = p[21];
+    c_L_alpha = p[22];
+    c_L_q = p[23];
+    c_L_delta_e = p[24];
 
     double *c_D_p, *c_D_alpha, *c_D_alpha_sq, *c_D_q, *c_D_delta_e; // Drag parameters
-    c_D_p = p[18];
-    c_D_alpha = p[19];
-    c_D_alpha_sq = p[20];
-    c_D_q = p[21];
-    c_D_delta_e = p[22];
+    c_D_p = p[25];
+    c_D_alpha = p[26];
+    c_D_alpha_sq = p[27];
+    c_D_q = p[28];
+    c_D_delta_e = p[29];
 
     double *c_m_0, *c_m_alpha, *c_m_q, *c_m_delta_e; // Aerodynamic moment around y axis
-    c_m_0 = p[23];
-    c_m_alpha = p[24];
-    c_m_q = p[25];
-    c_m_delta_e = p[26];
+    c_m_0 = p[30];
+    c_m_alpha = p[31];
+    c_m_q = p[32];
+    c_m_delta_e = p[33];
 
 		// Lateral parameters
 
 		// Y-aerodynamic force
     double *c_Y_beta, *c_Y_p, *c_Y_r, *c_Y_delta_a, *c_Y_delta_r;
-    c_Y_beta = p[27];
-    c_Y_p = p[28];
-    c_Y_r = p[29];
-    c_Y_delta_a = p[30];
-    c_Y_delta_r = p[31];
+    c_Y_beta = p[34];
+    c_Y_p = p[35];
+    c_Y_r = p[36];
+    c_Y_delta_a = p[37];
+    c_Y_delta_r = p[38];
 
 		// Moment around x-axis
     double *c_l_beta, *c_l_p, *c_l_r, *c_l_delta_a, *c_l_delta_r;
-    c_l_beta = p[32];
-    c_l_p = p[33];
-    c_l_r = p[34];
-    c_l_delta_a = p[35];
-    c_l_delta_r = p[36];
+    c_l_beta = p[39];
+    c_l_p = p[40];
+    c_l_r = p[41];
+    c_l_delta_a = p[42];
+    c_l_delta_r = p[43];
 
 		// Moment around z-axis
     double *c_n_beta, *c_n_p, *c_n_r, *c_n_delta_a, *c_n_delta_r;
-    c_n_beta = p[37];
-    c_n_p = p[38];
-    c_n_r = p[39];
-    c_n_delta_a = p[40];
-    c_n_delta_r = p[41];
+    c_n_beta = p[44];
+    c_n_p = p[45];
+    c_n_r = p[46];
+    c_n_delta_a = p[47];
+    c_n_delta_r = p[48];
 
     // *******
     // State and input
@@ -197,6 +208,9 @@ void compute_dx(
     delta_e_sp = u[5] - elevator_trim[0];
     delta_r_sp = u[6] - rudder_trim[0];
 
+		double n_p;
+    n_p = u[7];
+
     // ******
     // Forces
     // ******
@@ -233,6 +247,9 @@ void compute_dx(
 
     double X, Y, Z;
 
+		// Thrust force from motor and propeller
+		double F_p = rho_diam_pusher_pwr_four[0] * c_T_pusher[0] * pow(n_p, 2);
+
     // Rotate from stability frame to body frame
     X = -cos(alpha) * F_drag + sin(alpha) * F_lift;
     Y = half_rho_planform[0] * pow(V, 2) * wingspan[0] * c_Y;
@@ -241,7 +258,7 @@ void compute_dx(
 
     // Sum all forces
     double F_tot_x, F_tot_y, F_tot_z;
-    F_tot_x = F_g_x + X;
+    F_tot_x = F_g_x + X + F_p;
     F_tot_y = F_g_y + Y;
     F_tot_z = F_g_z + Z;
 

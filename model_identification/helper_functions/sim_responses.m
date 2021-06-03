@@ -4,9 +4,9 @@ function [] = sim_responses(experiments_to_use, nlgr_model, data, data_full_stat
     num_experiments = length(experiments_to_use);
     
     % Subtract trims before plotting, to plot what the model sees
-    aileron_trim = nlgr_model.Parameters(12).Value;
-    elevator_trim = nlgr_model.Parameters(13).Value;
-    rudder_trim = nlgr_model.Parameters(14).Value;
+    aileron_trim = nlgr_model.Parameters(16).Value;
+    elevator_trim = nlgr_model.Parameters(17).Value;
+    rudder_trim = nlgr_model.Parameters(18).Value;
     input_trims = [aileron_trim elevator_trim rudder_trim];
     
     for i = 1:num_experiments
@@ -562,6 +562,11 @@ function [] = plot_response(exp_i, full_state, predicted_output, input, dt, inpu
         plot(t, rad2deg(input(:,7) - rudder_trim));
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");
+        
+        subplot(num_plots,2,12)
+        plot(t, input(:,8));
+        legend("n_p");
+        ylabel("[RPM]");
         
         sgtitle("experiment index: " + exp_i)
     end

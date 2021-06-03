@@ -1,4 +1,4 @@
-function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_indices, data_type)
+function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_indices, data_type, maneuver_type)
     num_maneuvers = length(maneuver_start_indices);
 
     if data_type == "full"
@@ -13,14 +13,14 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
         OutputUnit = {'', '', '', '', 'rad/s', 'rad/s', 'rad/s', 'm/s', 'm/s', 'm/s'};
 
         for maneuver_i = 1:num_maneuvers
-            if maneuver_i == 1
-                maneuver_start_index = 1;
+            % Get correct maneuver start and end index
+            maneuver_start_index = maneuver_start_indices(maneuver_i);
+            if maneuver_i == num_maneuvers
+                maneuver_end_index = length(t);
             else
-                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
+                maneuver_end_index = maneuver_start_indices(maneuver_i + 1);
             end
-
-            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
-
+            
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
             full_state_maneuver = full_state(maneuver_start_index:maneuver_end_index,:);
@@ -51,9 +51,10 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
             output = [e0 e1 e2 e3 p q r u v w];
             input = [n_t1 n_t2 n_t4 n_t4 ...
                      delta_a delta_e delta_r n_p];
-
+                 
             % Create sysid data object
-            z = iddata(output, input, dt, 'Name', 'Full state data');
+            z = iddata(output, input, dt, 'Name', 'Full state data',...
+                'ExperimentName', maneuver_type + "_exp" + maneuver_i);
             z.TimeUnit = 's';
             z.Tstart = 0;
             z.InputName = InputName;
@@ -80,13 +81,13 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
         OutputUnit = {'', '', '', '', 'rad/s', 'm/s', 'm/s'};
 
         for maneuver_i = 1:num_maneuvers
-            if maneuver_i == 1
-                maneuver_start_index = 1;
+            % Get correct maneuver start and end index
+            maneuver_start_index = maneuver_start_indices(maneuver_i);
+            if maneuver_i == num_maneuvers
+                maneuver_end_index = length(t);
             else
-                maneuver_start_index = maneuver_start_indices(maneuver_i - 1);
+                maneuver_end_index = maneuver_start_indices(maneuver_i + 1);
             end
-
-            maneuver_end_index = maneuver_start_indices(maneuver_i) - 1;
 
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
@@ -121,7 +122,8 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
                      p r v];
 
             % Create sysid data object
-            z = iddata(output, input, dt, 'Name', 'Full state data with lat fixed');
+            z = iddata(output, input, dt, 'Name', 'Full state data with lat fixed',...
+                'ExperimentName', maneuver_type + "_exp" + maneuver_i);
             z.TimeUnit = 's';
             z.Tstart = 0;
             z.InputName = InputName;
