@@ -25,8 +25,8 @@ def set_maneuver_times(
         start_time = -1
         end_time = -1
         skip = False
-        if str(maneuver_i) in maneuver_times:
-            times = maneuver_times[str(maneuver_i)]
+        if maneuver_i in maneuver_times:
+            times = maneuver_times[maneuver_i]
             start_time = times[0]
             end_time = times[1]
         if maneuver_i in maneuvers_to_skip:
@@ -49,7 +49,23 @@ exp1["Maneuvers"] = {}
 
 sweep_maneuver_indices = np.arange(1, 32)
 maneuvers_w_dropout = [1, 8, 17, 21]
-set_maneuver_times(exp1, sweep_maneuver_indices, {}, maneuvers_w_dropout, "sweep")
+skip = [2]  # too close to other maneuvers
+set_maneuver_times(
+    exp1, sweep_maneuver_indices, {}, maneuvers_w_dropout + skip, "sweep"
+)
+
+# Pick some random cruise flight times
+exp1_cruise_times = {
+    31: [640, 650],
+    32: [650, 670],
+    33: [720, 720],
+    34: [770, 790],
+    35: [900, 920],
+    36: [1160, 1180],
+    37: [1970, 1990],
+}
+for key, value in exp1_cruise_times.items():
+    exp1["Maneuvers"][str(key)] = create_maneuver_dict("not_set", value[0], value[1])
 
 
 ##############
@@ -62,14 +78,14 @@ exp2["Number"] = 2
 exp2["Maneuvers"] = {}
 
 pitch_211_maneuver_indices = np.arange(1, 18)
-pitch_211_skip = [7, 8, 11, 17]
-set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, pitch_211_skip, "pitch_211")
+dropouts = [1, 2, 7, 11, 17]
+set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, dropouts, "pitch_211")
 
 # Pretend freehand times are the last maneuvers, just for simplicity
 # Does not make a difference for anything
 exp2_freehand_times = {"18": [180, 520]}
 for key, value in exp2_freehand_times.items():
-    exp2["Maneuvers"][key] = create_maneuver_dict("freehand", value[0], value[1])
+    exp2["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])
 
 
 ##############
@@ -101,35 +117,31 @@ sweep_maneuver_indices = np.arange(177, 192)
 
 # Correct pitch maneuver times
 pitch_211_maneuver_times = {
-    "2": [891, -1],  # disturbance
+    9: [-1, 981],  # split maneuvers
+    10: [-1, 986],  # split maneuvers
+    11: [-1, 991],  # split maneuvers
+    13: [-1, 1011],  # split maneuvers
+    14: [-1, 1016],  # split maneuvers
+    15: [-1, 1020.5],  # split maneuvers
+    16: [-1, 1025],  # split maneuvers
+    17: [-1, 1030],  # split maneuvers
+    19: [-1, 1051],  # split maneuvers
+    20: [-1, 1061],  # use two maneuvers in one
 }
 pitch_211_skip = [
-    1,  # disturbance
     4,  # dropout
     8,  # dropout
-    13,  # disturbance
-    16,  # disturbance
     18,  # dropout
+    21,  # used in 20
 ]
 
 pitch_211_nt_maneuver_times = {
-    "22": [-1, 1077],  # not still input
-    "23": [-1, 1080.7],  # throttle
-    "24": [1107, 1109.8],  # throttle
-    "25": [-1, 1117],  # throttle
-    "26": [-1, 1137],  # throttle
-    "27": [-1, 1142.7],  # throttle
-    "28": [1145, 1148],  # throttle
-    "29": [1163, 1167.5],  # throttle
-    "30": [-1, 1188],  # throttle
-    "33": [-1, 1231],  # throttle
-    "34": [1234.5, 1238],  # throttle
-    "36": [-1, 1265.5],  # throttle
+    22: [-1, 1083],  # take both 22 and 23
+    27: [-1, 1150],  # take both 27 and 28
 }
 pitch_211_nt_skip = [
-    31,  # throttle
-    32,  # aborted
-    35,  # throttle
+    23,  # already used
+    32,  # dropout
 ]
 set_maneuver_times(
     exp3,
@@ -138,6 +150,7 @@ set_maneuver_times(
     pitch_211_skip,
     "pitch_211",
 )
+
 set_maneuver_times(
     exp3,
     pitch_211_nt_maneuver_indices,
@@ -149,21 +162,21 @@ set_maneuver_times(
 
 # Correct roll maneuver times
 roll_211_maneuver_times = {
-    "38": [1352.3, 1356.5],  # nudge in input
-    "39": [-1, 1360],  # nudge in input
-    "40": [-1, 1362.7],  # nudge in input
-    "41": [-1, 1379.2],  # nudge in input
-    "43": [-1, 1390.5],  # nudge in input
-    "44": [-1, 1394],  # nudge in input
-    "45": [-1, 1397],  # nudge in input
-    "50": [1460.4, 1466],  # not still
-    "52": [-1, 1475],  # nudge in input
+    37: [-1, 1365],  # Take both 37,38,39,40 in one as they are so close
+    41: [-1, 1379],  # Remove 42
+    43: [1385.5, 1390],  # remove other exp and dropout
+    44: [1389, 1400],  # Take 44 and 45
+    46: [-1, 1429.5],  # dropout
+    47: [1432.5, 1443],  # 47 and 48
+    49: [-1, 1466],  # 47 and 48
+    51: [-1, 1477],  # 51 and 52
 }
 
 roll_211_skip = [
-    37,  # nudge in input can use this
-    47,  # not still
-    48,  # not still
+    42,  # dropout
+    45,  # already used
+    48,  # already used
+    50,  # already used
     56,  # dropout
 ]
 
@@ -172,52 +185,20 @@ set_maneuver_times(
 )
 
 roll_211_nt_maneuver_times = {
-    "57": [-1, 1546],  # nudge in input
-    "58": [-1, 1548.7],  # throttle
-    "59": [1550.8, 1554.5],  # throttle
-    "60": [1577, 1580.3],  # throttle
-    "61": [-1, 1586.3],  # throttle
-    "62": [-1, 1591.7],  # throttle
-    "63": [-1, 1608.5],  # throttle
-    "64": [1610.5, 1613.5],  # throttle
-    "65": [1616.5, 1619.2],  # throttle
-    "66": [1636.6, 1640.5],  # throttle
-    "67": [1645.4, 1649],  # throttle
-    "69": [-1, 1675.3],  # throttle
-    "70": [1679, -1],  # throttle
-    "71": [1699.8, 1702.8],  # throttle
-    "72": [1707.4, 1711],  # throttle
-    "73": [1722, 1725.3],  # throttle
-    "74": [1730, 1733.4],  # throttle
-    "75": [1737, 1740],  # throttle
-    "76": [-1, 1758.7],  # throttle
-    "81": [1817.5, 1821],  # throttle
-    "83": [1844.5, 1848.2],  # throttle
-    "84": [1854.5, 1858],  # throttle
-    "87": [-1, 1903.7],  # throttle
-    "88": [-1, 1918],  # throttle
-    "89": [-1, 1941],  # throttle
-    "90": [-1, 1951.5],  # throttle
-    "92": [-1, 1977.8],  # throttle
-    "93": [-1, 1987],  # throttle
-    "95": [-1, 2014],  # throttle
-    "96": [-1, 2023],  # throttle
-    "97": [-1, 2035],  # throttle
-    "98": [2046.7, 2050.4],  # throttle
-    "99": [-1, 2064.9],  # throttle
+    57: [-1, 1551],  # 57 and 58
+    61: [-1, 1595],  # 61 and 62
+    76: [-1, 1764],  # 61 and 62
+    92: [-1, 1990], # 92 and 93
 }
 
 roll_211_nt_skip = [
+    58,  # already used
+    61,  # already used
     68,  # dropout
-    77,  # to early throttle
-    78,  # aborted,
-    79,  # throttle,
-    80,  # throttle
+    77, # already used
+    78, # dropout
     82,  # dropout
-    85,  # disturbance
-    86,  # throttle
-    91,  # aborted
-    94,  # throttle
+    91, # dropout
 ]
 
 set_maneuver_times(
@@ -231,51 +212,21 @@ set_maneuver_times(
 
 # Correct yaw maneuver times
 yaw_211_maneuver_times = {
-    "109": [2302, -1],  # disturbance
+    105: [-1, 2320],  # 105 - 110
 }
 
 yaw_211_skip = [
-    100,  # disturbance
     101,  # dropout
-    103,  # disturbance
-    105,  # disturbance
-    106,  # disturbance
     107,  # dropout
     108,  # dropout
-    151,  # disturbance
-    162,  # disturbance
-    167,  # disturbance
-    171,  # disturbance
 ]
 set_maneuver_times(
     exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, yaw_211_skip, "yaw_211"
 )
 
-yaw_211_nt_maneuver_times = {
-    "113": [-1, 2368.5],  # throttle
-    "115": [2391, 2396],  # throttle
-    "116": [-1, 2406.9],  # throttle
-    "120": [2472.3, -1],  # throttle
-    "121": [2485, -1],  # throttle
-    "122": [-1, 2508.7],  # throttle
-    "123": [-1, 2518.5],  # throttle
-    "124": [-1, 2536.5],  # throttle
-    "127": [-1, 2591],  # throttle
-    "140": [-1, 2868],  # throttle
-    "143": [-1, -1],  # throttle
-}
+yaw_211_nt_maneuver_times = {}
 yaw_211_nt_skip = [
-    114,  # throttle
-    117,  # throttle
     118,  # dropout
-    119,  # throttle
-    123,  # throttle
-    126,  # throttle
-    128,  # aborted
-    129,  # throttle
-    132,  # aborted
-    136,  # aborted
-    138,  # throttle
 ]
 
 set_maneuver_times(
@@ -292,11 +243,11 @@ set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, [], "swee
 
 # Add freehand times
 exp3_freehand_times = {
-    "192": [4070, 4120],
-    "193": [4180, 4325],
+    192: [4070, 4120],
+    193: [4180, 4325],
 }
 for key, value in exp3_freehand_times.items():
-    exp3["Maneuvers"][key] = create_maneuver_dict("freehand", value[0], value[1])
+    exp3["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])
 
 
 ##############
@@ -331,8 +282,8 @@ sweep_maneuver_indices = np.arange(1, 32)
 skip = [
     1,  # dropout
     10,  # dropout
-    12, # something strange with drag
-    13, # something strange with drag
+    12,  # something strange with drag
+    13,  # something strange with drag
 ]
 set_maneuver_times(exp5, sweep_maneuver_indices, sweep_maneuver_times, skip, "sweep")
 
@@ -340,6 +291,7 @@ set_maneuver_times(exp5, sweep_maneuver_indices, sweep_maneuver_times, skip, "sw
 ##################
 
 # Create metadata object
+breakpoint()
 metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5], "dt": 0.01}
 
 with open("../data/metadata.json", "w") as outfile:

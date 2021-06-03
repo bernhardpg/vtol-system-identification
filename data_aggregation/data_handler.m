@@ -4,17 +4,21 @@ metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Output data
-save_output_data = true;
-save_plot = false;
+save_output_data = false;
+save_plot = true;
 show_plot = false;
 
 % Set common data time resolution
 dt = metadata.dt;
 
 num_experiments = length(metadata.Experiments);
-experiments_to_parse = 1:num_experiments;
-%experiments_to_parse = [1 2 3 5];
-maneuver_types_to_parse = ["sweep"];
+%experiments_to_parse = 1:num_experiments;
+experiments_to_parse = [2 3 4 5];
+maneuver_types_to_parse = [...
+    %"roll_211", "roll_211_no_throttle",...
+    "pitch_211", "pitch_211_no_throttle",...
+   % "yaw_211", "yaw_211_no_throttle",...
+    ];
 
 for i = experiments_to_parse
     parse_data_from_flight(metadata.Experiments(i), dt, save_output_data, save_plot, show_plot, maneuver_types_to_parse);
@@ -76,11 +80,6 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
     % Initialize empty output variables
     output_data = intialize_empty_output_struct();
 
-    % Normal maneuver length
-    % This is what is used for sweeps
-    default_maneuver_padding_start_s = 1;
-    default_maneuver_padding_end_s = 0;
-
     % Iterate through maneuvers
     num_aggregated_maneuvers = 0;
     for maneuver_i = 1:num_maneuvers
@@ -101,6 +100,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         end
         
         [maneuver_length_s] = get_default_maneuver_length_s(curr_maneuver_metadata.type);
+        [padding_before_s, padding_after_s] = get_default_maneuver_padding_s(curr_maneuver_metadata.type);
         
         if maneuver_i > length(sysid_indices)
            assumed_start_index = -1; % This will not get used 
@@ -110,7 +110,7 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         [maneuver_should_be_aggregated,...
             maneuver_start_index,...
             maneuver_end_index] = read_maneuver_metadata(...
-                curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, dt, assumed_start_index, maneuver_length_s ...
+                curr_maneuver_metadata, padding_before_s, padding_after_s, t, dt, assumed_start_index, maneuver_length_s ...
             );
 
         % Extract maneuver data
@@ -149,11 +149,8 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
                 %    show_plot, save_plot, plot_output_location);
                 %plot_accelerations(maneuver_i, t_maneuver, acc_B_maneuver, acc_B_unfiltered_maneuver, ang_acc_B_maneuver, ang_acc_unfiltered_maneuver, show_plot, save_plot, plot_output_location);
                 scatter_static_curves(maneuver_i, t_maneuver, AoA_deg_maneuver, L_maneuver, D_maneuver, Tau_y_maneuver, c_L_maneuver, c_D_maneuver, c_m_maneuver, show_plot, save_plot, plot_output_location);
-                plot_maneuver(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
-            else % do not generate plots for 2-1-1 maneuvers for now
-                % continue
             end
-            %plot_maneuver(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
+            plot_maneuver(maneuver_i, t_maneuver, state_maneuver, input_maneuver, show_plot, save_plot, plot_output_location);
             
         end
         
@@ -234,6 +231,17 @@ function [maneuver_length_s] = get_default_maneuver_length_s(maneuver_type)
             maneuver_length_s = 5.5;
         else
             maneuver_length_s = 6;
+        end
+end
+
+
+function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneuver_type) 
+        if maneuver_type == "sweep"
+            padding_start_s = 1;
+            padding_end_s = 0;
+        else
+            padding_start_s = 3;
+            padding_end_s = 3;
         end
 end
 
@@ -504,7 +512,7 @@ function [maneuver_should_be_aggregated,...
         end
         if maneuver_end_time_not_set || ~maneuver_should_be_aggregated
             maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt + round((default_maneuver_padding_end_s) / dt)...
+                [maneuver_start_index + maneuver_length_s / dt + round(default_maneuver_padding_start_s / dt) + round(default_maneuver_padding_end_s / dt)...
                 1]);
         else
             maneuver_end_index = round((curr_maneuver_metadata.end_s - t(1)) / dt);
