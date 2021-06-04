@@ -20,6 +20,17 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
             else
                 maneuver_end_index = maneuver_start_indices(maneuver_i + 1);
             end
+            if maneuver_start_index == maneuver_end_index
+                disp("");
+            end
+            if maneuver_i == 12
+               disp(""); 
+            end
+            if maneuver_i == 29
+               disp(""); 
+            end
+            
+            
             
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
@@ -88,7 +99,9 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
             else
                 maneuver_end_index = maneuver_start_indices(maneuver_i + 1);
             end
-
+            if maneuver_start_index == maneuver_end_index
+                disp("");
+            end
             % Extract only relevant maneuver data
             t_maneuver = t(maneuver_start_index:maneuver_end_index,:);
             full_state_maneuver = full_state(maneuver_start_index:maneuver_end_index,:);

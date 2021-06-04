@@ -7,7 +7,7 @@ function [] = sim_responses(nlgr_model, data, data_full_state, model_path, save_
     
     num_experiments = length(data.ExperimentName);
     for i = 1:num_experiments
-        exp_name = string(data(:,:,:,1).ExperimentName);
+        exp_name = string(data(:,:,:,i).ExperimentName);
         y = sim(nlgr_model, data);
 
         % Handle datatypes being different for single and multiple experiments

@@ -19,24 +19,64 @@ maneuver_types = [...
     "roll_211_no_throttle", "pitch_211_no_throttle", "yaw_211_no_throttle",...
     "roll_211", "pitch_211", "yaw_211"
     ];
-maneuver_quantities = [0 1 0 0 1 0];
 
-num_models_to_create = 5;
-
+num_models_to_create = 1;
 trained_params = {};
-% Train different models on same data
+
+%val_maneuver_quantities = [2 2 2 2 2 2];
+%[data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
+% Train different models on different data
+maneuver_quantities = [0 0 0 0 29 0];
 [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
+maneuver_quantities = [0 0 0 0 29 0];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
 
 for i = 1:num_models_to_create
+    disp(" ")
+    disp("====================")
+    disp("====== Model:" + i)
+
     model_params = fit_lon_model(data, num_states, num_outputs, num_inputs, model_type);
-    fit = evaluate_performance(model_params, data_val, num_states, num_inputs, num_outputs, model_type);
-    disp("Model " + i + " fit:");
-    fprintf(['  ' repmat('%3.1f%%, ',1,size(fit,2)) '\n'], fit);
-    trained_params(i) = {model_params};
+%     fit = evaluate_performance(model_params, data_val, num_states, num_inputs, num_outputs, model_type);
+%     disp("Model " + i + " fit:");
+%     fprintf(['  ' repmat('%3.1f%%, ',1,size(fit,2)) '\n'], fit);
+%     trained_params(i) = {model_params};
+
+    % Print and save model
+    initial_states = create_initial_states_struct(data_val, num_states, num_outputs, model_type);
+    nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, model_params, initial_states, model_type);
+    print_parameters(nlgr_model.Parameters, "free")
+
+    model_path = "fitted_models/multiple_models/" + "model_" + i + "/";
+    save_plot = true;
+    show_plot = false;
+    sim_responses(nlgr_model, data_val, data_full_state_val, model_path, save_plot, model_type, show_plot);
+
+    save("results/trained_models", 'trained_params')
 end
 
- disp("test");
+
+
+%%
+% Create plots of validation data
+for i = 1:length(trained_params)
+
+
+    params = trained_params{i};
+    initial_states = create_initial_states_struct(data_val, num_states, num_outputs, model_type);
+    nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
+    %print_parameters(nlgr_model.Parameters, "all");
+    print_parameters(nlgr_model.Parameters, "free")
+    
+
+    model_path = "fitted_models/multiple_models/" + "model_" + i + "/";
+    save_plot = true;
+    show_plot = false;
+    sim_responses(nlgr_model, data_val, data_full_state_val, model_path, save_plot, model_type, show_plot);
+end
+
+disp("test");
+save("results/trained_models", 'trained_params')
 
 
 %% Print parameters
@@ -60,13 +100,15 @@ disp("Saved " + model_name);
 function [new_params] = fit_lon_model(data, num_states, num_outputs, num_inputs, model_type)
     % Create params from initial values, but augment randomly
     params = create_collected_params([]);
-    augment_percentage = 70;
+    augment_percentage = 100;
     lon_params = 22:34;
     params = rand_augment_params(lon_params, params, augment_percentage);
     
     % Create model with params and initial states for the experiments
     initial_states = create_initial_states_struct(data, num_states, num_outputs, model_type);
     nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
+    disp("Initial params:")
+    print_parameters(nlgr_model.Parameters, "free")
     
     % Fix lon params
     params_to_fix = 1:length(params);
@@ -76,10 +118,10 @@ function [new_params] = fit_lon_model(data, num_states, num_outputs, num_inputs,
 
     % Optimization options
     opt = nlgreyestOptions('Display', 'on');
-    opt.SearchOptions.MaxIterations = 20;
+    opt.SearchOptions.MaxIterations = 40;
     opt.OutputWeight = diag([0 0 0 0 10 1 1]);
 
     % Estimate model
-    nlgr_model = nlgreyest(data, nlgr_model, opt);
+    %nlgr_model = nlgreyest(data, nlgr_model, opt);
     new_params = nlgr_model.Parameters();
 end

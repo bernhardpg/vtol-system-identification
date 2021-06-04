@@ -3,6 +3,7 @@ function [fit] = evaluate_performance(params, val_data, num_states, num_inputs, 
     nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
 
     num_experiments = length(val_data.ExperimentName);
+    fits = zeros(num_experiments, num_outputs);
     for i = 1:num_experiments
         exp_name = string(val_data.ExperimentName);
         y = sim(nlgr_model, val_data);
@@ -16,8 +17,9 @@ function [fit] = evaluate_performance(params, val_data, num_states, num_inputs, 
             output = cell2mat(val_data.y(i));
         end
         
-        [fit] = calc_fit(output, output_pred);
+        fits(i,:) = calc_fit(output, output_pred);
     end
+    fit = mean(fits);
 end
 
 function [fit] = calc_fit(y, y_pred)

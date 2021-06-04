@@ -157,6 +157,9 @@ function [] = parse_data_from_flight(experiment, dt, save_output_data, save_plot
         % Store data in aggregated data matrices
         if maneuver_should_be_aggregated
             curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
+            if curr_maneuver_index_in_aggregation_matrix == 1
+               disp(""); 
+            end
             output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
                 [output_data.(curr_maneuver_metadata.type).maneuver_start_indices...
                  curr_maneuver_index_in_aggregation_matrix];

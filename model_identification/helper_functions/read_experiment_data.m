@@ -20,6 +20,10 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
             state_exp = readmatrix(datapath + "state.csv");
             input_exp = readmatrix(datapath + "input.csv");
             maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
+            
+            % Make maneuver start indices continue from the previous ones
+            % already loaded.
+            maneuver_start_indices_exp = maneuver_start_indices_exp + length(state);
             t_exp = readmatrix(datapath + "t.csv");
 
             state = [state;
