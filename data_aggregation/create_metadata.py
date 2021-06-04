@@ -58,14 +58,23 @@ set_maneuver_times(
 exp1_cruise_times = {
     31: [640, 650],
     32: [650, 670],
-    33: [720, 720],
+    33: [720, 740],
     34: [770, 790],
     35: [900, 920],
     36: [1160, 1180],
     37: [1970, 1990],
+    38: [1990, 1997],
+    39: [2015, 2035],
+    40: [2060, 2080],
+    41: [2080, 2100],
+    42: [2115, 2130],
+    43: [2140, 2155],
+    44: [2175, 2190],
+    45: [2230, 2245],
+    46: [2250, 2270],
 }
 for key, value in exp1_cruise_times.items():
-    exp1["Maneuvers"][str(key)] = create_maneuver_dict("not_set", value[0], value[1])
+    exp1["Maneuvers"][str(key)] = create_maneuver_dict("cruise", value[0], value[1])
 
 
 ##############
@@ -83,7 +92,32 @@ set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, dropouts, "pitch_211")
 
 # Pretend freehand times are the last maneuvers, just for simplicity
 # Does not make a difference for anything
-exp2_freehand_times = {"18": [180, 520]}
+exp2_freehand_times = {
+    "18": [180, 195],
+    "19": [195, 210],
+    "20": [210, 225],
+    "21": [225, 240],
+    "22": [240, 255],
+    "23": [255, 270],
+    "24": [270, 285],
+    "25": [285, 300],
+    "26": [300, 315],
+    "27": [315, 330],
+    "28": [330, 345],
+    "29": [345, 360],
+    "30": [360, 375],
+    "31": [375, 390],
+    "32": [390, 405],
+    "33": [405, 420],
+    "34": [420, 435],
+    "35": [435, 450],
+    "36": [450, 465],
+    "37": [465, 480],
+    "38": [480, 495],
+    "39": [495, 510],
+    "40": [510, 525],
+    "41": [525, 530],
+}
 for key, value in exp2_freehand_times.items():
     exp2["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])
 
@@ -188,17 +222,17 @@ roll_211_nt_maneuver_times = {
     57: [-1, 1551],  # 57 and 58
     61: [-1, 1595],  # 61 and 62
     76: [-1, 1764],  # 61 and 62
-    92: [-1, 1990], # 92 and 93
+    92: [-1, 1990],  # 92 and 93
 }
 
 roll_211_nt_skip = [
     58,  # already used
     61,  # already used
     68,  # dropout
-    77, # already used
-    78, # dropout
+    77,  # already used
+    78,  # dropout
     82,  # dropout
-    91, # dropout
+    91,  # dropout
 ]
 
 set_maneuver_times(
@@ -243,8 +277,19 @@ set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, [], "swee
 
 # Add freehand times
 exp3_freehand_times = {
-    192: [4070, 4120],
-    193: [4180, 4325],
+    192: [4067, 4080],
+    193: [4095, 4110],
+    194: [4110, 4125],
+    195: [4180, 4195],
+    196: [4195, 4210],
+    197: [4210, 4225],
+    198: [4225, 4240],
+    199: [4240, 4255],
+    200: [4255, 4270],
+    201: [4270, 4285],
+    202: [4285, 4300],
+    203: [4300, 4315],
+    204: [4315, 4325],
 }
 for key, value in exp3_freehand_times.items():
     exp3["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])

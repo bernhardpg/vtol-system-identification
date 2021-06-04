@@ -37,5 +37,5 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
         end
     end
     
-    disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
+    %disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
 end

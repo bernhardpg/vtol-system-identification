@@ -13,11 +13,13 @@ dt = metadata.dt;
 
 num_experiments = length(metadata.Experiments);
 %experiments_to_parse = 1:num_experiments;
-experiments_to_parse = [2 3 4 5];
+experiments_to_parse = [1 2 3 4 5];
 maneuver_types_to_parse = [...
-    %"roll_211", "roll_211_no_throttle",...
+    "roll_211", "roll_211_no_throttle",...
     "pitch_211", "pitch_211_no_throttle",...
-   % "yaw_211", "yaw_211_no_throttle",...
+    "yaw_211", "yaw_211_no_throttle",...
+    "freehand", "cruise",...
+    %"sweep",...
     ];
 
 for i = experiments_to_parse
@@ -384,6 +386,23 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.freehand.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.freehand.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
+        
+        if ~isempty(output_data.cruise.state)
+            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+                + "/cruise/output/";
+            mkdir(data_output_location);
+            
+            writematrix(output_data.cruise.state, data_output_location + 'state.csv');
+            writematrix(output_data.cruise.input, data_output_location + 'input.csv');
+            writematrix(output_data.cruise.t, data_output_location + 't.csv');
+            writematrix(output_data.cruise.AoA, data_output_location + 'aoa_rad.csv');
+            writematrix(output_data.cruise.c_D, data_output_location + 'cd.csv');
+            writematrix(output_data.cruise.c_L, data_output_location + 'cl.csv');
+            writematrix(output_data.cruise.c_m, data_output_location + 'cm.csv');
+            writematrix(output_data.cruise.ang_acc, data_output_location + 'ang_acc.csv');
+            writematrix(output_data.cruise.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.cruise.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
+        end
 end
 
 function [output_struct] = intialize_empty_output_struct()
@@ -476,6 +495,17 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.freehand.AoA = [];
     output_struct.freehand.ang_acc = [];
     output_struct.freehand.aggregated_maneuvers = [];
+    
+    output_struct.cruise.maneuver_start_indices = [];
+    output_struct.cruise.t = [];
+    output_struct.cruise.input = [];
+    output_struct.cruise.state = [];
+    output_struct.cruise.c_D = [];
+    output_struct.cruise.c_L = [];
+    output_struct.cruise.c_m = [];
+    output_struct.cruise.AoA = [];
+    output_struct.cruise.ang_acc = [];
+    output_struct.cruise.aggregated_maneuvers = [];
     
     output_struct.not_set.maneuver_start_indices = [];
     output_struct.not_set.t = [];

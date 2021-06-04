@@ -151,49 +151,103 @@
                     "end_s": 650,
                     "skip": false,
                     "start_s": 640,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "32": {
                     "end_s": 670,
                     "skip": false,
                     "start_s": 650,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "33": {
-                    "end_s": 720,
+                    "end_s": 740,
                     "skip": false,
                     "start_s": 720,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "34": {
                     "end_s": 790,
                     "skip": false,
                     "start_s": 770,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "35": {
                     "end_s": 920,
                     "skip": false,
                     "start_s": 900,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "36": {
                     "end_s": 1180,
                     "skip": false,
                     "start_s": 1160,
-                    "type": "not_set"
+                    "type": "cruise"
                 },
                 "37": {
                     "end_s": 1990,
                     "skip": false,
                     "start_s": 1970,
-                    "type": "not_set"
+                    "type": "cruise"
+                },
+                "38": {
+                    "end_s": 1997,
+                    "skip": false,
+                    "start_s": 1990,
+                    "type": "cruise"
+                },
+                "39": {
+                    "end_s": 2035,
+                    "skip": false,
+                    "start_s": 2015,
+                    "type": "cruise"
                 },
                 "4": {
                     "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "sweep"
+                },
+                "40": {
+                    "end_s": 2080,
+                    "skip": false,
+                    "start_s": 2060,
+                    "type": "cruise"
+                },
+                "41": {
+                    "end_s": 2100,
+                    "skip": false,
+                    "start_s": 2080,
+                    "type": "cruise"
+                },
+                "42": {
+                    "end_s": 2130,
+                    "skip": false,
+                    "start_s": 2115,
+                    "type": "cruise"
+                },
+                "43": {
+                    "end_s": 2155,
+                    "skip": false,
+                    "start_s": 2140,
+                    "type": "cruise"
+                },
+                "44": {
+                    "end_s": 2190,
+                    "skip": false,
+                    "start_s": 2175,
+                    "type": "cruise"
+                },
+                "45": {
+                    "end_s": 2245,
+                    "skip": false,
+                    "start_s": 2230,
+                    "type": "cruise"
+                },
+                "46": {
+                    "end_s": 2270,
+                    "skip": false,
+                    "start_s": 2250,
+                    "type": "cruise"
                 },
                 "5": {
                     "end_s": -1,
@@ -286,9 +340,15 @@
                     "type": "pitch_211"
                 },
                 "18": {
-                    "end_s": 520,
+                    "end_s": 195,
                     "skip": false,
                     "start_s": 180,
+                    "type": "freehand"
+                },
+                "19": {
+                    "end_s": 210,
+                    "skip": false,
+                    "start_s": 195,
                     "type": "freehand"
                 },
                 "2": {
@@ -297,17 +357,149 @@
                     "start_s": -1,
                     "type": "pitch_211"
                 },
+                "20": {
+                    "end_s": 225,
+                    "skip": false,
+                    "start_s": 210,
+                    "type": "freehand"
+                },
+                "21": {
+                    "end_s": 240,
+                    "skip": false,
+                    "start_s": 225,
+                    "type": "freehand"
+                },
+                "22": {
+                    "end_s": 255,
+                    "skip": false,
+                    "start_s": 240,
+                    "type": "freehand"
+                },
+                "23": {
+                    "end_s": 270,
+                    "skip": false,
+                    "start_s": 255,
+                    "type": "freehand"
+                },
+                "24": {
+                    "end_s": 285,
+                    "skip": false,
+                    "start_s": 270,
+                    "type": "freehand"
+                },
+                "25": {
+                    "end_s": 300,
+                    "skip": false,
+                    "start_s": 285,
+                    "type": "freehand"
+                },
+                "26": {
+                    "end_s": 315,
+                    "skip": false,
+                    "start_s": 300,
+                    "type": "freehand"
+                },
+                "27": {
+                    "end_s": 330,
+                    "skip": false,
+                    "start_s": 315,
+                    "type": "freehand"
+                },
+                "28": {
+                    "end_s": 345,
+                    "skip": false,
+                    "start_s": 330,
+                    "type": "freehand"
+                },
+                "29": {
+                    "end_s": 360,
+                    "skip": false,
+                    "start_s": 345,
+                    "type": "freehand"
+                },
                 "3": {
                     "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
+                "30": {
+                    "end_s": 375,
+                    "skip": false,
+                    "start_s": 360,
+                    "type": "freehand"
+                },
+                "31": {
+                    "end_s": 390,
+                    "skip": false,
+                    "start_s": 375,
+                    "type": "freehand"
+                },
+                "32": {
+                    "end_s": 405,
+                    "skip": false,
+                    "start_s": 390,
+                    "type": "freehand"
+                },
+                "33": {
+                    "end_s": 420,
+                    "skip": false,
+                    "start_s": 405,
+                    "type": "freehand"
+                },
+                "34": {
+                    "end_s": 435,
+                    "skip": false,
+                    "start_s": 420,
+                    "type": "freehand"
+                },
+                "35": {
+                    "end_s": 450,
+                    "skip": false,
+                    "start_s": 435,
+                    "type": "freehand"
+                },
+                "36": {
+                    "end_s": 465,
+                    "skip": false,
+                    "start_s": 450,
+                    "type": "freehand"
+                },
+                "37": {
+                    "end_s": 480,
+                    "skip": false,
+                    "start_s": 465,
+                    "type": "freehand"
+                },
+                "38": {
+                    "end_s": 495,
+                    "skip": false,
+                    "start_s": 480,
+                    "type": "freehand"
+                },
+                "39": {
+                    "end_s": 510,
+                    "skip": false,
+                    "start_s": 495,
+                    "type": "freehand"
+                },
                 "4": {
                     "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
+                },
+                "40": {
+                    "end_s": 525,
+                    "skip": false,
+                    "start_s": 510,
+                    "type": "freehand"
+                },
+                "41": {
+                    "end_s": 530,
+                    "skip": false,
+                    "start_s": 525,
+                    "type": "freehand"
                 },
                 "5": {
                     "end_s": -1,
@@ -964,15 +1156,51 @@
                     "type": "sweep"
                 },
                 "192": {
-                    "end_s": 4120,
+                    "end_s": 4080,
                     "skip": false,
-                    "start_s": 4070,
+                    "start_s": 4067,
                     "type": "freehand"
                 },
                 "193": {
-                    "end_s": 4325,
+                    "end_s": 4110,
+                    "skip": false,
+                    "start_s": 4095,
+                    "type": "freehand"
+                },
+                "194": {
+                    "end_s": 4125,
+                    "skip": false,
+                    "start_s": 4110,
+                    "type": "freehand"
+                },
+                "195": {
+                    "end_s": 4195,
                     "skip": false,
                     "start_s": 4180,
+                    "type": "freehand"
+                },
+                "196": {
+                    "end_s": 4210,
+                    "skip": false,
+                    "start_s": 4195,
+                    "type": "freehand"
+                },
+                "197": {
+                    "end_s": 4225,
+                    "skip": false,
+                    "start_s": 4210,
+                    "type": "freehand"
+                },
+                "198": {
+                    "end_s": 4240,
+                    "skip": false,
+                    "start_s": 4225,
+                    "type": "freehand"
+                },
+                "199": {
+                    "end_s": 4255,
+                    "skip": false,
+                    "start_s": 4240,
                     "type": "freehand"
                 },
                 "2": {
@@ -986,6 +1214,36 @@
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
+                },
+                "200": {
+                    "end_s": 4270,
+                    "skip": false,
+                    "start_s": 4255,
+                    "type": "freehand"
+                },
+                "201": {
+                    "end_s": 4285,
+                    "skip": false,
+                    "start_s": 4270,
+                    "type": "freehand"
+                },
+                "202": {
+                    "end_s": 4300,
+                    "skip": false,
+                    "start_s": 4285,
+                    "type": "freehand"
+                },
+                "203": {
+                    "end_s": 4315,
+                    "skip": false,
+                    "start_s": 4300,
+                    "type": "freehand"
+                },
+                "204": {
+                    "end_s": 4325,
+                    "skip": false,
+                    "start_s": 4315,
+                    "type": "freehand"
                 },
                 "21": {
                     "end_s": -1,
