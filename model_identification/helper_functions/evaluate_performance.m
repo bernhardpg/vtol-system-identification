@@ -1,5 +1,5 @@
-function [fit] = evaluate_performance(params, val_data, num_states, num_inputs, num_outputs, model_type)
-    initial_states = create_initial_states_struct(val_data, num_states, num_outputs, model_type);
+function [fit] = evaluate_performance(params, input_trims, val_data, num_states, num_inputs, num_outputs, model_type)
+    initial_states = create_initial_states_struct(val_data, input_trims, num_states, num_outputs, model_type);
     nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
 
     num_experiments = length(val_data.ExperimentName);

@@ -1,10 +1,8 @@
 % Calculating deflection angles in degrees from raw PX4 input:
-% 1. Saturate raw PX4 input at [-1,1]
-% 2. Subtract PX4 trim parameters values to make zero correspond to
-%    zero deflection angle (control surfaces are not perfectly aligned).
-%    Call this absolute inputs.
-% 3. Use the following function to calculate deflection angles in deg:
-%    delta_deg = offset + input_absolute * linear_term
+% 1. PX4 inputs are WITH trims added. This is fine.
+% 2. Use raw PX4 input to calculate deflection angle as
+%    delta_deg = offset + input * linear_term
+% 3. Saturate deflection angle at known limits
 
 % Trims that are required for zero deflection angles
 % due to manifacturing inaccuriacies
@@ -16,12 +14,12 @@ trim_for_zero_deg_yaw = -0.02;
 % These data are obtained in the script:
 % actuator_id/control_surfaces/control_surface_scaling.m
 
-% Scaling from absolute PX4 inputs (with trims subtracted) to degrees
-offset_rudder = -0.7467;
+% Scaling from PX4 inputs to degrees
+offset_rudder = 0.1467;
 linear_term_rudder = 22.3333;
-offset_elevator = -1.0700;
+offset_elevator = 0.4700;
 linear_term_elevator = 25.6667;
-offset_aileron = -2.7433;
+offset_aileron = 3.3433;
 linear_term_aileron = 27.6667;
 
 % Max angles in actual deflections

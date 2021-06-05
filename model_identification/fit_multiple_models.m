@@ -33,19 +33,25 @@ mkdir(curr_run_path)
 
 
 num_models_to_create = 4;
-num_maneuvers_in_each_set = 14;
+num_maneuvers_in_each_set = 2;
 trained_params = {};
 
 augment_percentage = 25;
 
 % Create empty params table
 params = create_collected_params([]);
-[params_table] = create_param_table(params, 20, 50);
-[std_table] = create_param_table(params, 22, 34);
-
+params_table = create_param_table(params, 20, 50);
+std_table = create_param_table(params, 20, 50);
 fit_table = table('RowNames', {'e0','e1','e2','e4','q','u','w',});
 
+% Trim values
+aileron_trim = params(17).Value;
+elevator_trim = params(18).Value;
+rudder_trim = params(19).Value;
+input_trims = [aileron_trim elevator_trim rudder_trim];
+
 % Validation data 
+%val_maneuver_quantities = [2 2 2 2 2 2 2 2];
 val_maneuver_quantities = [2 2 2 2 2 2 2 2];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
 
@@ -72,7 +78,7 @@ for model_i = 1:num_models_to_create
         [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
         
         % Create model with new data and params
-        [nlgr_model] = create_model_from_params(data, model_params, num_states, num_outputs, num_inputs, model_type);
+        [nlgr_model] = create_model_from_params(data, model_params, input_trims, num_states, num_outputs, num_inputs, model_type);
     
         % Estimate params on data
         [model_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data);
@@ -86,16 +92,16 @@ for model_i = 1:num_models_to_create
     writetable(params_table, curr_run_path + "/params.dat", 'WriteRowNames', true);
     
     % Save plots of validation data
-    test_model_params(model_params, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
+    test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
     
     % Evaluate the fit of that model on the validation data
-    fit_table.(model_name) = evaluate_performance(model_params, data_val, num_states, num_inputs, num_outputs, model_type)';
+    fit_table.(model_name) = evaluate_performance(model_params, input_trims, data_val, num_states, num_inputs, num_outputs, model_type)';
     disp("  Fits:");
     disp(fit_table)
     writetable(fit_table, curr_run_path + "/fits.dat", 'WriteRowNames', true);
     
     % Store standard deviations of model
-    std_table.(model_name) = pvec_std;
+    std_table.(model_name) = pvec_std(20:50);
     disp("  Standard deviations:");
     disp(std_table);
     writetable(std_table, curr_run_path + "/std.dat", 'WriteRowNames', true);
@@ -104,26 +110,30 @@ end
 
 
 %%
-test_model_params(model_params, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
+test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
 
 %% Load an old model
-val_maneuver_quantities = [1 1 1 1 1 1];
+val_maneuver_quantities = [0 0 2 2 0 0 0 0];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
 
-run_to_read = 5;
+run_to_read = 17;
 model_i = 1;
 
 path = models_path + "run_" + run_to_read + "/";
 params_table = readtable(path + "params.dat", "ReadRowNames", true);
 initial_params = create_collected_params([]);
 model_params = load_params_from_table(initial_params, params_table, model_i);
-test_model_params(model_params, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, "", false, true)
+
+%%
+test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, "", false, true)
 
 
 %% Functions
 function [maneuver_quantities] = rand_gen_maneuver_quantities(num_maneuvers)
     prob = [1   2   3    4    5   6   7   8;
             0 0 0.5 0.5 0 0 0 0];
+%     prob = [1   2   3    4    5   6   7   8;
+%             0.4/6 0.4/6 0.3 0.3 0.4/6 0.4/6 0.4/6 0.4/6];
 %     prob = [1   2   3    4    5   6   7   8;
 %             1/8 1/8 1/8 1/8 1/8 1/8 1/8 1/8];
 %     
@@ -135,11 +145,11 @@ function [maneuver_quantities] = rand_gen_maneuver_quantities(num_maneuvers)
     end
 end
 
-function [] = test_model_params(params, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, path, save_plot, show_plot)
+function [] = test_model_params(params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, path, save_plot, show_plot)
     % Create initial states and model with validation data
-    initial_states = create_initial_states_struct(data_val, num_states, num_outputs, model_type);
+    initial_states = create_initial_states_struct(data_val, input_trims, num_states, num_outputs, model_type);
     nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
-    sim_responses(nlgr_model, data_val, data_full_state_val, path, save_plot, model_type, show_plot);
+    sim_responses(nlgr_model, data_val, data_full_state_val, path, save_plot, model_type, show_plot, input_trims);
 end
 
 function [params] = load_params_from_table(params, params_table, model_i)
@@ -179,13 +189,13 @@ function [augmented_params] = create_augmented_params(augment_percentage)
     augmented_params = rand_augment_params(params_to_augment, params, augment_percentage); 
 end
 
-function [nlgr_model] = create_model_from_params(data, params, num_states, num_outputs, num_inputs, model_type)
+function [nlgr_model] = create_model_from_params(data, params, input_trims, num_states, num_outputs, num_inputs, model_type)
     % Create model with params and initial states for the experiments
-    initial_states = create_initial_states_struct(data, num_states, num_outputs, model_type);
+    initial_states = create_initial_states_struct(data, input_trims, num_states, num_outputs, model_type);
     nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
     
     % Unfix lon params
-    lon_params = [20 23:36];
+    lon_params = [23:36];
     params_to_fix = 1:length(params);
     params_to_unfix = lon_params;
     nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
@@ -199,12 +209,12 @@ function [new_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data)
     opt.SearchOptions.MaxIterations = 20;
     opt.SearchOptions.FunctionTolerance = 1e-4; % Reduce by an order of 10
     opt.SearchOptions.StepTolerance = 1e-5; % Reduce by an order of 10
-    %opt.OutputWeight = diag([0 0 0 0 2 2 2]); % do not weight roll and yaw states
+    %opt.OutputWeight = diag([0 0 0 0 3 1 1]); % do not weight roll and yaw states
     opt.Regularization.Lambda = 0.1; % Prevent values from becoming too large
 
     % Estimate model
-    %nlgr_model = nlgreyest(data, nlgr_model, opt);
-    [~, pvec_std] = getpvec(nlgr_model, "Free");
+    nlgr_model = nlgreyest(data, nlgr_model, opt);
+    [~, pvec_std] = getpvec(nlgr_model);
     noise_covar = diag(nlgr_model.NoiseVariance);
     new_params = nlgr_model.Parameters();
 end

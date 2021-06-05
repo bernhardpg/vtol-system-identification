@@ -1,24 +1,23 @@
-function [delta_a_rad, delta_e_rad, delta_r_rad] = calculate_control_surface_angles_rad(roll_input_raw, pitch_input_raw, yaw_input_raw)
+function [delta_a_rad, delta_e_rad, delta_r_rad] = calculate_control_surface_angles_rad(roll_px4_input, pitch_px4_input, yaw_px4_input)
     control_surface_properties; % See this file for a more detailed description
     
-    % 1. Saturate raw px4 inputs at [-1,1], as these will be
-    %    saturated by PX4.
-    roll_input_raw_sat = sat(roll_input_raw);
-    pitch_input_raw_sat = sat(pitch_input_raw);
-    yaw_input_raw_saw = sat(yaw_input_raw);
-    
-    % 2. Subtract PX4 trim params to obtain absolute inputs
-    % (zero input => zero deflection angle)
-    roll_input_abs = roll_input_raw_sat - trim_for_zero_deg_roll;
-    pitch_input_abs = pitch_input_raw_sat - trim_for_zero_deg_pitch;
-    yaw_input_abs = yaw_input_raw_saw - trim_for_zero_deg_yaw;
-    
-    % 3. Convert inputs to degrees
-    delta_a_deg = linear_term_aileron * roll_input_abs + offset_aileron;
+    % Calculating deflection angles in degrees from raw PX4 input:
+    % 1. Logged PX4 inputs are WITH trims added. This is fine.
+    % 2. Use raw PX4 input to calculate deflection angle as
+    %    delta_deg = offset + input * linear_term
+    % 3. Saturate deflection angle at known limits
+
+    % 2. Convert inputs to degrees
+    delta_a_deg = linear_term_aileron * roll_px4_input + offset_aileron;
     % Flip signs on rudder and elevator to match standard aerospace
     % conventions (for some reason PX4 does not do this)
-    delta_e_deg = -(linear_term_elevator * pitch_input_abs + offset_elevator);
-    delta_r_deg = -(linear_term_rudder * yaw_input_abs + offset_rudder);
+    delta_e_deg = -(linear_term_elevator * pitch_px4_input + offset_elevator);
+    delta_r_deg = -(linear_term_rudder * yaw_px4_input + offset_rudder);
+    
+    % 3. Saturate deflections at known deflection angles
+    delta_a_deg = bound(delta_a_deg, -aileron_max_deg, aileron_max_deg);
+    delta_e_deg = bound(delta_e_deg, -elevator_max_deg, elevator_max_deg);
+    delta_r_deg = bound(delta_r_deg, -rudder_max_deg, rudder_max_deg);
     
     % Convert degrees to radians
     delta_a_rad = deg2rad(delta_a_deg);

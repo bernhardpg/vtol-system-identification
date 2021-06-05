@@ -1,10 +1,4 @@
-function [] = sim_responses(nlgr_model, data, data_full_state, model_path, save_plots, model_type, show_plot)
-    % Subtract trims before plotting, to plot what the model sees
-    aileron_trim = nlgr_model.Parameters(16).Value;
-    elevator_trim = nlgr_model.Parameters(17).Value;
-    rudder_trim = nlgr_model.Parameters(18).Value;
-    input_trims = [aileron_trim elevator_trim rudder_trim];
-    
+function [] = sim_responses(nlgr_model, data, data_full_state, model_path, save_plots, model_type, show_plot, input_trims)
     num_experiments = length(data.ExperimentName);
     for i = 1:num_experiments
         exp_name = string(data(:,:,:,i).ExperimentName);
@@ -28,6 +22,8 @@ function [] = sim_responses(nlgr_model, data, data_full_state, model_path, save_
 end
 
 function [] = plot_response(exp_name, full_state, predicted_output, input, dt, input_trims, plot_actual_trajectory, model_path, save_plots, model_type, show_plot)
+    control_surface_properties;
+
     tf = length(full_state) * dt - dt;
     t = 0:dt:tf;
     
@@ -454,7 +450,8 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("\phi (predicted)", "\phi")
         ylabel("[deg]")
-
+        ylim([-50 50])
+        
         subplot(num_plots,2,3)
         plot(t, rad2deg(pitch_pred)); 
         if plot_actual_trajectory
@@ -463,6 +460,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("\theta (predicted)", "\theta")
         ylabel("[deg]")
+        ylim([-20 20])
 
         subplot(num_plots,2,5)
         plot(t, rad2deg(yaw_pred)); 
@@ -499,6 +497,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("V_a (predicted)", "V_a")
         ylabel("[m/s]")
+        ylim([17 24]);
 
         subplot(num_plots,2,7)
         plot(t, rad2deg(p_pred));
@@ -516,7 +515,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
             plot(t, rad2deg(q));
         end
         legend("q (predicted)", "q")
-        ylim([-2*180/pi 4*180/pi]);
+        ylim([-2*180/pi 2*180/pi]);
         ylabel("[deg/s]")
 
         subplot(num_plots,2,11)
@@ -536,7 +535,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("u (predicted)", "u")
         ylabel("[m/s]")
-        ylim([10 30]);
+        ylim([15 27]);
         
         subplot(num_plots,2,15)
         plot(t, v_pred);
@@ -558,19 +557,22 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         ylim([-5 10]);
 
         subplot(num_plots,2,8)
-        plot(t, rad2deg(input(:,5) - aileron_trim));
-        legend("\delta_a (trim subtracted)")
-        ylabel("[deg]");
+        plot(t, input(:,5));
+        legend("\delta_a")
+        ylabel("[]");
         
         subplot(num_plots,2,10)
-        plot(t, rad2deg(input(:,6) - elevator_trim));
-        legend("\delta_e")
-        ylabel("[deg]");
-
+        plot(t, input(:,6) - elevator_trim);
+        legend("\delta_e (trim subtracted)")
+        ylabel("[]");
+%         yline(elevator_max_deg, '-.r');
+%         yline(-elevator_max_deg, '-.r');
+%         ylim([-28 28])
+        
         subplot(num_plots,2,12)
-        plot(t, rad2deg(input(:,7) - rudder_trim));
+        plot(t, input(:,7));
         legend("\delta_r (trim subtracted)")
-        ylabel("[deg]");
+        ylabel("[]");
         
         subplot(num_plots,2,14)
         plot(t, input(:,8));

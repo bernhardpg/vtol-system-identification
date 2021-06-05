@@ -1,4 +1,4 @@
-function [initial_states] = create_initial_states_struct(data, num_states, num_outputs, type)
+function [initial_states] = create_initial_states_struct(data, input_trims, num_states, num_outputs, type)
     initial_states_values = {}; % At each index, this will contain an array of initial state values for each experiment
     num_experiments = length(data.ExperimentName);
     
@@ -75,9 +75,13 @@ function [initial_states] = create_initial_states_struct(data, num_states, num_o
             rudder_input_index = 3;
             num_inputs_before_control_surfaces = 4;
             
-            initial_states_values(num_outputs + aileron_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + aileron_input_index,:).u)'};
-            initial_states_values(num_outputs + elevator_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + elevator_input_index,:).u)'};
-            initial_states_values(num_outputs + rudder_input_index) = {cell2mat(data(1,:,num_inputs_before_control_surfaces + rudder_input_index,:).u)'};
+            init_aileron_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + aileron_input_index,:).u)' - input_trims(1);
+            init_elevator_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + elevator_input_index,:).u)' - input_trims(2);
+            init_rudder_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + rudder_input_index,:).u)' - input_trims(3);
+            
+            initial_states_values(num_outputs + aileron_input_index) = {init_aileron_states};
+            initial_states_values(num_outputs + elevator_input_index) = {init_elevator_states};
+            initial_states_values(num_outputs + rudder_input_index) = {init_rudder_states};
         end
         
     elseif type == "full"

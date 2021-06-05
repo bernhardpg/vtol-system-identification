@@ -245,7 +245,7 @@ function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneu
             padding_start_s = 1;
             padding_end_s = 0;
         else
-            padding_start_s = 3;
+            padding_start_s = 2;
             padding_end_s = 3;
         end
 end
