@@ -703,9 +703,9 @@ function [t, state, input, v_N] = read_state_and_input_from_log(csv_log_file_loc
     % Convert from [0,1] interval to angles
     [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = ...
         calculate_control_surface_angles_rad(fw_aileron_input, fw_elevator_input, fw_rudder_input);
-    [fw_throttle_rpm] = calculate_rpm_pusher_motor(fw_throttle_input);
+    [fw_throttle_rev_per_s] = calculate_rev_per_s_pusher_motor(fw_throttle_input);
     
-    u_fw_raw = [aileron_angle_rad elevator_angle_rad rudder_angle_rad fw_throttle_rpm];
+    u_fw_raw = [aileron_angle_rad elevator_angle_rad rudder_angle_rad fw_throttle_rev_per_s];
     u_fw = interp1q(t_u_fw, u_fw_raw, t');
     
     

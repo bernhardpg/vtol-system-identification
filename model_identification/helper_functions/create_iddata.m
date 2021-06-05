@@ -80,7 +80,7 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
             end
         end
     
-    elseif data_type == "full_lat_fixed"
+    elseif data_type == "lon"
         data = iddata('Name', 'Full state model with lateral states fixed');
 
         % Describe input
@@ -135,7 +135,7 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
                      p r v];
 
             % Create sysid data object
-            z = iddata(output, input, dt, 'Name', 'Full state data with lat fixed',...
+            z = iddata(output, input, dt, 'Name', 'Longitudinal data',...
                 'ExperimentName', maneuver_type + "_exp" + maneuver_i);
             z.TimeUnit = 's';
             z.Tstart = 0;
@@ -151,7 +151,7 @@ function [data] = create_iddata(dt, t, full_state, full_input, maneuver_start_in
             end
         end
         
-    elseif data_type == "lon"
+    elseif data_type == "lon_old"
         data = iddata('Name', 'Longitudinal data');
 
         % Describe input

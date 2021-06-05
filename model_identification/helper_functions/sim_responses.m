@@ -55,7 +55,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
     elevator_trim = input_trims(2);
     rudder_trim = input_trims(3);
     
-    if model_type == "lon"
+    if model_type == "lon_old"
         % Read predicted state
         e0_pred = predicted_output(:,1);
         e2_pred = predicted_output(:,2);
@@ -410,7 +410,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         
         sgtitle(exp_name)
     
-    elseif model_type == "full_lat_fixed"
+    elseif model_type == "lon"
         % Read predicted state
         e0_pred = predicted_output(:,1);
         e1_pred = predicted_output(:,2);
@@ -490,6 +490,15 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("\beta (predicted)", "\beta")
         ylabel("[deg]")
+        
+        subplot(num_plots,2,6)
+        plot(t, V_a_pred); 
+        if plot_actual_trajectory
+            hold on
+            plot(t, V_a);
+        end
+        legend("V_a (predicted)", "V_a")
+        ylabel("[m/s]")
 
         subplot(num_plots,2,7)
         plot(t, rad2deg(p_pred));
@@ -507,6 +516,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
             plot(t, rad2deg(q));
         end
         legend("q (predicted)", "q")
+        ylim([-2*180/pi 4*180/pi]);
         ylabel("[deg/s]")
 
         subplot(num_plots,2,11)
@@ -526,6 +536,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("u (predicted)", "u")
         ylabel("[m/s]")
+        ylim([10 30]);
         
         subplot(num_plots,2,15)
         plot(t, v_pred);
@@ -544,26 +555,27 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         end
         legend("w (predicted)", "w")
         ylabel("[m/s]")
+        ylim([-5 10]);
 
-        subplot(num_plots,2,6)
+        subplot(num_plots,2,8)
         plot(t, rad2deg(input(:,5) - aileron_trim));
         legend("\delta_a (trim subtracted)")
         ylabel("[deg]");
         
-        subplot(num_plots,2,8)
+        subplot(num_plots,2,10)
         plot(t, rad2deg(input(:,6) - elevator_trim));
         legend("\delta_e")
         ylabel("[deg]");
 
-        subplot(num_plots,2,10)
+        subplot(num_plots,2,12)
         plot(t, rad2deg(input(:,7) - rudder_trim));
         legend("\delta_r (trim subtracted)")
         ylabel("[deg]");
         
-        subplot(num_plots,2,12)
+        subplot(num_plots,2,14)
         plot(t, input(:,8));
         legend("n_p");
-        ylabel("[RPM]");
+        ylabel("[rev/s]");
         
         sgtitle(exp_name)
     end

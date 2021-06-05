@@ -1,6 +1,7 @@
-function [rpm] = calculate_rpm_pusher_motor(px4_input)
+function [rev_per_s] = calculate_rev_per_s_pusher_motor(px4_input)
     pwm_signal = convert_pusher_motor_input_to_pwm_scale(px4_input);
     rpm = convert_pusher_pwm_to_rpm(pwm_signal);
+    rev_per_s = rpm ./ 60;
 end
 
 function [pwm_signal] = convert_pusher_motor_input_to_pwm_scale(px4_input)

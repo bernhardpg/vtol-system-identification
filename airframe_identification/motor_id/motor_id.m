@@ -24,6 +24,7 @@ if 0
         voltage_v = data.Voltage_V_;
         rpm_electrical = data.MotorElectricalSpeed_RPM_;
         rpm_mechanical = rpm_electrical; % It seems that the naming in the logs
+        rps = rpm_mechanical / 60; % we use revolutions per second
         % is actually wrong, otherwise the motor would have a RPM of 1 Hz to
         % 8Hz. I assume that the RPM has already been divided by
         % kNUM_MAG_POLES = 14.
@@ -37,8 +38,8 @@ if 0
 
         figure
         subplot(4,1,1)
-        plot(t, rpm_mechanical)
-        title("RPM")
+        plot(t, rps)
+        title("n [rev/s]")
 
         subplot(4,1,2)
         plot(t, esc_signal);
@@ -70,6 +71,7 @@ current_a = data.Current_A_;
 voltage_v = data.Voltage_V_;
 rpm_electrical = data.MotorElectricalSpeed_RPM_;
 rpm_mechanical = rpm_electrical; % It seems that the naming in the logs
+rev_per_s = rpm_mechanical / 60;
 % is actually wrong, otherwise the motor would have a RPM of 1 Hz to
 % 8Hz. I assume that the RPM has already been divided by
 % kNUM_MAG_POLES = 14.
@@ -91,7 +93,7 @@ prop_diam_pusher = prop_diam_pusher_in_inches * kINCH_TO_METER;
 
 % Least Squares Estimation
 % Construct regressor vector
-phi_raw = rho * prop_diam_pusher^4 * rpm_mechanical.^2';
+phi_raw = rho * prop_diam_pusher^4 * rev_per_s.^2';
 
 % Clean data
 found_start = false;
@@ -116,7 +118,7 @@ phi = phi_raw(first_non_zero_index:last_non_zero_index);
 y = thrust_N(first_non_zero_index:last_non_zero_index);
 
 % Plot data points
-scatter(rpm_mechanical(first_non_zero_index:last_non_zero_index), ...
+scatter(rev_per_s(first_non_zero_index:last_non_zero_index), ...
     thrust_N(first_non_zero_index:last_non_zero_index)); hold on;
 
 % Estimate parameters
@@ -133,10 +135,10 @@ RMSE = sqrt(mean_squared_error)
 % Plot fit
 c_T = theta
 
-n = 0:0.1:max(rpm_mechanical);
+n = 0:0.1:max(rev_per_s);
 estimated_thrust = c_T * rho * prop_diam_pusher^4 * n.^2;
 plot(n, estimated_thrust);
-xlabel("n [rpm]");
+xlabel("n [rev/s]");
 ylabel("Thrust [N]")
 title("Motor characteristics")
 

@@ -14,7 +14,7 @@ function [initial_states] = create_initial_states_struct(data, num_states, num_o
         end
     end
     
-    if type == "lon"
+    if type == "lon_old"
         state_names = {'q0', 'q2', 'q', 'u', 'w', 'delta_e'};
         state_units = {'', '', 'rad/s', 'm/s', 'm/s', 'rad'};
         
@@ -31,7 +31,7 @@ function [initial_states] = create_initial_states_struct(data, num_states, num_o
         end
 
     elseif type == "lat"
-        state_names = {'q0', 'q1', 'q2', 'q3', 'p','r', 'v', 'delta_a', 'delta_r'};
+        state_names = {'q0', 'q1', 'q2', 'q3', 'p', 'r', 'v', 'delta_a', 'delta_r'};
         state_units = {'', '', '', '', 'rad/s', 'rad/s', 'm/s', 'rad', 'rad'};
 
         if num_experiments == 1
@@ -52,7 +52,7 @@ function [initial_states] = create_initial_states_struct(data, num_states, num_o
             initial_states_values(num_outputs + rudder_input_index) = {cell2mat(data(1,:,rudder_input_index,:).u)'};
         end
         
-    elseif type == "full_lat_fixed"
+    elseif type == "lon"
         state_names = {'q0', 'q1', 'q2', 'q3', 'q', 'u', 'w', 'delta_a', 'delta_e', 'delta_r'};
         state_units = {'', '', '', '', 'rad/s', 'm/s', 'm/s', 'rad', 'rad', 'rad'};
         
