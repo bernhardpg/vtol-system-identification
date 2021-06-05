@@ -298,7 +298,7 @@ function [par_name_lon, par_fixed_lon, par_min_lon, par_max_lon, par_value_lon] 
     };
 
     % Do not allow static curve params to change a lot
-    max_stat_change = 0.3;
+    max_stat_change = 0.4;
     stat_lower_lim = 1 - max_stat_change;
     stat_upper_lim = 1 + max_stat_change;
     par_min_lon = {

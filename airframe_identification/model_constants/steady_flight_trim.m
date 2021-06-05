@@ -3,6 +3,11 @@ roll_input_trim_raw = -0.03; % 06_31_21.ulg 12:55 to 13:08
 pitch_input_trim_raw = 0.12; % 06_31_21.ulg 17:20-17:26
 yaw_input_trim_raw = -0.12; % 06_31_21.ulg 12:55 to 13:05
 
+% Convert to right signs following standard aerospace notation
+roll_input_trim_raw = roll_input_trim_raw;
+pitch_input_trim_raw = -pitch_input_trim_raw;
+yaw_input_trim_raw = -yaw_input_trim_raw;
+
 % See 07_12_32.ulg from 2:48 to 2:54.
 
 % load control surface properties
@@ -21,6 +26,8 @@ delta_r_trim_deg = linear_term_rudder * yaw_input_trim_abs + offset_rudder;
 
 % 3. Convert degrees to radians
 delta_a_trim_rad = deg2rad(delta_a_trim_deg);
-%delta_e_trim_rad = deg2rad(delta_e_trim_deg);
-delta_e_trim_rad = 0;
+delta_e_trim_rad = deg2rad(delta_e_trim_deg);
+%delta_e_trim_rad = 0;
 delta_r_trim_rad = deg2rad(delta_r_trim_deg);
+
+% TODO: Not sure about roll and yaw

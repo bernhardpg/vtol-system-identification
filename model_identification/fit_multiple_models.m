@@ -32,9 +32,11 @@ end
 mkdir(curr_run_path)
 
 
-num_models_to_create = 20;
+num_models_to_create = 99;
 num_maneuvers_in_each_set = 10;
 trained_params = {};
+
+augment_percentage = 50;
 
 % Create empty params table
 params = create_collected_params([]);
@@ -56,7 +58,6 @@ for model_i = 1:num_models_to_create
     disp("Training " + model_name)
     
     % Create model with slightly randomized initial parameters
-    augment_percentage = 15;
     [model_params] = create_augmented_params(augment_percentage);
     
     % Train model X times on new training data
@@ -92,8 +93,9 @@ for model_i = 1:num_models_to_create
     
     % Store standard deviations of model
     std_table.(model_name) = pvec_std;
+    disp("  Standard deviations:");
     disp(std_table);
-    writetable(fit_table, curr_run_path + "/std.dat", 'WriteRowNames', true);
+    writetable(std_table, curr_run_path + "/std.dat", 'WriteRowNames', true);
     
     % Save plots of validation data
     test_model_params(model_params, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
@@ -120,7 +122,7 @@ test_model_params(model_params, data_val, data_full_state_val, num_states, num_o
 %% Functions
 function [maneuver_quantities] = rand_gen_maneuver_quantities(num_maneuvers)
     prob = [1   2   3    4    5   6   7   8;
-        4/60 4/60 0.3 0.3 4/60 4/60 4/60 4/60];
+            0 0 0.5 0.5 0 0 0 0]; % Add a few cruise and freehand flights
     
     maneuver_quantities = zeros(1,8);
     for i = 1:num_maneuvers
@@ -190,11 +192,11 @@ end
 function [new_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data)
     % Optimization options
     %opt = nlgreyestOptions();
-    opt = nlgreyestOptions('Display', 'on','EstimateCovariance',true);
+    opt = nlgreyestOptions('EstimateCovariance',true);
     opt.SearchOptions.MaxIterations = 20;
     opt.SearchOptions.FunctionTolerance = 1e-4; % Reduce by an order of 10
     opt.SearchOptions.StepTolerance = 1e-5; % Reduce by an order of 10
-    opt.OutputWeight = diag([0.5 0 0.5 0 2 2 2]); % do not weight roll and yaw states
+    opt.OutputWeight = diag([0 0 0 0 2 2 2]); % do not weight roll and yaw states
     opt.Regularization.Lambda = 0.1; % Prevent values from becoming too large
 
     % Estimate model
