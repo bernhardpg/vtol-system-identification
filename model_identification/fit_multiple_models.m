@@ -29,33 +29,34 @@ while isfolder(curr_run_path)
    run_number = run_number + 1;
    curr_run_path = models_path + "run_" + run_number;
 end
+disp("Saving as run_" + run_number);
 mkdir(curr_run_path)
 
+% Run settings
+num_models_to_create = 5;
+num_maneuvers_in_each_set = 10;
+num_training_rounds = 1;
+augment_params_percentage = 30;
 
-num_models_to_create = 4;
-num_maneuvers_in_each_set = 2;
-trained_params = {};
+% Create initial params
+initial_params = create_collected_params([]);
 
-augment_percentage = 25;
-
-% Create empty params table
-params = create_collected_params([]);
-params_table = create_param_table(params, 20, 50);
-std_table = create_param_table(params, 20, 50);
+% Create tables for run data
+first_param_to_save = 23;
+last_param_to_save = 50;
+params_table = create_param_table(initial_params, first_param_to_save, last_param_to_save);
+std_table = create_param_table(initial_params, first_param_to_save, last_param_to_save);
 fit_table = table('RowNames', {'e0','e1','e2','e4','q','u','w',});
 
 % Trim values
-aileron_trim = params(17).Value;
-elevator_trim = params(18).Value;
-rudder_trim = params(19).Value;
+aileron_trim = initial_params(17).Value;
+elevator_trim = initial_params(18).Value;
+rudder_trim = initial_params(19).Value;
 input_trims = [aileron_trim elevator_trim rudder_trim];
 
 % Validation data 
-%val_maneuver_quantities = [2 2 2 2 2 2 2 2];
 val_maneuver_quantities = [2 2 2 2 2 2 2 2];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
-
-num_training_rounds = 1;
 
 for model_i = 1:num_models_to_create
     model_name = "Model_" + model_i;
@@ -64,29 +65,33 @@ for model_i = 1:num_models_to_create
     disp("Training " + model_name)
     
     % Create model with slightly randomized initial parameters
-    [model_params] = create_augmented_params(augment_percentage);
+    [model_params] = create_augmented_params(augment_params_percentage);
     
     % Train model X times on new training data
     for i = 1:num_training_rounds
         disp(" - Training round: " + i)
         
+        % Randomly pick what kind of maneuvers to use
         maneuver_quantities = rand_gen_maneuver_quantities(num_maneuvers_in_each_set);
-        
         disp(" -- Training with: ");
         disp(maneuver_quantities);
-        
         [data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
         
-        % Create model with new data and params
-        [nlgr_model] = create_model_from_params(data, model_params, input_trims, num_states, num_outputs, num_inputs, model_type);
-    
-        % Estimate params on data
+        % Create model with params and initial states for the experiments
+        initial_states = create_initial_states_struct(data, input_trims, num_states, num_outputs, model_type);
+        nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, model_params, initial_states, model_type);
+
+        % Unfix lon params
+        lon_params = 23:36;
+        nlgr_model = fix_parameters(lon_params, nlgr_model, false);
+        
+        % Estimate params from data
         [model_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data);
         disp(" -- Mean std of parameters: " + mean(pvec_std));
     end
     
     % Store params
-    [params_table] = add_params_to_table(model_name, model_params, params_table, 20, 50);
+    [params_table] = add_params_to_table(model_name, model_params, params_table, first_param_to_save, last_param_to_save);
     disp("  Models:");
     disp(params_table);
     writetable(params_table, curr_run_path + "/params.dat", 'WriteRowNames', true);
@@ -101,23 +106,37 @@ for model_i = 1:num_models_to_create
     writetable(fit_table, curr_run_path + "/fits.dat", 'WriteRowNames', true);
     
     % Store standard deviations of model
-    std_table.(model_name) = pvec_std(20:50);
+    std_table.(model_name) = pvec_std(first_param_to_save:last_param_to_save);
     disp("  Standard deviations:");
     disp(std_table);
     writetable(std_table, curr_run_path + "/std.dat", 'WriteRowNames', true);
-    
 end
+
+
+
+
+
+
 
 
 %%
 test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
 
 %% Load an old model
-val_maneuver_quantities = [0 0 2 2 0 0 0 0];
+val_maneuver_quantities = [1 0 1 1 0 0 0 0];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
 
-run_to_read = 17;
+%%
+run_to_read = 10;
 model_i = 1;
+
+    
+% Trim values
+aileron_trim = model_params(17).Value;
+elevator_trim = model_params(18).Value;
+rudder_trim = model_params(19).Value;
+input_trims = [aileron_trim elevator_trim rudder_trim];
+
 
 path = models_path + "run_" + run_to_read + "/";
 params_table = readtable(path + "params.dat", "ReadRowNames", true);
@@ -130,6 +149,7 @@ test_model_params(model_params, input_trims, data_val, data_full_state_val, num_
 
 %% Functions
 function [maneuver_quantities] = rand_gen_maneuver_quantities(num_maneuvers)
+    % Only use pitch maneuvers to fit pitch coefficients
     prob = [1   2   3    4    5   6   7   8;
             0 0 0.5 0.5 0 0 0 0];
 %     prob = [1   2   3    4    5   6   7   8;
@@ -183,38 +203,29 @@ function [params_table] = add_params_to_table(col_name, params, params_table, st
 end
 
 function [augmented_params] = create_augmented_params(augment_percentage)
-    % Create params from initial values, but augment randomly
-    params = create_collected_params([]);
-    params_to_augment = [23 26 27 31:36]; % Do not augment 24, 25, 28, 29, 30
-    augmented_params = rand_augment_params(params_to_augment, params, augment_percentage); 
-end
-
-function [nlgr_model] = create_model_from_params(data, params, input_trims, num_states, num_outputs, num_inputs, model_type)
-    % Create model with params and initial states for the experiments
-    initial_states = create_initial_states_struct(data, input_trims, num_states, num_outputs, model_type);
-    nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, params, initial_states, model_type);
+    % Create clean params
+    initial_params = create_collected_params([]);
     
-    % Unfix lon params
-    lon_params = [23:36];
-    params_to_fix = 1:length(params);
-    params_to_unfix = lon_params;
-    nlgr_model = fix_parameters(params_to_fix, nlgr_model, true);
-    nlgr_model = fix_parameters(params_to_unfix, nlgr_model, false);
+    % Do not augment 24, 25, 28, 29, 30, 36 as we trust these more, and so these are confined to be
+    % in a relatively small interval
+    params_to_augment = [23 26 27 31:34 36];
+    
+    augmented_params = rand_augment_params(params_to_augment, initial_params, augment_percentage); 
 end
 
 function [new_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data)
     % Optimization options
     %opt = nlgreyestOptions();
-    opt = nlgreyestOptions('Display','On','EstimateCovariance',true);
+    opt = nlgreyestOptions('Display','On', 'EstimateCovariance',true);
     opt.SearchOptions.MaxIterations = 20;
-    opt.SearchOptions.FunctionTolerance = 1e-4; % Reduce by an order of 10
-    opt.SearchOptions.StepTolerance = 1e-5; % Reduce by an order of 10
-    %opt.OutputWeight = diag([0 0 0 0 3 1 1]); % do not weight roll and yaw states
+    %opt.SearchOptions.FunctionTolerance = 1e-4; % Reduce by an order of 10
+    %opt.SearchOptions.StepTolerance = 1e-5; % Reduce by an order of 10
+    opt.OutputWeight = diag([1 1 1 1 1 1 1]);
     opt.Regularization.Lambda = 0.1; % Prevent values from becoming too large
 
     % Estimate model
     nlgr_model = nlgreyest(data, nlgr_model, opt);
-    [~, pvec_std] = getpvec(nlgr_model);
+    [~, pvec_std] = getpvec(nlgr_model, "Free");
     noise_covar = diag(nlgr_model.NoiseVariance);
     new_params = nlgr_model.Parameters();
 end

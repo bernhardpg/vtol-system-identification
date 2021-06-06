@@ -28,5 +28,6 @@ delta_a_trim_rad = deg2rad(delta_a_trim_deg);
 delta_e_trim_rad = deg2rad(delta_e_trim_deg);
 delta_r_trim_rad = deg2rad(delta_r_trim_deg);
 
-delta_e_trim_rad = -0.03;
+delta_a_trim_rad = 0;
+delta_r_trim_rad = 0;
 

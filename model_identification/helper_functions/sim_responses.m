@@ -478,6 +478,7 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
             plot(t, rad2deg(alpha));
         end
         legend("\alpha (predicted)", "\alpha")
+        ylim([-13 20])
         ylabel("[deg]")
 
         subplot(num_plots,2,4)
@@ -557,22 +558,21 @@ function [] = plot_response(exp_name, full_state, predicted_output, input, dt, i
         ylim([-5 10]);
 
         subplot(num_plots,2,8)
-        plot(t, input(:,5));
+        plot(t, rad2deg(input(:,5)));
         legend("\delta_a")
-        ylabel("[]");
+        ylabel("[deg]");
         
         subplot(num_plots,2,10)
-        plot(t, input(:,6) - elevator_trim);
-        legend("\delta_e (trim subtracted)")
-        ylabel("[]");
-%         yline(elevator_max_deg, '-.r');
-%         yline(-elevator_max_deg, '-.r');
-%         ylim([-28 28])
+        plot(t, rad2deg(input(:,6))); hold on
+        plot(t, rad2deg(input(:,6) - elevator_trim), '--r'); hold on
+        legend("\delta_e", "\delta_e (trim subtracted)")
+        ylabel("[deg]");
+        ylim([-28 28])
         
         subplot(num_plots,2,12)
-        plot(t, input(:,7));
+        plot(t, rad2deg(input(:,7)));
         legend("\delta_r (trim subtracted)")
-        ylabel("[]");
+        ylabel("[deg]");
         
         subplot(num_plots,2,14)
         plot(t, input(:,8));

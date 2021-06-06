@@ -97,53 +97,86 @@
             endingLineNumber = "232"
             landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
             landmarkType = "9">
-            <Locations>
-               <Location
-                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "compute_dx"
-                  moduleName = "longitudinal_model_c.mexmaci64"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "233"
-                  endingLineNumber = "233"
-                  offsetFromSymbolStart = "2341">
-               </Location>
-               <Location
-                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "compute_dx"
-                  moduleName = "longitudinal_model_c.mexmaci64"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "233"
-                  endingLineNumber = "233"
-                  offsetFromSymbolStart = "2529">
-               </Location>
-               <Location
-                  uuid = "B4037A00-8C1F-431A-A971-C262CD8CD249 - c7ae7e1979413b82"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "compute_dx"
-                  moduleName = "longitudinal_model_c.mexmaci64"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/bernhardpausgraesdal/development/vtol_sysid/model/longitudinal_model_c.c"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "233"
-                  endingLineNumber = "233"
-                  offsetFromSymbolStart = "2643">
-               </Location>
-            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "23F546FB-6674-4D71-83C2-DBC3B5322664"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../models/longitudinal_model_c.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "318"
+            endingLineNumber = "318"
+            landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DEFC45DF-5919-4704-B91E-F5A14B60698E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../models/longitudinal_model_c.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "316"
+            endingLineNumber = "316"
+            landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E650A1FF-FD66-4A26-BB68-AAC88AEAA0BA"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../models/longitudinal_model_c.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "319"
+            endingLineNumber = "319"
+            landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "3E32B158-EA5A-4A4E-AD0B-B58ABCC55964"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../models/longitudinal_model_c.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "306"
+            endingLineNumber = "306"
+            landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6329AF6B-0ADE-4E10-85C3-9ADFF0A4763E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../models/longitudinal_model_c.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "329"
+            endingLineNumber = "329"
+            landmarkName = "compute_dx(dx, t, x, u, p, auxvar)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

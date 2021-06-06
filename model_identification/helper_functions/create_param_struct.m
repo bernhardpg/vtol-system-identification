@@ -90,7 +90,7 @@ function [ParName, ParFixed, ParMin, ParMax, ParValue] = create_common_model_par
         true,... % aileron_trim_rad
         true,... % elevator_trim_rad
         true,... % rudder_trim_rad
-        false,... % c_T_0_pusher
+        true,... % c_T_0_pusher
         true,... % c_T_top
         true,... % c_Q_top
     };
@@ -115,7 +115,7 @@ function [ParName, ParFixed, ParMin, ParMax, ParValue] = create_common_model_par
         -Inf,... % aileron_trim_rad
         -Inf,... % elevator_trim_rad
         -Inf,... % rudder_trim_rad
-        c_T_0_pusher * 0.9,... % c_T_0_pusher
+        -Inf,... % c_T_0_pusher
         -Inf,... % c_T_top
         -Inf,... % c_Q_top
     };
@@ -140,7 +140,7 @@ function [ParName, ParFixed, ParMin, ParMax, ParValue] = create_common_model_par
         Inf,... % aileron_trim_rad
         Inf,... % elevator_trim_rad
         Inf,... % rudder_trim_rad
-        c_T_0_pusher * 1.1,... % c_T_0_pusher
+        Inf,... % c_T_0_pusher
         Inf,... % c_T_top
         Inf,... % c_Q_top
     };
@@ -321,7 +321,7 @@ function [par_name_lon, par_fixed_lon, par_min_lon, par_max_lon, par_value_lon] 
         approx_zero,... % c_D_delta_e,    	...
         -Inf,... % c_m_0,				...
         -Inf,... % c_m_alpha,          ...
-        -Inf,... % c_m_q,				...
+        c_m_q * stat_upper_lim,... % c_m_q,				...
         -Inf,... % c_m_delta_e,		...
     };
 
@@ -338,7 +338,7 @@ function [par_name_lon, par_fixed_lon, par_min_lon, par_max_lon, par_value_lon] 
         Inf,... % c_D_delta_e,    	...
         Inf,... % c_m_0,				...
         -approx_zero,... % c_m_alpha,          ...
-        -approx_zero,... % c_m_q,				...
+        c_m_q * stat_lower_lim,... % c_m_q,				...
         -approx_zero,... % c_m_delta_e,		...
     };
 % 

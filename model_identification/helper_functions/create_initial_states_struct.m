@@ -75,6 +75,7 @@ function [initial_states] = create_initial_states_struct(data, input_trims, num_
             rudder_input_index = 3;
             num_inputs_before_control_surfaces = 4;
             
+            % Load initial condition of control surfaces with trims
             init_aileron_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + aileron_input_index,:).u)' - input_trims(1);
             init_elevator_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + elevator_input_index,:).u)' - input_trims(2);
             init_rudder_states = cell2mat(data(1,:,num_inputs_before_control_surfaces + rudder_input_index,:).u)' - input_trims(3);

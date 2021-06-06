@@ -251,8 +251,8 @@ void compute_dx(
 
 		// Thrust force from motor and propeller
 		double F_p = rho_diam_pusher_pwr_four[0] * c_T_0_pusher[0] * pow(n_p, 2)
-			//- rho_diam_pusher_pwr_three[0] * c_T_J_pusher[0] * V * n_p;
-			- rho_diam_pusher_pwr_three[0] * c_T_J_pusher[0] * pow(V, 2);
+			- rho_diam_pusher_pwr_three[0] * c_T_J_pusher[0] * V * n_p;
+			//- rho_diam_pusher_pwr_three[0] * c_T_J_pusher[0] * pow(V, 2);
 
     // Rotate from stability frame to body frame
     X = -cos(alpha) * F_drag + sin(alpha) * F_lift;

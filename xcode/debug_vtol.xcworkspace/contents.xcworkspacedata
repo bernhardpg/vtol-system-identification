@@ -10,4 +10,7 @@
    <FileRef
       location = "group:../model/longitudinal_model_w_actuator_dynamics_c.c">
    </FileRef>
+   <FileRef
+      location = "group:../models/longitudinal_model_c.c">
+   </FileRef>
 </Workspace>
