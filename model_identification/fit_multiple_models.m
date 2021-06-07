@@ -35,7 +35,7 @@ mkdir(curr_run_path)
 % Run settings
 num_models_to_create = 5;
 num_maneuvers_in_each_set = 10;
-num_training_rounds = 1;
+num_training_rounds = 5;
 augment_params_percentage = 30;
 
 % Create initial params
@@ -45,7 +45,7 @@ initial_params = create_collected_params([]);
 first_param_to_save = 23;
 last_param_to_save = 50;
 params_table = create_param_table(initial_params, first_param_to_save, last_param_to_save);
-std_table = create_param_table(initial_params, first_param_to_save, last_param_to_save);
+std_table = create_param_table(initial_params, 23, 36);
 fit_table = table('RowNames', {'e0','e1','e2','e4','q','u','w',});
 
 % Trim values
@@ -56,7 +56,9 @@ input_trims = [aileron_trim elevator_trim rudder_trim];
 
 % Validation data 
 val_maneuver_quantities = [2 2 2 2 2 2 2 2];
+val_maneuver_quantities_only_pitch = [0 0 5 5 0 0 0 0];
 [data_val, data_full_state_val] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
+[data_val_only_pitch, data_full_state_val_only_pitch] = create_combined_iddata(metadata, maneuver_types, val_maneuver_quantities, model_type);
 
 for model_i = 1:num_models_to_create
     model_name = "Model_" + model_i;
@@ -82,6 +84,7 @@ for model_i = 1:num_models_to_create
         nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, model_params, initial_states, model_type);
 
         % Unfix lon params
+        nlgr_model = fix_parameters(1:51, nlgr_model, true);
         lon_params = 23:36;
         nlgr_model = fix_parameters(lon_params, nlgr_model, false);
         
@@ -100,13 +103,13 @@ for model_i = 1:num_models_to_create
     test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
     
     % Evaluate the fit of that model on the validation data
-    fit_table.(model_name) = evaluate_performance(model_params, input_trims, data_val, num_states, num_inputs, num_outputs, model_type)';
-    disp("  Fits:");
+    fit_table.(model_name) = evaluate_performance(model_params, input_trims, data_val_only_pitch, num_states, num_inputs, num_outputs, model_type)';
+    disp("  Fits on new pitch maneuvers:");
     disp(fit_table)
     writetable(fit_table, curr_run_path + "/fits.dat", 'WriteRowNames', true);
     
     % Store standard deviations of model
-    std_table.(model_name) = pvec_std(first_param_to_save:last_param_to_save);
+    std_table.(model_name) = pvec_std;
     disp("  Standard deviations:");
     disp(std_table);
     writetable(std_table, curr_run_path + "/std.dat", 'WriteRowNames', true);
@@ -121,6 +124,50 @@ end
 
 %%
 test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, curr_run_path + "/" + model_name + "/", true, false)
+
+%%
+run_to_read = 1;
+model_i = 2;
+
+    
+% Trim values
+aileron_trim = model_params(17).Value;
+elevator_trim = model_params(18).Value;
+rudder_trim = model_params(19).Value;
+input_trims = [aileron_trim elevator_trim rudder_trim];
+
+
+path = models_path + "run_" + run_to_read + "/";
+params_table = readtable(path + "params.dat", "ReadRowNames", true);
+initial_params = create_collected_params([]);
+model_params = load_params_from_table(initial_params, params_table, model_i);
+%%
+
+% Randomly pick what kind of maneuvers to use
+maneuver_quantities = rand_gen_maneuver_quantities(num_maneuvers_in_each_set);
+disp(" -- Training with: ");
+disp(maneuver_quantities);
+
+[data, data_full_state] = create_combined_iddata(metadata, maneuver_types, maneuver_quantities, model_type);
+
+% Create model with params and initial states for the experiments
+initial_states = create_initial_states_struct(data, input_trims, num_states, num_outputs, model_type);
+nlgr_model = create_nlgr_object(num_states, num_outputs, num_inputs, model_params, initial_states, model_type);
+
+% Unfix lon params
+nlgr_model = fix_parameters(1:51, nlgr_model, true);
+lon_params = 23:36;
+nlgr_model = fix_parameters(lon_params, nlgr_model, false);
+
+inertia_params = [8 13 14];
+nlgr_model = fix_parameters(inertia_params, nlgr_model, false);
+
+% Estimate params from data
+[model_params, pvec_std, noise_covar] = estimate_model(nlgr_model, data);
+disp(" -- Mean std of parameters: " + mean(pvec_std));
+
+test_model_params(model_params, input_trims, data_val, data_full_state_val, num_states, num_outputs, num_inputs, model_type, "", false, true)
+
 
 %% Load an old model
 val_maneuver_quantities = [1 0 1 1 0 0 0 0];
