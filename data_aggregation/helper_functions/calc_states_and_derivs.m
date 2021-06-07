@@ -29,7 +29,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     w_spline = slmengine(t_recorded, w,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
     
     % Set desired time vector
-    t = (0:dt_desired:t_end)';
+    t = (t_0:dt_desired:t_end)';
     
     % Calculate derivatives and attitude angles at desired times
     phi = slmeval(t, phi_spline);

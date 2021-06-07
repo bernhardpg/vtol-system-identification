@@ -5,19 +5,19 @@ metadata = read_metadata(metadata_filename);
 
 % Output data
 save_output_data = true;
-save_plot = false;
 show_plot = false;
 
 % Experiments
 num_experiments = length(metadata.Experiments);
 %experiments_to_parse = 1:num_experiments;
-experiments_to_parse = [1 2 3 4 5];
+experiments_to_parse = [1:6];
 maneuver_types_to_parse = [...
     %"roll_211", "roll_211_no_throttle",...
     "pitch_211", %"pitch_211_no_throttle",...
     %"yaw_211", "yaw_211_no_throttle",...
     %"freehand", "cruise",...
     %"sweep",...
+    %"not_set"
     ];
 
 for i = experiments_to_parse
@@ -235,9 +235,12 @@ function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneu
         if maneuver_type == "sweep"
             padding_start_s = 1;
             padding_end_s = 0;
+        elseif (maneuver_type == "pitch_211") || (maneuver_type == "pitch_211_no_throttle")
+            padding_start_s = 2;
+            padding_end_s = 2;
         else
             padding_start_s = 2;
-            padding_end_s = 3;
+            padding_end_s = 2;
         end
 end
 

@@ -9,7 +9,7 @@ maneuver_type = "pitch_211";
 
 % Plot settings
 plot_location = "data/maneuver_plots/" + maneuver_type + "/";
-save_maneuver_plot = true;
+save_maneuver_plot = false;
 show_maneuver_plot = false;
 
 % Set data params
@@ -18,82 +18,101 @@ dt_desired = 1 / 50;
 % Read data recorded from logs
 [t_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, u_mr_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices] ...
     = read_experiment_data(metadata, maneuver_type);
-num_maneuvers = length(maneuver_start_indices);
 
-% Iterate through all maneuvers and calculate data
-for maneuver_i = 1:num_maneuvers
-    % Get correct maneuver start and end index
-    maneuver_start_index = maneuver_start_indices(maneuver_i);
-    if maneuver_i == num_maneuvers
-        maneuver_end_index = length(t_all_maneuvers);
-    else
-        maneuver_end_index = maneuver_start_indices(maneuver_i + 1) - 1;
-    end            
+% Calculate states and their derivatives using splines
+[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p]...
+    = collect_data_from_all_maneuvers(dt_desired, t_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices,...
+        save_maneuver_plot, show_maneuver_plot);
 
-    % Extract recorded data during maneuver
-    t_recorded = t_all_maneuvers(maneuver_start_index:maneuver_end_index,:);
-    t_recorded = t_recorded - t_recorded(1); % Make t go from 0 to end
-    q_NB = q_NB_all_maneuvers(maneuver_start_index:maneuver_end_index,:);
-    v_NED = v_NED_all_maneuvers(maneuver_start_index:maneuver_end_index,:);
-    u_fw = u_fw_all_maneuvers(maneuver_start_index:maneuver_end_index,:);
-    
-    eul_recorded = quat2eul(q_NB);
-    phi_recorded = eul_recorded(:,3);
-    theta_recorded = eul_recorded(:,2);
-    psi_recorded = eul_recorded(:,1);
-    v_N_recorded = v_NED(:,1);
-    v_E_recorded = v_NED(:,2);
-    v_D_recorded = v_NED(:,3);
-    
-    delta_a_recorded = u_fw(:,1);
-    delta_e_recorded = u_fw(:,2);
-    delta_r_recorded = u_fw(:,3);
-    n_p_recorded = u_fw(:,4);
-   
-    % Calculate all relevant states and their derivatives during the
-    % maneuver
-    [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot] ...
-        = calc_states_and_derivs(dt_desired, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
-    
-    % TODO: It is very much possible that this horizon handling needs to be done more accurately
-    delta_a = interp1(t_recorded, delta_a_recorded, t);
-    delta_e = interp1(t_recorded, delta_e_recorded, t);
-    delta_r = interp1(t_recorded, delta_r_recorded, t);
-    n_p = interp1(t_recorded, n_p_recorded, t);
-    
-    %plot_maneuver("maneuver_" + maneuver_i, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, show_maneuver_plot, save_maneuver_plot, plot_location);
-    
-    % TODO: I need to find actual PWM to RPM scale.
-    %T = calc_propeller_force(n_p);
-    [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z);
-    [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot);
+% TODO: I need to find actual PWM to RPM scale.
+%T = calc_propeller_force(n_p);
+[c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z);
+[c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot);
 
-    % Explanatory variables for equation-error
-    [u_hat, v_hat, w_hat, p_hat, q_hat, r_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-    
-    % Start with c_Z
-    N = length(c_Z);
-    X = [ones(N, 1) w_hat]; % Regressor
-    z = c_Z; % Output measurements
-    c_Z_hat = regression_analysis(X, z);
-    
-    plot(t, c_Z, t, c_Z_hat); hold on
-    
-    N = length(c_Z);
-    X = [ones(N, 1) w_hat w_hat.^2]; % Regressor
-    z = c_Z; % Output measurements
-    c_Z_hat = regression_analysis(X, z);
-    
-    plot(t, c_Z, t, c_Z_hat); hold on
-    
-    % Check kinematic consistency
-    %check_kinematic_consistency(t, phi, theta, psi, p, q, r, t_recorded, phi_recorded, theta_recorded, psi_recorded);
-    
-    % Plot velocities
-    %plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_recorded);
+% Explanatory variables for equation-error
+[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
+
+% Create a time vector for plotting of all maneuvers
+t_plot = 0:dt_desired:length(t)*dt_desired - dt_desired;
+%%
+%%%
+% Find most relevant terms for c_Z:
+%%%
+
+clc;
+
+N = length(c_Z);
+
+% 1st
+X = [ones(N, 1)]; % Regressor
+z = c_Z; % Output measurements
+indep_vars_str = "1";
+vars_to_test_str = "u_hat w_hat q_hat delta_e n_p";
+vars_to_test = [u_hat w_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+% Add w as independent variable
+X = [ones(N, 1) w_hat]; % Regressor
+indep_vars_str = "1 w_hat";
+vars_to_test_str = "u_hat q_hat delta_e n_p";
+vars_to_test = [u_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+% Add q_hat as independent variable
+X = [ones(N, 1) w_hat delta_e]; % Regressor
+indep_vars_str = "1 w_hat delta_e";
+vars_to_test_str = "u_hat q_hat n_p";
+vars_to_test = [u_hat q_hat n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+disp("Try nonlinear terms")
+vars_to_test_str = "w_hat.^2 q_hat.^2 delta_e.^2";
+vars_to_test = [w_hat.^2 q_hat.^2 delta_e.^2];
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) w_hat w_hat.^2 delta_e]; % Regressor
+indep_vars_str = "1 w_hat w_hat.^2 delta_e";
+stepwise_regression_round(X, z, indep_vars_str);
+
+fig = figure;
+fig.Position = [100 100 1700 500];
+plot(t_plot, c_Z, '--'); hold on;
+xlabel("time [s]")
+plot(t_plot, c_Z_hat); hold on
+
+%%
+
+%%%
+% Find most relevant terms for c_m:
+%%%
+
+
+clc;
+
+N = length(c_m);
+
+%%
+function [y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_variables_str)
+    [y_hat, F0, R_sq, cov_th, th_hat] = regression_analysis(X, z);
+
+    disp("Independent variables: [" + indep_variables_str + "]")
+    fprintf("F0: ")
+    fprintf([repmat('%4.2f ',1,length(F0)) '\n'], F0);
+    disp("R_sq: " + R_sq);
 end
 
-function [y_hat] = regression_analysis(X, z)
+function [] = explore_next_var(z, variables_to_test, variables_to_test_str)
+    disp("Testing new terms:")
+    r = calculate_partial_correlation(variables_to_test, z);
+    disp("r: " + variables_to_test_str);
+    fprintf([repmat('%5.3f ',1,length(r)) '\n'], r);
+    disp(" ")
+end
+
+function [y_hat, F0, R_sq, cov_th, th_hat] = regression_analysis(X, z)
     [N, n_p] = size(X);
     D = (X' * X)^(-1);
     d = diag(D);
@@ -105,12 +124,26 @@ function [y_hat] = regression_analysis(X, z)
     sig_sq_hat = v' * v / (N - n_p); % Estimated noise variance
     cov_th = sig_sq_hat * d; % Estimates parameter variance
     
+    % Calculate partial F metrix F0
     F0 = th_hat .^ 2 ./ cov_th;
-    fprintf("F0: ")
-    fprintf([repmat('%4.2f ',1,length(F0)) '\n'], F0);
+    
+    % Calculate R^2
+    z_bar = mean(z);
+    R_sq = (y_hat' * z - N * z_bar^2) / (z' * z - N * z_bar^2);
 end
 
-function [u_hat, v_hat, w_hat, p_hat, q_hat, r_hat] = calc_explanatory_vars(p, q, r, u, v, w)
+function [r] = calculate_partial_correlation(X, z)
+    X_bar = mean(X);
+    N = length(z);
+    z_bar = mean(z);
+    
+    cov_Xz = (X - X_bar)' * (z - z_bar) / (N - 1);
+    var_X = diag((X - X_bar)' * (X - X_bar)) / (N - 1);
+    var_z = diag((z - z_bar)' * (z - z_bar)) / (N - 1);
+    r = cov_Xz ./ sqrt(var_X * var_z);
+end
+
+function [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w)
     aircraft_properties; % Get V_nom, wingspan and MAC
     
     u_hat = u / V_nom;
@@ -166,7 +199,8 @@ function [] = plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_re
     legend("w", "w (recorded)")
 end
 
-function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, show_plot, save_plot, plot_location)
+function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, ...
+    t_recorded, phi_recorded, theta_recorded, psi_recorded, show_plot, save_plot, plot_location)
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
         % Plot
@@ -178,23 +212,23 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         num_plots = 9;
 
         subplot(num_plots,2,1)
-        plot(t, rad2deg(phi)); 
-        legend("\phi")
+        plot(t, rad2deg(phi), t_recorded, rad2deg(phi_recorded), '--'); 
+        legend("\phi", "\phi (recorded)")
         ylabel("[deg]")
         ylim([-50 50])
         
         subplot(num_plots,2,3)
-        plot(t, rad2deg(theta)); 
-        legend("\theta")
+        plot(t, rad2deg(theta), t_recorded, rad2deg(theta_recorded), '--'); 
+        legend("\theta", "\theta (recorded)")
         ylabel("[deg]")
         ylim([-30 30])
 
         subplot(num_plots,2,5)
-        plot(t, rad2deg(psi)); 
-        legend("\psi")
+        plot(t, rad2deg(psi), t_recorded, rad2deg(psi_recorded), '--'); 
+        legend("\psi", "\psi (recorded)")
         ylabel("[deg]")
         psi_mean_deg = mean(rad2deg(psi));
-        ylim([psi_mean_deg - 30 psi_mean_deg + 30])
+        ylim([psi_mean_deg - 50 psi_mean_deg + 50])
         
         subplot(num_plots,2,2)
         plot(t, V); 

@@ -287,7 +287,7 @@
             "Maneuvers": {
                 "1": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -299,7 +299,7 @@
                 },
                 "11": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -335,7 +335,7 @@
                 },
                 "17": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -353,7 +353,7 @@
                 },
                 "2": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -515,7 +515,7 @@
                 },
                 "7": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -544,7 +544,7 @@
                     "type": "pitch_211"
                 },
                 "10": {
-                    "end_s": 986,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -610,7 +610,7 @@
                     "type": "yaw_211"
                 },
                 "11": {
-                    "end_s": 991,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -742,7 +742,7 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "13": {
-                    "end_s": 1011,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -808,7 +808,7 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "14": {
-                    "end_s": 1016,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -874,7 +874,7 @@
                     "type": "yaw_211"
                 },
                 "15": {
-                    "end_s": 1020.5,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -940,7 +940,7 @@
                     "type": "yaw_211"
                 },
                 "16": {
-                    "end_s": 1025,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -1006,7 +1006,7 @@
                     "type": "yaw_211"
                 },
                 "17": {
-                    "end_s": 1030,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -1073,7 +1073,7 @@
                 },
                 "18": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1138,7 +1138,7 @@
                     "type": "sweep"
                 },
                 "19": {
-                    "end_s": 1051,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -1210,7 +1210,7 @@
                     "type": "pitch_211"
                 },
                 "20": {
-                    "end_s": 1061,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -1247,7 +1247,7 @@
                 },
                 "21": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1367,7 +1367,7 @@
                 },
                 "4": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1631,7 +1631,7 @@
                 },
                 "8": {
                     "end_s": -1,
-                    "skip": true,
+                    "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1696,7 +1696,7 @@
                     "type": "roll_211_no_throttle"
                 },
                 "9": {
-                    "end_s": 981,
+                    "end_s": -1,
                     "skip": false,
                     "start_s": -1,
                     "type": "pitch_211"
@@ -1960,6 +1960,324 @@
                 }
             },
             "Number": 5
+        },
+        {
+            "LogName": "2021_3_25_freehand_2_1_1_maneuvers",
+            "Maneuvers": {
+                "1": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "10": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "11": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "12": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "13": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "14": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "15": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "16": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "17": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "18": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "19": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "2": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "20": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "21": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "22": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "23": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "24": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "25": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "26": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "27": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "28": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "29": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "3": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "30": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "31": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "32": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "33": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "34": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "35": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "36": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "37": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "38": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "39": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "4": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "40": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "41": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "42": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "43": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "44": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "45": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "46": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "47": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "48": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "49": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "5": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "50": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "51": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "52": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "pitch_211"
+                },
+                "6": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "7": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "8": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                },
+                "9": {
+                    "end_s": -1,
+                    "skip": false,
+                    "start_s": -1,
+                    "type": "roll_211"
+                }
+            },
+            "Number": 6
         }
     ],
     "dt": 0.02

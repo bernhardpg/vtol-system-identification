@@ -88,7 +88,7 @@ exp2["Maneuvers"] = {}
 
 pitch_211_maneuver_indices = np.arange(1, 18)
 dropouts = [1, 2, 7, 11, 17]
-set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, dropouts, "pitch_211")
+set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, [], "pitch_211")
 
 # Pretend freehand times are the last maneuvers, just for simplicity
 # Does not make a difference for anything
@@ -166,7 +166,7 @@ pitch_211_skip = [
     4,  # dropout
     8,  # dropout
     18,  # dropout
-    21,  # used in 20
+    # 21,  # used in 20
 ]
 
 pitch_211_nt_maneuver_times = {
@@ -180,8 +180,8 @@ pitch_211_nt_skip = [
 set_maneuver_times(
     exp3,
     pitch_211_maneuver_indices,
-    pitch_211_maneuver_times,
-    pitch_211_skip,
+    {},
+    [],
     "pitch_211",
 )
 
@@ -332,12 +332,26 @@ skip = [
 ]
 set_maneuver_times(exp5, sweep_maneuver_indices, sweep_maneuver_times, skip, "sweep")
 
+##############
+# Experiment 6
+##############
+
+exp6 = {}
+exp6["LogName"] = "2021_3_25_freehand_2_1_1_maneuvers"
+exp6["Number"] = 6
+exp6["Maneuvers"] = {}
+roll_maneuver_indices = np.arange(1, 26)  # Not quite sure about these
+pitch_maneuver_indices = np.arange(25, 53)
+yaw_maneuver_indices = np.arange(57, 66)
+set_maneuver_times(exp6, roll_maneuver_indices, {}, [], "roll_211")
+set_maneuver_times(exp6, pitch_maneuver_indices, {}, [], "pitch_211")
+
 
 ##################
 
 # Create metadata object
 breakpoint()
-metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5], "dt": 0.02}
+metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5, exp6], "dt": 0.02}
 
 with open("../data/metadata.json", "w") as outfile:
     json.dump(metadata, outfile, indent=4, sort_keys=True)
