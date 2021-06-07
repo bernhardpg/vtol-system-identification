@@ -1,13 +1,15 @@
-function [t, q_NB, v_N, u_mr, u_fw, maneuver_start_indices] = read_experiment_data(metadata, maneuver_types)
+function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuver_start_indices_u_fw] = read_experiment_data(metadata, maneuver_types)
     num_experiments = length(metadata.Experiments);
     experiment_data_path = "data/experiments/";
 
-    t = [];
+    t_state = [];
+    t_u_fw = [];
     q_NB = [];
     v_N = [];
     u_mr = [];
     u_fw = [];
-    maneuver_start_indices = [];
+    maneuver_start_indices_state = [];
+    maneuver_start_indices_u_fw = [];
     
     for type_i = 1:length(maneuver_types)
         maneuver_type = maneuver_types(type_i);
@@ -19,16 +21,19 @@ function [t, q_NB, v_N, u_mr, u_fw, maneuver_start_indices] = read_experiment_da
                 continue
             end
             
-            t_exp = readmatrix(datapath + "t.csv");
+            t_state_exp = readmatrix(datapath + "t_state.csv");
+            t_u_fw_exp = readmatrix(datapath + "t_u_fw.csv");
             q_NB_exp = readmatrix(datapath + "q_NB.csv");
             v_N_exp = readmatrix(datapath + "v_N.csv");
             u_mr_exp = readmatrix(datapath + "u_mr.csv");
             u_fw_exp = readmatrix(datapath + "u_fw.csv");
-            maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
+            maneuver_start_indices_state_exp = readmatrix(datapath + "maneuver_start_indices_state.csv");
+            maneuver_start_indices_u_fw_exp = readmatrix(datapath + "maneuver_start_indices_u_fw.csv");
             
             % Make maneuver start indices continue from the previous ones
             % already loaded.
-            maneuver_start_indices_exp = maneuver_start_indices_exp + length(t);
+            maneuver_start_indices_state_exp = maneuver_start_indices_state_exp + length(t_state);
+            maneuver_start_indices_u_fw_exp = maneuver_start_indices_u_fw_exp + length(t_u_fw);
             
             q_NB = [q_NB;
                     q_NB_exp];
@@ -38,12 +43,16 @@ function [t, q_NB, v_N, u_mr, u_fw, maneuver_start_indices] = read_experiment_da
                     u_mr_exp];
             u_fw = [u_fw;
                     u_fw_exp];
-            maneuver_start_indices = [maneuver_start_indices...
-                maneuver_start_indices_exp];
-            t = [t;
-                 t_exp];
+            maneuver_start_indices_state = [maneuver_start_indices_state...
+                maneuver_start_indices_state_exp];
+            maneuver_start_indices_u_fw = [maneuver_start_indices_u_fw ...
+                maneuver_start_indices_u_fw_exp];
+            t_state = [t_state;
+                       t_state_exp];
+            t_u_fw = [t_u_fw;
+                      t_u_fw_exp];
         end
     end
     
-    disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
+    disp("Loaded " + length(maneuver_start_indices_state) + " maneuvers.")
 end

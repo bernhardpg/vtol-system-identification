@@ -92,20 +92,17 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
     csv_log_file_location = csv_files_location + log_file;
 
     % Read state and input data
-    [t, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location);
-    dt = mean(rmoutliers(t(2:end) - t(1:end-1))); % Calculate dt for conversion between index and time
+    [t_state, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location);
+    dt = mean(rmoutliers(t_state(2:end) - t_state(1:end-1))); % Calculate dt for conversion between index and time
     [t_u_mr, u_mr, t_u_fw, u_fw] = read_input(csv_log_file_location);
-    % Interpolate inputs to same time horizon as attitude and velocity
-    u_mr = interp1(t_u_mr, u_mr, t);
-    u_fw = interp1(t_u_fw, u_fw, t);
     
     % Get system identification maneuvers
-    sysid_indices = get_sysid_indices(csv_log_file_location, t);
+    sysid_times_s = get_sysid_times(csv_log_file_location, t_state);
     
     % If no maneuvers in metadata, use sysid switch to get number of
     % maneuvers
     if num_maneuvers == 0
-       num_maneuvers = length(sysid_indices); 
+       num_maneuvers = length(sysid_times_s); 
     end
     
     % Initialize empty output variables
@@ -132,40 +129,59 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
         
         [maneuver_length_s] = get_default_maneuver_length_s(curr_maneuver_metadata.type);
         [padding_before_s, padding_after_s] = get_default_maneuver_padding_s(curr_maneuver_metadata.type);
+            
+        maneuver_start_guess_s = sysid_times_s(maneuver_i);
         
-        if maneuver_i > length(sysid_indices)
-           assumed_start_index = -1; % This will not get used 
-        else
-            assumed_start_index = sysid_indices(maneuver_i);
-        end
-        [maneuver_should_be_aggregated,...
-            maneuver_start_index,...
-            maneuver_end_index] = read_maneuver_metadata(...
-                curr_maneuver_metadata, padding_before_s, padding_after_s, t, dt, assumed_start_index, maneuver_length_s ...
+        [maneuver_should_be_aggregated, maneuver_start_s, maneuver_end_s] = ...
+            get_maneuver_start_end_time(...
+                curr_maneuver_metadata, padding_before_s, padding_after_s, t_state, maneuver_start_guess_s, maneuver_length_s ...
             );
 
-        % Extract maneuver data
-        t_maneuver = t(maneuver_start_index:maneuver_end_index);
-        q_NB_maneuver = q_NB(maneuver_start_index:maneuver_end_index,:);
-        v_N_maneuver = v_N(maneuver_start_index:maneuver_end_index,:);
+        % Find maneuver indices for state
+        maneuver_start_index_state = floor(interp1(t_state, 1:length(t_state), maneuver_start_s)) + 1;
+        maneuver_end_index_state = floor(interp1(t_state, 1:length(t_state), maneuver_end_s)) - 1;
+        
+        % Interpolate start and end time, to make sure that we save values
+        % for start and end of maneuver
+        t_state_maneuver = [maneuver_start_s;
+                            t_state(maneuver_start_index_state:maneuver_end_index_state);
+                            maneuver_end_s];
+        q_NB_maneuver = [interp1(t_state, q_NB, maneuver_start_s);
+                         q_NB(maneuver_start_index_state:maneuver_end_index_state,:);
+                         interp1(t_state, q_NB, maneuver_end_s)];
+        v_N_maneuver = [interp1(t_state, v_N, maneuver_start_s);
+                        v_N(maneuver_start_index_state:maneuver_end_index_state,:);
+                        interp1(t_state, v_N, maneuver_end_s)];
         
         % Extract input data
-        u_mr_maneuver = u_mr(maneuver_start_index:maneuver_end_index,:);
-        u_fw_maneuver = u_fw(maneuver_start_index:maneuver_end_index,:);
+        % we dont care about MR inputs yet
+        %u_mr_maneuver = u_mr(maneuver_start_index:maneuver_end_index,:);
+        
+        maneuver_start_index_u_fw = floor(interp1(t_u_fw, 1:length(t_u_fw), maneuver_start_s)) + 1;
+        maneuver_end_index_u_fw = floor(interp1(t_u_fw, 1:length(t_u_fw), maneuver_end_s)) - 1;
+        
+        t_u_fw_maneuver = [maneuver_start_s;
+                         t_u_fw(maneuver_start_index_u_fw:maneuver_end_index_u_fw);
+                         maneuver_end_s];
+        u_fw_maneuver = [interp1(t_u_fw, u_fw, maneuver_start_s);
+                         u_fw(maneuver_start_index_u_fw:maneuver_end_index_u_fw,:);
+                         interp1(t_u_fw, u_fw, maneuver_end_s)];
         
         % Store data in aggregated data matrices
         if maneuver_should_be_aggregated
-            curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
-            if curr_maneuver_index_in_aggregation_matrix == 1
-               disp(""); 
-            end
-            output_data.(curr_maneuver_metadata.type).maneuver_start_indices =...
-                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices...
-                 curr_maneuver_index_in_aggregation_matrix];
+            curr_maneuver_state_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t_state) + 1;
+            curr_maneuver_u_fw_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t_u_fw) + 1;
             
-            output_data.(curr_maneuver_metadata.type).t = ...
-                [output_data.(curr_maneuver_metadata.type).t;
-                 t_maneuver];
+            output_data.(curr_maneuver_metadata.type).maneuver_start_indices_state =...
+                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices_state...
+                 curr_maneuver_state_index_in_aggregation_matrix];
+            output_data.(curr_maneuver_metadata.type).maneuver_start_indices_u_fw =...
+                [output_data.(curr_maneuver_metadata.type).maneuver_start_indices_u_fw...
+                 curr_maneuver_u_fw_index_in_aggregation_matrix];
+            
+            output_data.(curr_maneuver_metadata.type).t_state = ...
+                [output_data.(curr_maneuver_metadata.type).t_state;
+                 t_state_maneuver];
             output_data.(curr_maneuver_metadata.type).q_NB = ...
                 [output_data.(curr_maneuver_metadata.type).q_NB;
                  q_NB_maneuver];
@@ -174,7 +190,10 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
                  v_N_maneuver];
             output_data.(curr_maneuver_metadata.type).u_mr = ...
                 [output_data.(curr_maneuver_metadata.type).u_mr;
-                 u_mr_maneuver];
+                 ];
+            output_data.(curr_maneuver_metadata.type).t_u_fw = ...
+                [output_data.(curr_maneuver_metadata.type).t_u_fw;
+                 t_u_fw_maneuver];
             output_data.(curr_maneuver_metadata.type).u_fw = ...
                 [output_data.(curr_maneuver_metadata.type).u_fw;
                  u_fw_maneuver];
@@ -245,138 +264,156 @@ function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneu
 end
 
 function [] = save_output(experiment_number, output_data)
-        if ~isempty(output_data.sweep.t)
+        if ~isempty(output_data.sweep.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/sweep/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.sweep.t, data_output_location + 't.csv');   
+            writematrix(output_data.sweep.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.sweep.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.sweep.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.sweep.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.sweep.t, data_output_location + 't_u_fw.csv');  
             writematrix(output_data.sweep.u_fw, data_output_location + 'u_fw.csv');
  
-            writematrix(output_data.sweep.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.sweep.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.sweep.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.sweep.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.roll_211.t)
+        if ~isempty(output_data.roll_211.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/roll_211/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.roll_211.t, data_output_location + 't.csv');   
+            writematrix(output_data.roll_211.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.roll_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.roll_211.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.roll_211.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.roll_211.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.roll_211.t, data_output_location + 't_u_fw.csv');  
  
-            writematrix(output_data.roll_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.roll_211.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.roll_211.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.roll_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.roll_211_no_throttle.t)
+        if ~isempty(output_data.roll_211_no_throttle.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/roll_211_no_throttle/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.roll_211_no_throttle.t, data_output_location + 't.csv');   
+            writematrix(output_data.roll_211_no_throttle.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.roll_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.roll_211_no_throttle.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.roll_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.roll_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.roll_211.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.roll_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.roll_211_no_throttle.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.roll_211_no_throttle.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.roll_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.pitch_211.t)
+        if ~isempty(output_data.pitch_211.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/pitch_211/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.pitch_211.t, data_output_location + 't.csv');   
+            writematrix(output_data.pitch_211.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.pitch_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.pitch_211.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.pitch_211.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.pitch_211.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.pitch_211.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.pitch_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.pitch_211.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.pitch_211.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.pitch_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.pitch_211_no_throttle.t)
+        if ~isempty(output_data.pitch_211_no_throttle.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/pitch_211_no_throttle/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.pitch_211_no_throttle.t, data_output_location + 't.csv');   
+            writematrix(output_data.pitch_211_no_throttle.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.pitch_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.pitch_211_no_throttle.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.pitch_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.pitch_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.pitch_211_no_throttle.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.pitch_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.pitch_211_no_throttle.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.pitch_211_no_throttle.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.pitch_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.yaw_211.t)
+        if ~isempty(output_data.yaw_211.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/yaw_211/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.yaw_211.t, data_output_location + 't.csv');   
+            writematrix(output_data.yaw_211.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.yaw_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.yaw_211.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.yaw_211.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.yaw_211.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.yaw_211.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.yaw_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.yaw_211.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.yaw_211.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.yaw_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.yaw_211_no_throttle.t)
+        if ~isempty(output_data.yaw_211_no_throttle.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/yaw_211_no_throttle/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.yaw_211_no_throttle.t, data_output_location + 't.csv');   
+            writematrix(output_data.yaw_211_no_throttle.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.yaw_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.yaw_211_no_throttle.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.yaw_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.yaw_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.yaw_211_no_throttle.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.yaw_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.yaw_211_no_throttle.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.yaw_211_no_throttle.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.yaw_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.freehand.t)
+        if ~isempty(output_data.freehand.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/freehand/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.freehand.t, data_output_location + 't.csv');   
+            writematrix(output_data.freehand.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.freehand.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.freehand.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.freehand.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.freehand.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.freehand.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.freehand.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.freehand.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.freehand.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.freehand.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
         
-        if ~isempty(output_data.cruise.t)
+        if ~isempty(output_data.cruise.t_state)
             data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
                 + "/cruise/output/";
             mkdir(data_output_location);
             
-            writematrix(output_data.cruise.t, data_output_location + 't.csv');   
+            writematrix(output_data.cruise.t_state, data_output_location + 't_state.csv');   
             writematrix(output_data.cruise.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.cruise.v_N, data_output_location + 'v_N.csv');
             writematrix(output_data.cruise.u_mr, data_output_location + 'u_mr.csv');
             writematrix(output_data.cruise.u_fw, data_output_location + 'u_fw.csv');
+            writematrix(output_data.cruise.t_u_fw, data_output_location + 't_u_fw.csv');  
             
-            writematrix(output_data.cruise.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
+            writematrix(output_data.cruise.maneuver_start_indices_state, data_output_location + 'maneuver_start_indices_state.csv');
+            writematrix(output_data.cruise.maneuver_start_indices_u_fw, data_output_location + 'maneuver_start_indices_u_fw.csv');
             writematrix(output_data.cruise.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
 end
@@ -384,80 +421,100 @@ end
 function [output_struct] = intialize_empty_output_struct()
     output_struct.sweep = {};
 
-    output_struct.sweep.maneuver_start_indices = [];
-    output_struct.sweep.t = [];
+    output_struct.sweep.maneuver_start_indices_state = [];
+    output_struct.sweep.maneuver_start_indices_u_fw = [];
+    output_struct.sweep.t_state = [];
+    output_struct.sweep.t_u_fw = [];
     output_struct.sweep.q_NB = [];
     output_struct.sweep.v_N = [];
     output_struct.sweep.u_mr = [];
     output_struct.sweep.u_fw = [];
     output_struct.sweep.aggregated_maneuvers = [];
 
-    output_struct.roll_211.maneuver_start_indices = [];
-    output_struct.roll_211.t = [];
+    output_struct.roll_211.maneuver_start_indices_state = [];
+    output_struct.roll_211.maneuver_start_indices_u_fw = [];
+    output_struct.roll_211.t_state = [];
+    output_struct.roll_211.t_u_fw = [];
     output_struct.roll_211.q_NB = [];
     output_struct.roll_211.v_N = [];
     output_struct.roll_211.u_mr = [];
     output_struct.roll_211.u_fw = [];
     output_struct.roll_211.aggregated_maneuvers = [];
     
-    output_struct.roll_211_no_throttle.maneuver_start_indices = [];
-    output_struct.roll_211_no_throttle.t = [];
+    output_struct.roll_211_no_throttle.maneuver_start_indices_state = [];
+    output_struct.roll_211_no_throttle.maneuver_start_indices_u_fw = [];
+    output_struct.roll_211_no_throttle.t_state = [];
+    output_struct.roll_211_no_throttle.t_u_fw = [];
     output_struct.roll_211_no_throttle.q_NB = [];
     output_struct.roll_211_no_throttle.v_N = [];
     output_struct.roll_211_no_throttle.u_mr = [];
     output_struct.roll_211_no_throttle.u_fw = [];
     output_struct.roll_211_no_throttle.aggregated_maneuvers = [];
 
-    output_struct.pitch_211.maneuver_start_indices = [];
-    output_struct.pitch_211.t = [];
+    output_struct.pitch_211.maneuver_start_indices_state = [];
+    output_struct.pitch_211.maneuver_start_indices_u_fw = [];
+    output_struct.pitch_211.t_state = [];
+    output_struct.pitch_211.t_u_fw = [];
     output_struct.pitch_211.q_NB = [];
     output_struct.pitch_211.v_N = [];
     output_struct.pitch_211.u_mr = [];
     output_struct.pitch_211.u_fw = [];
     output_struct.pitch_211.aggregated_maneuvers = [];
 
-    output_struct.pitch_211_no_throttle.maneuver_start_indices = [];
-    output_struct.pitch_211_no_throttle.t = [];
+    output_struct.pitch_211_no_throttle.maneuver_start_indices_state = [];
+    output_struct.pitch_211_no_throttle.maneuver_start_indices_u_fw = [];
+    output_struct.pitch_211_no_throttle.t_state = [];
+    output_struct.pitch_211_no_throttle.t_u_fw = [];
     output_struct.pitch_211_no_throttle.q_NB = [];
     output_struct.pitch_211_no_throttle.v_N = [];
     output_struct.pitch_211_no_throttle.u_mr = [];
     output_struct.pitch_211_no_throttle.u_fw = [];
     output_struct.pitch_211_no_throttle.aggregated_maneuvers = [];
     
-    output_struct.yaw_211.maneuver_start_indices = [];
-    output_struct.yaw_211.t = [];
+    output_struct.yaw_211.maneuver_start_indices_state = [];
+    output_struct.yaw_211.maneuver_start_indices_u_fw = [];
+    output_struct.yaw_211.t_state = [];
+    output_struct.yaw_211.t_u_fw = [];
     output_struct.yaw_211.q_NB = [];
     output_struct.yaw_211.v_N = [];
     output_struct.yaw_211.u_mr = [];
     output_struct.yaw_211.u_fw = [];
     output_struct.yaw_211.aggregated_maneuvers = [];
     
-    output_struct.yaw_211_no_throttle.maneuver_start_indices = [];
-    output_struct.yaw_211_no_throttle.t = [];
+    output_struct.yaw_211_no_throttle.maneuver_start_indices_state = [];
+    output_struct.yaw_211_no_throttle.maneuver_start_indices_u_fw = [];
+    output_struct.yaw_211_no_throttle.t_state = [];
+    output_struct.yaw_211_no_throttle.t_u_fw = [];
     output_struct.yaw_211_no_throttle.q_NB = [];
     output_struct.yaw_211_no_throttle.v_N = [];
     output_struct.yaw_211_no_throttle.u_mr = [];
     output_struct.yaw_211_no_throttle.u_fw = [];
     output_struct.yaw_211_no_throttle.aggregated_maneuvers = [];
     
-    output_struct.freehand.maneuver_start_indices = [];
-    output_struct.freehand.t = [];
+    output_struct.freehand.maneuver_start_indices_state = [];
+    output_struct.freehand.maneuver_start_indices_u_fw = [];
+    output_struct.freehand.t_state = [];
+    output_struct.freehand.t_u_fw = [];
     output_struct.freehand.q_NB = [];
     output_struct.freehand.v_N = [];
     output_struct.freehand.u_mr = [];
     output_struct.freehand.u_fw = [];
     output_struct.freehand.aggregated_maneuvers = [];
     
-    output_struct.cruise.maneuver_start_indices = [];
-    output_struct.cruise.t = [];
+    output_struct.cruise.maneuver_start_indices_state = [];
+    output_struct.cruise.maneuver_start_indices_u_fw = [];
+    output_struct.cruise.t_state = [];
+    output_struct.cruise.t_u_fw = [];
     output_struct.cruise.q_NB = [];
     output_struct.cruise.v_N = [];
     output_struct.cruise.u_mr = [];
     output_struct.cruise.u_fw = [];
     output_struct.cruise.aggregated_maneuvers = [];
     
-    output_struct.not_set.maneuver_start_indices = [];
-    output_struct.not_set.t = [];
+    output_struct.not_set.maneuver_start_indices_state = [];
+    output_struct.not_set.maneuver_start_indices_u_fw = [];
+    output_struct.not_set.t_state = [];
+    output_struct.not_set.t_u_fw = [];
     output_struct.not_set.q_NB = [];
     output_struct.not_set.v_N = [];
     output_struct.not_set.u_mr = [];
@@ -467,10 +524,9 @@ function [output_struct] = intialize_empty_output_struct()
 
 end
 
-function [maneuver_should_be_aggregated,...
-    maneuver_start_index,...
-    maneuver_end_index] = read_maneuver_metadata(...
-        curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, dt, assumed_start_index, maneuver_length_s ...
+function [maneuver_should_be_aggregated, maneuver_start_s, maneuver_end_s]...
+    = get_maneuver_start_end_time(...
+        curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, start_time_s, maneuver_length_s ...
     )
         
         maneuver_should_be_aggregated = ~curr_maneuver_metadata.skip;
@@ -483,18 +539,18 @@ function [maneuver_should_be_aggregated,...
         % Use default maneuver start or end if not set, or if maneuver
         % should not be aggregated
         if maneuver_start_time_not_set || ~maneuver_should_be_aggregated
-            maneuver_start_index = max(...
-                [assumed_start_index - round(default_maneuver_padding_start_s / dt)...
-                1]);
+            maneuver_start_s = max(...
+                [start_time_s - default_maneuver_padding_start_s...
+                 t(1)]); % never start maneuver before first timestamp
         else
-            maneuver_start_index = round((curr_maneuver_metadata.start_s - t(1)) / dt);
+            maneuver_start_s = curr_maneuver_metadata.start_s;
         end
         if maneuver_end_time_not_set || ~maneuver_should_be_aggregated
-            maneuver_end_index = max(...
-                [maneuver_start_index + maneuver_length_s / dt + round(default_maneuver_padding_start_s / dt) + round(default_maneuver_padding_end_s / dt)...
-                1]);
+            maneuver_end_s = max(...
+                [maneuver_start_s + maneuver_length_s + default_maneuver_padding_start_s + default_maneuver_padding_end_s...
+                 t(1)]); % do not end maneuver before first timestamp
         else
-            maneuver_end_index = round((curr_maneuver_metadata.end_s - t(1)) / dt);
+            maneuver_end_s = curr_maneuver_metadata.end_s;
         end
 end
 
@@ -517,9 +573,9 @@ function [] = read_state_input_data_in_time_interval(start_time_s, end_time_s, c
 
     % Save to files
     if save_output_data
-        writematrix(t, data_output_location + 't.csv');
+        writematrix(t, data_output_location + 't_input.csv');
         writematrix(state, data_output_location + 'state.csv');
-        writematrix(input, data_output_location + 'input.csv');
+        writematrix(input, data_output_location + 'input_input.csv');
     end
 
 end
@@ -704,7 +760,37 @@ function [sysid_indices] = get_sysid_indices(csv_log_file_location, t)
 
     % Find corresponding indices in time vector
     sysid_indices = round(interp1(t,1:length(t),sysid_times));
-    sysid_indices = sysid_indices(1:sysid_maneuver_num - 1);
+    sysid_indices = sysid_indices(1:sysid_maneuver_num - 1); % cut away zeros
+end
+
+function [sysid_times_s] = get_sysid_times(csv_log_file_location, t)
+    input_rc = readtable(csv_log_file_location + '_' + "input_rc_0" + ".csv");
+    
+    % Extract RC sysid switch log
+    sysid_rc_switch_raw = input_rc.values_6_; % sysid switch mapped to button 6
+    t_rc = input_rc.timestamp / 1e6;
+    RC_TRESHOLD = 1800;
+
+    % Find times when switch was switched
+    MAX_SYSID_MANEUVERS = 500;
+    sysid_times_s = zeros(MAX_SYSID_MANEUVERS,1);
+    sysid_maneuver_num = 1;
+    sysid_found = false;
+    for i = 1:length(t_rc)
+      % Add time if found a new rising edge
+      if sysid_rc_switch_raw(i) >= RC_TRESHOLD && not(sysid_found)
+          sysid_times_s(sysid_maneuver_num) = t_rc(i);
+          sysid_found = true;
+          sysid_maneuver_num = sysid_maneuver_num + 1;
+      end
+      
+      % If found a falling edge, start looking again
+      if sysid_found && sysid_rc_switch_raw(i) < RC_TRESHOLD
+         sysid_found = false; 
+      end
+    end
+    
+    sysid_times_s = sysid_times_s(1:sysid_maneuver_num - 1); % cut away zeros
 end
 
 
