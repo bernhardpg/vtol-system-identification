@@ -5,36 +5,7 @@ g = 9.81; % m / s^2
 %%%%%%
 %%% Aircraft properties
 %%%%%%
-
-%%% Mass properties
-% Mass
-mass_g = 12630.00;
-mass_kg = mass_g * 1e-3;
-
-% Moment of Inertia around NED body frame
-% Calculated from 3D CAD file
-% units: grams * square millimeters;
-Jxx = 1016069849.02;	Jxy = 20625.57;	Jxz = 131897698.13;
-Jyx = 20625.57;	Jyy = 1112626767.24;	Jyz = 33212.68;
-Jzx = 131897698.13;	Jzy = 33212.68;	Jzz = 2019891007.45;
-
-J_grams_sqmm = [Jxx Jxy Jxz;
-                Jyx Jyy Jyz
-                Jzx Jzy Jzz];
-
-grams_sqmm_to_kg_sqm = 1e-3 * 1e-3^2;
-J = J_grams_sqmm * grams_sqmm_to_kg_sqm;
-
-% Redefine these with correct units (this is bad coding style)
-Jxx = J(1,1);
-Jxy = J(1,2);
-Jxz = J(1,3);
-Jyx = J(2,1);
-Jyy = J(2,2);
-Jyz = J(2,3);
-Jzx = J(3,1);
-Jzy = J(3,2);
-Jzz = J(3,3);
+inertia_properties;
 
 lam_det = Jxx * Jzz - Jxz ^ 2;
 lam_1 = Jxz * (Jxx - Jyy + Jzz) / lam_det;
@@ -79,8 +50,6 @@ r_t1_B = r_t1_B_mm / 1e3;
 r_t2_B = r_t1_B_mm / 1e3;
 r_t3_B = r_t1_B_mm / 1e3;
 r_t4_B = r_t1_B_mm / 1e3;
-
-
 
 %%% Propellers and motors
 kINCH_TO_METER = 0.0254;
