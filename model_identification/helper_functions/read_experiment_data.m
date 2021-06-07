@@ -1,11 +1,11 @@
-function [state, input, t, maneuver_start_indices] = read_experiment_data(metadata, maneuver_types)
+function [t, q_NB, v_N, maneuver_start_indices] = read_experiment_data(metadata, maneuver_types)
     num_experiments = length(metadata.Experiments);
     experiment_data_path = "data/experiments/";
 
-    state = [];
-    input = [];
-    maneuver_start_indices = [];
     t = [];
+    q_NB = [];
+    v_N = [];
+    maneuver_start_indices = [];
     
     for type_i = 1:length(maneuver_types)
         maneuver_type = maneuver_types(type_i);
@@ -16,20 +16,20 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
             if ~exist(datapath, 'dir')
                 continue
             end
-
-            state_exp = readmatrix(datapath + "state.csv");
-            input_exp = readmatrix(datapath + "input.csv");
+            
+            t_exp = readmatrix(datapath + "t.csv");
+            q_NB_exp = readmatrix(datapath + "q_NB.csv");
+            v_N_exp = readmatrix(datapath + "v_N.csv");
             maneuver_start_indices_exp = readmatrix(datapath + "maneuver_start_indices.csv");
             
             % Make maneuver start indices continue from the previous ones
             % already loaded.
-            maneuver_start_indices_exp = maneuver_start_indices_exp + length(state);
-            t_exp = readmatrix(datapath + "t.csv");
-
-            state = [state;
-                     state_exp];
-            input = [input;
-                     input_exp];
+            maneuver_start_indices_exp = maneuver_start_indices_exp + length(t);
+            
+            q_NB = [q_NB;
+                     q_NB_exp];
+            v_N = [v_N;
+                     v_N_exp];
             maneuver_start_indices = [maneuver_start_indices...
                 maneuver_start_indices_exp];
             t = [t;
@@ -37,5 +37,5 @@ function [state, input, t, maneuver_start_indices] = read_experiment_data(metada
         end
     end
     
-    %disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
+    disp("Loaded " + length(maneuver_start_indices) + " maneuvers.")
 end
