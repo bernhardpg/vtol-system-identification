@@ -71,9 +71,9 @@ rho_diam_pusher_pwr_five = rho * prop_diam_pusher ^ 5; % computed once for effic
 half_rho_planform = 0.5 * rho * planform_sqm; % computed once for efficiency
 
 % Cruise conditions
-V_cruise = 23; % m/s
-nondim_constant_lon = mean_aerodynamic_chord_m / (2 * V_cruise);
-nondim_constant_lat = wingspan_m / (2 * V_cruise);
+V_nom = 21; % Nominal airspeed, m/s
+nondim_constant_lon = mean_aerodynamic_chord_m / (2 * V_nom);
+nondim_constant_lat = wingspan_m / (2 * V_nom);
 
 % Load control surface properties
 control_surface_properties;

@@ -4,11 +4,18 @@ clc; clear all; close all;
 metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
+% Maneuver settings
+maneuver_type = "pitch_211";
+
+% Plot settings
+plot_location = "data/maneuver_plots/" + maneuver_type + "/";
+save_maneuver_plot = true;
+show_maneuver_plot = false;
+
 % Set data params
 dt_desired = 1 / 50;
 
 % Read data recorded from logs
-maneuver_type = "pitch_211";
 [t_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, u_mr_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices] ...
     = read_experiment_data(metadata, maneuver_type);
 num_maneuvers = length(maneuver_start_indices);
@@ -54,18 +61,64 @@ for maneuver_i = 1:num_maneuvers
     delta_r = interp1(t_recorded, delta_r_recorded, t);
     n_p = interp1(t_recorded, n_p_recorded, t);
     
-    plot_maneuver("maneuver_" + maneuver_i, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p);
+    %plot_maneuver("maneuver_" + maneuver_i, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, show_maneuver_plot, save_maneuver_plot, plot_location);
     
     % TODO: I need to find actual PWM to RPM scale.
     %T = calc_propeller_force(n_p);
     [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z);
     [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot);
+
+    % Explanatory variables for equation-error
+    [u_hat, v_hat, w_hat, p_hat, q_hat, r_hat] = calc_explanatory_vars(p, q, r, u, v, w);
+    
+    % Start with c_Z
+    N = length(c_Z);
+    X = [ones(N, 1) w_hat]; % Regressor
+    z = c_Z; % Output measurements
+    c_Z_hat = regression_analysis(X, z);
+    
+    plot(t, c_Z, t, c_Z_hat); hold on
+    
+    N = length(c_Z);
+    X = [ones(N, 1) w_hat w_hat.^2]; % Regressor
+    z = c_Z; % Output measurements
+    c_Z_hat = regression_analysis(X, z);
+    
+    plot(t, c_Z, t, c_Z_hat); hold on
     
     % Check kinematic consistency
     %check_kinematic_consistency(t, phi, theta, psi, p, q, r, t_recorded, phi_recorded, theta_recorded, psi_recorded);
     
     % Plot velocities
     %plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_recorded);
+end
+
+function [y_hat] = regression_analysis(X, z)
+    [N, n_p] = size(X);
+    D = (X' * X)^(-1);
+    d = diag(D);
+    th_hat = D * X' * z;
+    
+    y_hat = X * th_hat; % Estimated output
+    
+    v = z - y_hat; % Residuals
+    sig_sq_hat = v' * v / (N - n_p); % Estimated noise variance
+    cov_th = sig_sq_hat * d; % Estimates parameter variance
+    
+    F0 = th_hat .^ 2 ./ cov_th;
+    fprintf("F0: ")
+    fprintf([repmat('%4.2f ',1,length(F0)) '\n'], F0);
+end
+
+function [u_hat, v_hat, w_hat, p_hat, q_hat, r_hat] = calc_explanatory_vars(p, q, r, u, v, w)
+    aircraft_properties; % Get V_nom, wingspan and MAC
+    
+    u_hat = u / V_nom;
+    v_hat = v / V_nom;
+    w_hat = w / V_nom;
+    p_hat = p * (wingspan_m / (2 * V_nom));
+    q_hat = q * (mean_aerodynamic_chord_m / (2 * V_nom));
+    r_hat = r * (wingspan_m / (2 * V_nom));
 end
 
 function [dyn_pressure] = calc_dyn_pressure(u, v, w)
@@ -113,11 +166,10 @@ function [] = plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_re
     legend("w", "w (recorded)")
 end
 
-function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p)
+function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, show_plot, save_plot, plot_location)
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
         % Plot
-        show_plot = true;
         fig = figure;
         if ~show_plot
             fig.Visible = 'off';
@@ -135,12 +187,14 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         plot(t, rad2deg(theta)); 
         legend("\theta")
         ylabel("[deg]")
-        ylim([-20 20])
+        ylim([-30 30])
 
         subplot(num_plots,2,5)
         plot(t, rad2deg(psi)); 
         legend("\psi")
         ylabel("[deg]")
+        psi_mean_deg = mean(rad2deg(psi));
+        ylim([psi_mean_deg - 30 psi_mean_deg + 30])
         
         subplot(num_plots,2,2)
         plot(t, V); 
@@ -151,6 +205,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         subplot(num_plots,2,7)
         plot(t, rad2deg(p));
         legend("p")
+        ylim([-2*180/pi 2*180/pi]);
         ylabel("[deg/s]")
         
         subplot(num_plots,2,9)
@@ -161,6 +216,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
 
         subplot(num_plots,2,11)
         plot(t, rad2deg(r));
+        ylim([-2*180/pi 2*180/pi]);
         legend("r")
         ylabel("[deg/s]")
 
@@ -172,6 +228,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         
         subplot(num_plots,2,15)
         plot(t, v);
+        ylim([-5 5]);
         legend("v")
         ylabel("[m/s]")
         
@@ -185,6 +242,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         plot(t, rad2deg(delta_a));
         legend("\delta_a")
         ylabel("[deg]");
+        ylim([-28 28])
         
         subplot(num_plots,2,6)
         plot(t, rad2deg(delta_e));
@@ -196,11 +254,19 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         plot(t, rad2deg(delta_r));
         legend("\delta_r")
         ylabel("[deg]");
+        ylim([-28 28])
         
         subplot(num_plots,2,10)
         plot(t, n_p);
         legend("n_p");
         ylabel("[rev/s]");
+        ylim([0 130])
         
         sgtitle(fig_name);
+        
+        if save_plot
+            filename = fig_name;
+            mkdir(plot_location);
+            saveas(fig, plot_location + filename, 'epsc')
+        end
 end

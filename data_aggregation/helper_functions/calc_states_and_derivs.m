@@ -19,9 +19,10 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     w = temp(:,3);
     
     % Calculate piecewise spline approximations of signals
-    phi_spline = slmengine(t_recorded, phi,'knots',t_0:.1:t_end + 0.1); % add 'plot', 'on' to see fit
-    theta_spline = slmengine(t_recorded, theta,'knots',t_0:.1:t_end + 0.1);
-    psi_spline = slmengine(t_recorded, psi,'knots',t_0:.1:t_end + 0.1);
+    dt_knots = 0.1;
+    phi_spline = slmengine(t_recorded, phi,'knots',t_0:dt_knots:t_end + dt_knots); % add 'plot', 'on' to see fit
+    theta_spline = slmengine(t_recorded, theta,'knots',t_0:dt_knots:t_end + dt_knots);
+    psi_spline = slmengine(t_recorded, psi,'knots',t_0:dt_knots:t_end + dt_knots);
         
     u_spline = slmengine(t_recorded, u,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
     v_spline = slmengine(t_recorded, v,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
