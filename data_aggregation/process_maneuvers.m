@@ -82,6 +82,7 @@ fig.Position = [100 100 1700 500];
 plot(t_plot, c_Z, '--'); hold on;
 xlabel("time [s]")
 plot(t_plot, c_Z_hat); hold on
+legend("c_Z", "c_Z (predicted)")
 
 %%
 
@@ -89,10 +90,111 @@ plot(t_plot, c_Z_hat); hold on
 % Find most relevant terms for c_m:
 %%%
 
+clc;
+N = length(c_m);
+
+X = [ones(N, 1)]; % Regressor
+z = c_m; % Output measurements
+indep_vars_str = "1";
+vars_to_test_str = "u_hat w_hat q_hat delta_e n_p";
+vars_to_test = [u_hat w_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) w_hat]; % Regressor
+z = c_m; % Output measurements
+indep_vars_str = "1 w_hat";
+vars_to_test_str = "u_hat q_hat delta_e n_p";
+vars_to_test = [u_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) w_hat delta_e]; % Regressor
+z = c_m; % Output measurements
+indep_vars_str = "1 w_hat delta_e";
+vars_to_test_str = "u_hat q_hat n_p";
+vars_to_test = [u_hat q_hat n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+vars_to_test_str = "w_hat.^2 delta_e.^2";
+vars_to_test = [w_hat.^2 delta_e.^2];
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) w_hat delta_e q_hat]; % Regressor
+z = c_m; % Output measurements
+indep_vars_str = "1 w_hat delta_e q_hat";
+vars_to_test_str = "u_hat q_hat n_p";
+vars_to_test = [u_hat q_hat n_p];
+[c_m_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+fig = figure;
+fig.Position = [100 100 1700 500];
+plot(t_plot, c_m, '--'); hold on;
+xlabel("time [s]")
+plot(t_plot, c_m_hat); hold on
+legend("c_m", "c_m (predicted)")
+
+
+%%
+
+%%%
+% Find most relevant terms for c_X:
+%%%
 
 clc;
+N = length(c_X);
 
-N = length(c_m);
+X = [ones(N, 1)]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1";
+vars_to_test_str = "u_hat w_hat q_hat delta_e n_p";
+vars_to_test = [u_hat w_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) u_hat]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1 u_hat";
+vars_to_test_str = " w_hat q_hat delta_e n_p";
+vars_to_test = [w_hat q_hat delta_e n_p];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) u_hat n_p]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1 u_hat n_p";
+vars_to_test_str = " w_hat q_hat delta_e";
+vars_to_test = [w_hat q_hat delta_e];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) u_hat w_hat n_p]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1 u_hat w_hat n_p";
+vars_to_test_str = "w_hat.^2";
+vars_to_test = [w_hat.^2];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) u_hat w_hat w_hat.^2 n_p]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1 u_hat w_hat w_hat.^2 n_p";
+stepwise_regression_round(X, z, indep_vars_str);
+disp(" ")
+
+X = [ones(N, 1) u_hat w_hat w_hat.^2 n_p q_hat]; % Regressor
+z = c_X; % Output measurements
+indep_vars_str = "1 u_hat w_hat w_hat.^2 n_p q_hat";
+[c_X_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+
+fig = figure;
+fig.Position = [100 100 1700 500];
+plot(t_plot, c_X, '--'); hold on;
+xlabel("time [s]")
+plot(t_plot, c_X_hat); hold on
+legend("c_X", "c_X (predicted)")
 
 %%
 function [y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_variables_str)

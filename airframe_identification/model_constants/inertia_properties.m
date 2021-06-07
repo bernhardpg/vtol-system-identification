@@ -3,6 +3,8 @@
 mass_g = 12140.00;
 mass_kg = mass_g * 1e-3;
 
+cg_position_from_front_mm = 494.31; 
+
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
