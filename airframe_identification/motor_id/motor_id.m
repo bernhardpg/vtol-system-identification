@@ -1,6 +1,4 @@
 % PUSHER MOTOR
-
-
 clc; clear all; close all;
 
 % File locations

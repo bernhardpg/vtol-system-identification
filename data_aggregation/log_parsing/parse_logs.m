@@ -54,6 +54,34 @@ function [t, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location)
     v_N = [v_n v_e v_d];
 end
 
+
+function [t_u_mr, u_mr, t_u_fw, u_fw] = read_input(csv_log_file_location)
+    actuator_controls_mr = readtable(csv_log_file_location + '_' + "actuator_controls_0_0" + ".csv");
+
+    t_u_mr = actuator_controls_mr.timestamp / 1e6;
+    u_roll_mr = actuator_controls_mr.control_0_;
+    u_pitch_mr = actuator_controls_mr.control_1_;
+    u_yaw_mr = actuator_controls_mr.control_2_;
+    u_throttle_mr = actuator_controls_mr.control_3_;
+    u_mr = [u_roll_mr u_pitch_mr u_yaw_mr u_throttle_mr];
+    % TODO: Convert these from PX4 inputs to actual RPMs of each motor
+
+    actuator_controls_fw = readtable(csv_log_file_location + '_' + "actuator_controls_1_0" + ".csv");
+    t_u_fw = actuator_controls_fw.timestamp / 1e6;
+    % Inputs in [0,1] interval
+    fw_aileron_input = actuator_controls_fw.control_0_;
+    fw_elevator_input = actuator_controls_fw.control_1_;
+    fw_rudder_input = actuator_controls_fw.control_2_;
+    fw_throttle_input = actuator_controls_fw.control_3_;
+    
+    % Convert from [0,1] interval to angles
+    [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = ...
+        calculate_control_surface_angles_rad(fw_aileron_input, fw_elevator_input, fw_rudder_input);
+    [fw_throttle_rev_per_s] = calculate_rev_per_s_pusher_motor(fw_throttle_input);
+    
+    u_fw = [aileron_angle_rad elevator_angle_rad rudder_angle_rad fw_throttle_rev_per_s];
+end
+
 function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to_parse)
     exp_num = experiment.Number;
     log_file = experiment.LogName;
@@ -66,6 +94,10 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
     % Read state and input data
     [t, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location);
     dt = mean(rmoutliers(t(2:end) - t(1:end-1))); % Calculate dt for conversion between index and time
+    [t_u_mr, u_mr, t_u_fw, u_fw] = read_input(csv_log_file_location);
+    % Interpolate inputs to same time horizon as attitude and velocity
+    u_mr = interp1(t_u_mr, u_mr, t);
+    u_fw = interp1(t_u_fw, u_fw, t);
     
     % Get system identification maneuvers
     sysid_indices = get_sysid_indices(csv_log_file_location, t);
@@ -117,6 +149,10 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
         q_NB_maneuver = q_NB(maneuver_start_index:maneuver_end_index,:);
         v_N_maneuver = v_N(maneuver_start_index:maneuver_end_index,:);
         
+        % Extract input data
+        u_mr_maneuver = u_mr(maneuver_start_index:maneuver_end_index,:);
+        u_fw_maneuver = u_fw(maneuver_start_index:maneuver_end_index,:);
+        
         % Store data in aggregated data matrices
         if maneuver_should_be_aggregated
             curr_maneuver_index_in_aggregation_matrix = length(output_data.(curr_maneuver_metadata.type).t) + 1;
@@ -136,6 +172,12 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
             output_data.(curr_maneuver_metadata.type).v_N = ...
                 [output_data.(curr_maneuver_metadata.type).v_N;
                  v_N_maneuver];
+            output_data.(curr_maneuver_metadata.type).u_mr = ...
+                [output_data.(curr_maneuver_metadata.type).u_mr;
+                 u_mr_maneuver];
+            output_data.(curr_maneuver_metadata.type).u_fw = ...
+                [output_data.(curr_maneuver_metadata.type).u_fw;
+                 u_fw_maneuver];
                 
             output_data.(curr_maneuver_metadata.type).aggregated_maneuvers = ...
                 [output_data.(curr_maneuver_metadata.type).aggregated_maneuvers maneuver_i];
@@ -208,6 +250,8 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.sweep.t, data_output_location + 't.csv');   
             writematrix(output_data.sweep.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.sweep.v_N, data_output_location + 'v_N.csv');
+            writematrix(output_data.sweep.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.sweep.u_fw, data_output_location + 'u_fw.csv');
  
             writematrix(output_data.sweep.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.sweep.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
@@ -221,6 +265,8 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.roll_211.t, data_output_location + 't.csv');   
             writematrix(output_data.roll_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.roll_211.v_N, data_output_location + 'v_N.csv');
+            writematrix(output_data.roll_211.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.roll_211.u_fw, data_output_location + 'u_fw.csv');
  
             writematrix(output_data.roll_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.roll_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
@@ -234,7 +280,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.roll_211_no_throttle.t, data_output_location + 't.csv');   
             writematrix(output_data.roll_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.roll_211_no_throttle.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.roll_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.roll_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.roll_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.roll_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -247,7 +295,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.pitch_211.t, data_output_location + 't.csv');   
             writematrix(output_data.pitch_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.pitch_211.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.pitch_211.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.pitch_211.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.pitch_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.pitch_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -260,7 +310,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.pitch_211_no_throttle.t, data_output_location + 't.csv');   
             writematrix(output_data.pitch_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.pitch_211_no_throttle.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.pitch_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.pitch_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.pitch_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.pitch_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -273,7 +325,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.yaw_211.t, data_output_location + 't.csv');   
             writematrix(output_data.yaw_211.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.yaw_211.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.yaw_211.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.yaw_211.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.yaw_211.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.yaw_211.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -286,7 +340,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.yaw_211_no_throttle.t, data_output_location + 't.csv');   
             writematrix(output_data.yaw_211_no_throttle.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.yaw_211_no_throttle.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.yaw_211_no_throttle.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.yaw_211_no_throttle.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.yaw_211_no_throttle.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.yaw_211_no_throttle.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -299,7 +355,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.freehand.t, data_output_location + 't.csv');   
             writematrix(output_data.freehand.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.freehand.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.freehand.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.freehand.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.freehand.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.freehand.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -312,7 +370,9 @@ function [] = save_output(experiment_number, output_data)
             writematrix(output_data.cruise.t, data_output_location + 't.csv');   
             writematrix(output_data.cruise.q_NB, data_output_location + 'q_NB.csv');
             writematrix(output_data.cruise.v_N, data_output_location + 'v_N.csv');
- 
+            writematrix(output_data.cruise.u_mr, data_output_location + 'u_mr.csv');
+            writematrix(output_data.cruise.u_fw, data_output_location + 'u_fw.csv');
+            
             writematrix(output_data.cruise.maneuver_start_indices, data_output_location + 'maneuver_start_indices.csv');
             writematrix(output_data.cruise.aggregated_maneuvers, data_output_location + 'aggregated_maneuvers.csv');
         end
@@ -325,60 +385,80 @@ function [output_struct] = intialize_empty_output_struct()
     output_struct.sweep.t = [];
     output_struct.sweep.q_NB = [];
     output_struct.sweep.v_N = [];
+    output_struct.sweep.u_mr = [];
+    output_struct.sweep.u_fw = [];
     output_struct.sweep.aggregated_maneuvers = [];
 
     output_struct.roll_211.maneuver_start_indices = [];
     output_struct.roll_211.t = [];
     output_struct.roll_211.q_NB = [];
     output_struct.roll_211.v_N = [];
+    output_struct.roll_211.u_mr = [];
+    output_struct.roll_211.u_fw = [];
     output_struct.roll_211.aggregated_maneuvers = [];
     
     output_struct.roll_211_no_throttle.maneuver_start_indices = [];
     output_struct.roll_211_no_throttle.t = [];
     output_struct.roll_211_no_throttle.q_NB = [];
     output_struct.roll_211_no_throttle.v_N = [];
+    output_struct.roll_211_no_throttle.u_mr = [];
+    output_struct.roll_211_no_throttle.u_fw = [];
     output_struct.roll_211_no_throttle.aggregated_maneuvers = [];
 
     output_struct.pitch_211.maneuver_start_indices = [];
     output_struct.pitch_211.t = [];
     output_struct.pitch_211.q_NB = [];
     output_struct.pitch_211.v_N = [];
+    output_struct.pitch_211.u_mr = [];
+    output_struct.pitch_211.u_fw = [];
     output_struct.pitch_211.aggregated_maneuvers = [];
 
     output_struct.pitch_211_no_throttle.maneuver_start_indices = [];
     output_struct.pitch_211_no_throttle.t = [];
     output_struct.pitch_211_no_throttle.q_NB = [];
     output_struct.pitch_211_no_throttle.v_N = [];
+    output_struct.pitch_211_no_throttle.u_mr = [];
+    output_struct.pitch_211_no_throttle.u_fw = [];
     output_struct.pitch_211_no_throttle.aggregated_maneuvers = [];
     
     output_struct.yaw_211.maneuver_start_indices = [];
     output_struct.yaw_211.t = [];
     output_struct.yaw_211.q_NB = [];
     output_struct.yaw_211.v_N = [];
+    output_struct.yaw_211.u_mr = [];
+    output_struct.yaw_211.u_fw = [];
     output_struct.yaw_211.aggregated_maneuvers = [];
     
     output_struct.yaw_211_no_throttle.maneuver_start_indices = [];
     output_struct.yaw_211_no_throttle.t = [];
     output_struct.yaw_211_no_throttle.q_NB = [];
     output_struct.yaw_211_no_throttle.v_N = [];
+    output_struct.yaw_211_no_throttle.u_mr = [];
+    output_struct.yaw_211_no_throttle.u_fw = [];
     output_struct.yaw_211_no_throttle.aggregated_maneuvers = [];
     
     output_struct.freehand.maneuver_start_indices = [];
     output_struct.freehand.t = [];
     output_struct.freehand.q_NB = [];
     output_struct.freehand.v_N = [];
+    output_struct.freehand.u_mr = [];
+    output_struct.freehand.u_fw = [];
     output_struct.freehand.aggregated_maneuvers = [];
     
     output_struct.cruise.maneuver_start_indices = [];
     output_struct.cruise.t = [];
     output_struct.cruise.q_NB = [];
     output_struct.cruise.v_N = [];
+    output_struct.cruise.u_mr = [];
+    output_struct.cruise.u_fw = [];
     output_struct.cruise.aggregated_maneuvers = [];
     
     output_struct.not_set.maneuver_start_indices = [];
     output_struct.not_set.t = [];
     output_struct.not_set.q_NB = [];
     output_struct.not_set.v_N = [];
+    output_struct.not_set.u_mr = [];
+    output_struct.not_set.u_fw = [];
     output_struct.not_set.aggregated_maneuvers = [];
 
 
