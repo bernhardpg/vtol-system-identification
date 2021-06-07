@@ -1,4 +1,4 @@
-function [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z] = ...
+function [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot] = ...
     calc_states_and_derivs(dt_desired, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded)
     
     t_0 = t_recorded(1);
@@ -48,9 +48,18 @@ function [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z] = ...
     % Calc p, q and r from kinematic relationships
     [p, q, r] = calc_pqr(phi, theta, psi, phi_dot, theta_dot, psi_dot);
     
-    % Calc accelerations
-    g = 9.81;
-    [a_x, a_y, a_z] = calc_acc(g, phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot);
+    % Calc translational accelerations
+    aircraft_properties; % to get g
+    [a_x, a_y, a_z] = calc_trans_acc(g, phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot);
+    
+    % Calc angular accelerations
+    p_spline = slmengine(t, p,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
+    q_spline = slmengine(t, q,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
+    r_spline = slmengine(t, r,'knots',t_0:.1:t_end + 0.1, 'plot', 'off');
+    
+    p_dot = slmeval(t, p_spline, 1);
+    q_dot = slmeval(t, q_spline, 1);
+    r_dot = slmeval(t, r_spline, 1);
 end
 
 function [p, q, r] = calc_pqr(phi, theta, psi, phi_dot, theta_dot, psi_dot)
@@ -69,7 +78,7 @@ function [u, v, w] = calc_uvw(phi, theta, psi, v_N, v_E, v_D)
         + cos(theta) .* cos(phi) .* v_D;
 end
 
-function [a_x, a_y, a_z] = calc_acc(g, phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot)
+function [a_x, a_y, a_z] = calc_trans_acc(g, phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot)
     a_x = u_dot + q .* w - r .* v + g .* sin(theta);
     a_y = v_dot + r .* u - p .* w - g .* cos(theta) .* sin(phi);
     a_z = w_dot + p .* v - q .* u - g .* cos(theta) .* cos(phi);

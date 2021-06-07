@@ -1,3 +1,7 @@
+%%% Physical constants
+rho = 1.225; % kg / m^3 (air density at sea level)
+g = 9.81; % m / s^2
+
 %%%%%%
 %%% Aircraft properties
 %%%%%%
@@ -76,9 +80,7 @@ r_t2_B = r_t1_B_mm / 1e3;
 r_t3_B = r_t1_B_mm / 1e3;
 r_t4_B = r_t1_B_mm / 1e3;
 
-%%% Physical constants
-rho = 1.225; % kg / m^3 (air density at sea level)
-g = 9.81; % m / s^2
+
 
 %%% Propellers and motors
 kINCH_TO_METER = 0.0254;
