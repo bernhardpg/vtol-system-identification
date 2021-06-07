@@ -9,7 +9,7 @@ maneuver_type = "pitch_211";
 
 % Plot settings
 plot_location = "data/maneuver_plots/" + maneuver_type + "/";
-save_maneuver_plot = true;
+save_maneuver_plot = false;
 show_maneuver_plot = false;
 
 % Set data params
@@ -75,7 +75,8 @@ explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) w_hat w_hat.^2 delta_e]; % Regressor
 indep_vars_str = "1 w_hat w_hat.^2 delta_e";
-stepwise_regression_round(X, z, indep_vars_str);
+[c_Z_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+th_hat
 
 fig = figure;
 fig.Position = [100 100 1700 500];
@@ -128,6 +129,7 @@ vars_to_test_str = "u_hat q_hat n_p";
 vars_to_test = [u_hat q_hat n_p];
 [c_m_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
+th_hat
 
 fig = figure;
 fig.Position = [100 100 1700 500];
@@ -188,12 +190,129 @@ X = [ones(N, 1) u_hat w_hat w_hat.^2 n_p q_hat]; % Regressor
 z = c_X; % Output measurements
 indep_vars_str = "1 u_hat w_hat w_hat.^2 n_p q_hat";
 [c_X_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+th_hat
 
 fig = figure;
 fig.Position = [100 100 1700 500];
 plot(t_plot, c_X, '--'); hold on;
 xlabel("time [s]")
 plot(t_plot, c_X_hat); hold on
+legend("c_X", "c_X (predicted)")
+
+
+%% LATERAL MODES
+% NOTE: FOR THIS I FIRST NEED TO LOAD LAT DATA!
+
+%%%
+% Find most relevant terms for c_Y:
+%%%
+
+clc;
+N = length(c_Y);
+
+X = [ones(N, 1)]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1";
+vars_to_test_str = "v_hat p_hat r_hat delta_a delta_r";
+vars_to_test = [v_hat p_hat r_hat delta_a delta_r];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1 v_hat";
+vars_to_test_str = "p_hat r_hat delta_a delta_r";
+vars_to_test = [p_hat r_hat delta_a delta_r];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat delta_r]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1 v_hat delta_r";
+vars_to_test_str = "p_hat r_hat delta_a";
+vars_to_test = [p_hat r_hat delta_a];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat delta_r delta_a]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1 v_hat delta_r delta_a";
+vars_to_test_str = "p_hat r_hat";
+vars_to_test = [p_hat r_hat];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat p_hat delta_r delta_a]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1 v_hat p_hat delta_r delta_a";
+vars_to_test_str = "r_hat";
+vars_to_test = [r_hat];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat p_hat r_hat delta_r delta_a]; % Regressor
+z = c_Y; % Output measurements
+indep_vars_str = "1 v_hat p_hat r_hat delta_r delta_a";
+[c_Y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+
+fig = figure;
+fig.Position = [100 100 1700 500];
+plot(t_plot, c_Y, '--'); hold on;
+xlabel("time [s]")
+plot(t_plot, c_Y_hat); hold on
+legend("c_X", "c_X (predicted)")
+
+%%
+
+%%%
+% Find most relevant terms for c_l:
+%%%
+
+clc;
+N = length(c_l);
+
+X = [ones(N, 1)]; % Regressor
+z = c_l; % Output measurements
+indep_vars_str = "1";
+vars_to_test_str = "v_hat p_hat r_hat delta_a delta_r";
+vars_to_test = [v_hat p_hat r_hat delta_a delta_r];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) delta_a]; % Regressor
+z = c_l; % Output measurements
+indep_vars_str = "1 delta_a";
+vars_to_test_str = "v_hat p_hat r_hat delta_r";
+vars_to_test = [v_hat p_hat r_hat delta_r];
+[c_l_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) r_hat delta_a]; % Regressor
+z = c_l; % Output measurements
+indep_vars_str = "1 r_hat delta_a";
+vars_to_test_str = "v_hat p_hat delta_r";
+vars_to_test = [v_hat p_hat delta_r];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) p_hat r_hat delta_a]; % Regressor
+z = c_l; % Output measurements
+indep_vars_str = "1 p_hat r_hat delta_a";
+vars_to_test_str = "v_hat delta_r";
+vars_to_test = [v_hat delta_r];
+stepwise_regression_round(X, z, indep_vars_str);
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) v_hat p_hat r_hat delta_a delta_r]; % Regressor
+z = c_l; % Output measurements
+indep_vars_str = "1 v_hat p_hat r_hat delta_a delta_r";
+stepwise_regression_round(X, z, indep_vars_str);
+
+fig = figure;
+fig.Position = [100 100 1700 500];
+plot(t_plot, c_l, '--'); hold on;
+xlabel("time [s]")
+plot(t_plot, c_l_hat); hold on
 legend("c_X", "c_X (predicted)")
 
 %%
@@ -272,7 +391,8 @@ function [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, T)
     dyn_pressure = calc_dyn_pressure(u, v, w);
     aircraft_properties; % get mass and planform
     % TODO: Add thrust here
-    c_X = (mass_kg * a_x - 0) ./ (dyn_pressure * planform_sqm);
+    T = 0;
+    c_X = (mass_kg * a_x - T) ./ (dyn_pressure * planform_sqm);
     c_Y = (mass_kg * a_y) ./ (dyn_pressure * planform_sqm);
     c_Z = (mass_kg * a_z) ./ (dyn_pressure * planform_sqm);
 end
