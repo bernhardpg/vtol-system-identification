@@ -39,7 +39,7 @@ for maneuver_i = 1:num_maneuvers
     
     % Calculate all relevant states and their derivatives during the
     % maneuver
-    [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z] ...
+    [phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot] ...
         = calc_states_and_derivs(dt_desired, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
     
     % Check kinematic consistency
@@ -49,7 +49,7 @@ for maneuver_i = 1:num_maneuvers
     %plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_recorded);
 end
 
-function [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z] = ...
+function [phi, theta, psi, p, q, r, u, v, w, a_x, a_y, w_dot] = ...
     calc_states_and_derivs(dt_desired, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded)
     
     t_0 = t_recorded(1);
