@@ -1,5 +1,5 @@
 function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
-    = collect_data_from_all_maneuvers(dt_desired, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
+    = collect_data_from_all_maneuvers(maneuvers_to_skip, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
     save_maneuver_plot, show_maneuver_plot, plot_location)
 
     % Initialize empty variables to contain states
@@ -29,6 +29,11 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     num_maneuvers = length(maneuver_start_indices_state);
     num_discarded_maneuvers = 0;
     for maneuver_i = 1:num_maneuvers
+        % Skip maneuvers
+        if any(maneuvers_to_skip(:) == maneuver_i)
+            continue
+        end
+        
         curr_maneuver_start_index = length(t) + 1;
         
         % Get correct maneuver start and end index
@@ -56,7 +61,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
         % Calculate all relevant states and their derivatives during the
         % maneuver
         [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m] ...
-            = calc_states_and_derivs(dt_desired, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
+            = calc_states_and_derivs(dt, t_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
 
         % Manuever with dropout causes spikes in derivatives
         % Skip these

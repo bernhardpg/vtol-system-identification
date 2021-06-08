@@ -88,7 +88,7 @@ function [] = parse_maneuver_new(experiment, save_output_data, maneuver_types_to
     maneuver_metadata = experiment.Maneuvers;
     num_maneuvers = length(fieldnames(maneuver_metadata));
     
-    csv_files_location = "data/log_files/csv/";
+    csv_files_location = "data/data_raw/log_files/csv/";
     csv_log_file_location = csv_files_location + log_file;
 
     % Read state and input data
@@ -265,7 +265,7 @@ end
 
 function [] = save_output(experiment_number, output_data)
         if ~isempty(output_data.sweep.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/sweep/output/";
             mkdir(data_output_location);
             
@@ -282,7 +282,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.roll_211.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/roll_211/output/";
             mkdir(data_output_location);
             
@@ -299,7 +299,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.roll_211_no_throttle.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/roll_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -316,7 +316,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.pitch_211.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/pitch_211/output/";
             mkdir(data_output_location);
             
@@ -333,7 +333,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.pitch_211_no_throttle.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/pitch_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -350,7 +350,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.yaw_211.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/yaw_211/output/";
             mkdir(data_output_location);
             
@@ -367,7 +367,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.yaw_211_no_throttle.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/yaw_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -384,7 +384,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.freehand.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/freehand/output/";
             mkdir(data_output_location);
             
@@ -401,7 +401,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.cruise.t_state)
-            data_output_location = "data/experiments/experiment_" + string(experiment_number) ...
+            data_output_location = "data/data_raw/experiments/experiment_" + string(experiment_number) ...
                 + "/cruise/output/";
             mkdir(data_output_location);
             
@@ -528,9 +528,6 @@ function [maneuver_should_be_aggregated, maneuver_start_s, maneuver_end_s]...
     = get_maneuver_start_end_time(...
         curr_maneuver_metadata, default_maneuver_padding_start_s, default_maneuver_padding_end_s, t, start_time_s, maneuver_length_s ...
     )
-        
-        maneuver_should_be_aggregated = ~curr_maneuver_metadata.skip;
-        
         % Use sysid index for maneuver if no maneuver start and end time is
         % set in metadata
         maneuver_start_time_not_set = curr_maneuver_metadata.start_s == -1;

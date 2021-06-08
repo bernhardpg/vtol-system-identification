@@ -1,6 +1,6 @@
 function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuver_start_indices_u_fw] = read_experiment_data(metadata, maneuver_types)
     num_experiments = length(metadata.Experiments);
-    experiment_data_path = "data/experiments/";
+    experiment_data_path = "data/data_raw/experiments/";
 
     t_state = [];
     t_u_fw = [];
