@@ -73,18 +73,23 @@ if 0
         tspan = t_m(1):dt:t_m(end);
         y0 = [theta_m(1) q_m(1) u_m(1) w_m(1)];
 
-        input_m = [delta_a_m delta_e_m delta_r_m n_p_m];
-        y_lat_m = [phi_m, psi_m, p_m, r_m, v_m];
-
-        y_pred = ode45(@(t,y) aircraft_dynamics_lon(t, y, t_m, input_m, y_lat_m, all_params), tspan, y0);
-
+        input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
+        lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
+        [dy_dt] = lon_dynamics(t_m(1), y0, t_m, input_seq_m, lat_state_seq_m, all_params);
+        
+        tic
+        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics(t, y, t_seq, input, y_lat, all_params), tspan, y0);
+        toc
+        
         plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
             t_m, y_pred,...
             false, true, "");
     end
 end
 
-% cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+tic
+cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+toc
 
 % Optimization settings
 rng default % For reproducibility

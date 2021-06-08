@@ -8,6 +8,9 @@
       location = "group:../model/longitudinal_model_c.c">
    </FileRef>
    <FileRef
+      location = "group:../test_function_c.c">
+   </FileRef>
+   <FileRef
       location = "group:../model/longitudinal_model_w_actuator_dynamics_c.c">
    </FileRef>
    <FileRef
