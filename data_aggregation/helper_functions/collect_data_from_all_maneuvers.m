@@ -1,4 +1,4 @@
-function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p]...
+function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
     = collect_data_from_all_maneuvers(dt_desired, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
     save_maneuver_plot, show_maneuver_plot, plot_location)
 
@@ -23,11 +23,14 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     delta_e = [];
     delta_r = [];
     n_p = [];
+    maneuver_start_indices = [];
 
     % Iterate through all maneuvers and calculate data
     num_maneuvers = length(maneuver_start_indices_state);
     num_discarded_maneuvers = 0;
     for maneuver_i = 1:num_maneuvers
+        curr_maneuver_start_index = length(t) + 1;
+        
         % Get correct maneuver start and end index
         maneuver_start_index_state = maneuver_start_indices_state(maneuver_i);
         if maneuver_i == num_maneuvers
@@ -125,9 +128,11 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
                    delta_r_m];
         n_p = [n_p;
                n_p_m];
+       maneuver_start_indices = [maneuver_start_indices;
+                                 curr_maneuver_start_index];
 
         if save_maneuver_plot || show_maneuver_plot
-            plot_maneuver("maneuver_" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_maneuver_plot, show_maneuver_plot, plot_location)
+            plot_maneuver_comp_real("maneuver_" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_maneuver_plot, show_maneuver_plot, plot_location)
         end
     %     
         % Check kinematic consistency
@@ -140,7 +145,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     disp("Discarded " + num_discarded_maneuvers + " maneuvers due to dropout");
 end
 
-function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_plot, show_plot, plot_location)
+function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_plot, show_plot, plot_location)
 
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 

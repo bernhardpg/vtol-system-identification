@@ -20,7 +20,8 @@ dt_desired = 1 / 50;
     = read_experiment_data(metadata, maneuver_type);
 
 % Calculate states and their derivatives using splines
-[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p]...
+% TODO: Save maneuers for validation
+[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
     = collect_data_from_all_maneuvers(dt_desired, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
         save_maneuver_plot, show_maneuver_plot, plot_location);
 
@@ -34,6 +35,52 @@ dt_desired = 1 / 50;
 
 % Create a time vector for plotting of all maneuvers
 t_plot = 0:dt_desired:length(t)*dt_desired - dt_desired;
+
+%%
+c_X_0 = 0.1276;
+c_X_u = -0.3511;
+c_X_w = 0.1757;
+c_X_w_sq = 2.7162;
+c_X_q = -3.2355;
+c_X_n_p = 0.0025;
+c_Z_0 = -0.5322;
+c_Z_w = -5.1945;
+c_Z_w_sq = 5.7071;
+c_Z_delta_e = -0.3440;
+c_m_0 = 0.0266;
+c_m_w = -1.0317;
+c_m_q = 1.0616;
+c_m_delta_e = -0.3329;
+
+aircraft_properties;
+params = [rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,...
+     gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,...
+     c_X_0, c_X_u, c_X_w, c_X_w_sq, c_X_q, c_X_n_p,...
+     c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,...
+     c_m_0, c_m_w, c_m_q, c_m_delta_e,...
+     ]';
+
+for maneuver_i = 2:length(maneuver_start_indices)
+    [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
+     = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a, delta_e, delta_r, n_p);
+    
+    % Get inputs
+    input_seq = [delta_a_m, delta_e_m, delta_r_m, n_p_m];
+    
+    % Take lat states as they are
+    lat_state_seq = [phi_m, psi_m, p_m, r_m, v_m];
+    
+    tspan = [t_m(1) t_m(end)];
+    
+    y0 = [theta_m(1) q_m(1) u_m(1) w_m(1)];
+    [t_pred, y_pred] = ode23s(@(t,y) aircraft_dynamics_lon(t, y, t_m, input_seq, lat_state_seq, params), tspan, y0);
+        
+    plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
+        t_pred, y_pred,...
+        false, true, "");
+end
+
+
 %%
 %%%
 % Find most relevant terms for c_Z:
@@ -76,7 +123,8 @@ explore_next_var(z, vars_to_test, vars_to_test_str);
 X = [ones(N, 1) w_hat w_hat.^2 delta_e]; % Regressor
 indep_vars_str = "1 w_hat w_hat.^2 delta_e";
 [c_Z_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
-th_hat
+th_hat = num2cell(th_hat);
+[c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e] = th_hat{:}
 
 fig = figure;
 fig.Position = [100 100 1700 500];
@@ -103,7 +151,6 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) w_hat]; % Regressor
-z = c_m; % Output measurements
 indep_vars_str = "1 w_hat";
 vars_to_test_str = "u_hat q_hat delta_e n_p";
 vars_to_test = [u_hat q_hat delta_e n_p];
@@ -111,7 +158,6 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) w_hat delta_e]; % Regressor
-z = c_m; % Output measurements
 indep_vars_str = "1 w_hat delta_e";
 vars_to_test_str = "u_hat q_hat n_p";
 vars_to_test = [u_hat q_hat n_p];
@@ -122,14 +168,14 @@ vars_to_test_str = "w_hat.^2 delta_e.^2";
 vars_to_test = [w_hat.^2 delta_e.^2];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) w_hat delta_e q_hat]; % Regressor
-z = c_m; % Output measurements
+X = [ones(N, 1) w_hat q_hat delta_e]; % Regressor
 indep_vars_str = "1 w_hat delta_e q_hat";
 vars_to_test_str = "u_hat q_hat n_p";
 vars_to_test = [u_hat q_hat n_p];
 [c_m_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
-th_hat
+th_hat = num2cell(th_hat);
+[c_m_0, c_m_w, c_m_q, c_m_delta_e] = th_hat{:}
 
 fig = figure;
 fig.Position = [100 100 1700 500];
@@ -157,7 +203,6 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) u_hat]; % Regressor
-z = c_X; % Output measurements
 indep_vars_str = "1 u_hat";
 vars_to_test_str = " w_hat q_hat delta_e n_p";
 vars_to_test = [w_hat q_hat delta_e n_p];
@@ -165,7 +210,6 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) u_hat n_p]; % Regressor
-z = c_X; % Output measurements
 indep_vars_str = "1 u_hat n_p";
 vars_to_test_str = " w_hat q_hat delta_e";
 vars_to_test = [w_hat q_hat delta_e];
@@ -173,7 +217,6 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) u_hat w_hat n_p]; % Regressor
-z = c_X; % Output measurements
 indep_vars_str = "1 u_hat w_hat n_p";
 vars_to_test_str = "w_hat.^2";
 vars_to_test = [w_hat.^2];
@@ -181,16 +224,15 @@ stepwise_regression_round(X, z, indep_vars_str);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) u_hat w_hat w_hat.^2 n_p]; % Regressor
-z = c_X; % Output measurements
 indep_vars_str = "1 u_hat w_hat w_hat.^2 n_p";
 stepwise_regression_round(X, z, indep_vars_str);
 disp(" ")
 
-X = [ones(N, 1) u_hat w_hat w_hat.^2 n_p q_hat]; % Regressor
-z = c_X; % Output measurements
+X = [ones(N, 1) u_hat w_hat w_hat.^2 q_hat n_p]; % Regressor
 indep_vars_str = "1 u_hat w_hat w_hat.^2 n_p q_hat";
 [c_X_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str);
-th_hat
+th_hat = num2cell(th_hat);
+[c_X_0, c_X_u, c_X_w, c_X_w_sq c_X_q c_X_n_p] = th_hat{:}
 
 fig = figure;
 fig.Position = [100 100 1700 500];
@@ -198,6 +240,7 @@ plot(t_plot, c_X, '--'); hold on;
 xlabel("time [s]")
 plot(t_plot, c_X_hat); hold on
 legend("c_X", "c_X (predicted)")
+
 
 
 %% LATERAL MODES
@@ -401,9 +444,9 @@ function [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_
     dyn_pressure = calc_dyn_pressure(u, v, w);
     aircraft_properties; % get inertias, wingspan, MAC and planform
 
-    c_l = (Jxx * p_dot - Jxz * (r_dot + p .* q) + q .* r * (Jzz - Jyy)) ./ (dyn_pressure * wingspan_m * planform_sqm);
-    c_m = (Jyy * q_dot - r .* p * (Jxx - Jzz) + Jxz * (p .^ 2 - r .^ 2)) ./ (dyn_pressure * mean_aerodynamic_chord_m * planform_sqm);
-    c_n = (Jzz * r_dot - Jxz * (p_dot - q .* r) + p .* q * (Jyy - Jxx)) ./ (dyn_pressure * wingspan_m * planform_sqm);
+    c_l = (J_xx * p_dot - J_xz * (r_dot + p .* q) + q .* r * (J_zz - J_yy)) ./ (dyn_pressure * wingspan_m * planform_sqm);
+    c_m = (J_yy * q_dot - r .* p * (J_xx - J_zz) + J_xz * (p .^ 2 - r .^ 2)) ./ (dyn_pressure * mean_aerodynamic_chord_m * planform_sqm);
+    c_n = (J_zz * r_dot - J_xz * (p_dot - q .* r) + p .* q * (J_yy - J_xx)) ./ (dyn_pressure * wingspan_m * planform_sqm);
 end
 
 function [] = plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_recorded)

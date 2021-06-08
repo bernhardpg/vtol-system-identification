@@ -7,17 +7,6 @@ g = 9.81; % m / s^2
 %%%%%%
 inertia_properties;
 
-lam_det = Jxx * Jzz - Jxz ^ 2;
-lam_1 = Jxz * (Jxx - Jyy + Jzz) / lam_det;
-lam_2 = (Jzz * (Jzz - Jyy) + Jxz ^ 2) / lam_det;
-lam_3 = Jzz / lam_det;
-lam_4 = Jxz / lam_det;
-lam_5 = (Jzz - Jxx) / Jyy;
-lam_6 = Jxz / Jyy;
-lam_7 = (Jxx * (Jxx - Jyy) + Jxz ^ 2) / lam_det;
-lam_8 = Jxx / lam_det;
-lam = [lam_1 lam_2 lam_3 lam_4 lam_5 lam_6 lam_7 lam_8];
-
 %%% Wings
 % Planform
 % From CAD 3D model
