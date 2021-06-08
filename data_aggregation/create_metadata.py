@@ -83,7 +83,6 @@ exp2["Number"] = 2
 exp2["Maneuvers"] = {}
 
 pitch_211_maneuver_indices = np.arange(1, 18)
-dropouts = [1, 2, 7, 11, 17]
 set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, "pitch_211")
 
 # Pretend freehand times are the last maneuvers, just for simplicity
@@ -166,7 +165,7 @@ pitch_211_nt_maneuver_times = {
 set_maneuver_times(
     exp3,
     pitch_211_maneuver_indices,
-    {},
+    pitch_211_maneuver_times,
     "pitch_211",
 )
 

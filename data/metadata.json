@@ -456,7 +456,7 @@
                     "type": "pitch_211"
                 },
                 "10": {
-                    "end_s": -1,
+                    "end_s": 985.5,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -511,7 +511,7 @@
                     "type": "yaw_211"
                 },
                 "11": {
-                    "end_s": -1,
+                    "end_s": 990.5,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -621,7 +621,7 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "13": {
-                    "end_s": -1,
+                    "end_s": 1011,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -676,7 +676,7 @@
                     "type": "yaw_211_no_throttle"
                 },
                 "14": {
-                    "end_s": -1,
+                    "end_s": 1016,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -731,7 +731,7 @@
                     "type": "yaw_211"
                 },
                 "15": {
-                    "end_s": -1,
+                    "end_s": 1020.5,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -786,7 +786,7 @@
                     "type": "yaw_211"
                 },
                 "16": {
-                    "end_s": -1,
+                    "end_s": 1025,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -841,7 +841,7 @@
                     "type": "yaw_211"
                 },
                 "17": {
-                    "end_s": -1,
+                    "end_s": 1029.5,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -951,7 +951,7 @@
                     "type": "sweep"
                 },
                 "19": {
-                    "end_s": -1,
+                    "end_s": 1051,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1011,7 +1011,7 @@
                     "type": "pitch_211"
                 },
                 "20": {
-                    "end_s": -1,
+                    "end_s": 1055,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
@@ -1416,7 +1416,7 @@
                     "type": "roll_211_no_throttle"
                 },
                 "9": {
-                    "end_s": -1,
+                    "end_s": 981,
                     "start_s": -1,
                     "type": "pitch_211"
                 },

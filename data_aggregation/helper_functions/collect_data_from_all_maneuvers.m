@@ -28,13 +28,16 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     % Iterate through all maneuvers and calculate data
     num_maneuvers = length(maneuver_start_indices_state);
     num_discarded_maneuvers = 0;
-    for maneuver_i = 1:num_maneuvers
+    
+    % Randomly shuffle maneuver order
+    disp("Shuffling order of maneuvers before aggregating...")
+    maneuvers_to_parse = shuffle(1:num_maneuvers);
+    
+    for maneuver_i = maneuvers_to_parse
         % Skip maneuvers
         if any(maneuvers_to_skip(:) == maneuver_i)
             continue
         end
-        
-        curr_maneuver_start_index = length(t) + 1;
         
         % Get correct maneuver start and end index
         maneuver_start_index_state = maneuver_start_indices_state(maneuver_i);
@@ -70,6 +73,12 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
             num_discarded_maneuvers = num_discarded_maneuvers + 1;
             continue;
         end
+        
+        % ONLY SAVE IF MANEUVER IS NOT SKIPPED
+        % Save maneuver start index
+        curr_maneuver_start_index = length(t) + 1;
+        maneuver_start_indices = [maneuver_start_indices;
+                                 curr_maneuver_start_index];
 
         % Handle inputs which are on their own timestamps and start indices
         maneuver_start_index_u_fw = maneuver_start_indices_u_fw(maneuver_i);
@@ -133,8 +142,6 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
                    delta_r_m];
         n_p = [n_p;
                n_p_m];
-       maneuver_start_indices = [maneuver_start_indices;
-                                 curr_maneuver_start_index];
 
         if save_maneuver_plot || show_maneuver_plot
             plot_maneuver_comp_real("maneuver_" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_maneuver_plot, show_maneuver_plot, plot_location)
@@ -147,7 +154,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
         %plot_velocity(t, u, v, w, t_recorded, u_recorded, v_recorded, w_recorded);
     end
     
-    disp("Discarded " + num_discarded_maneuvers + " maneuvers due to dropout");
+    disp("Loaded " + (num_maneuvers - num_discarded_maneuvers) + " maneuvers." + " Discarded " + num_discarded_maneuvers + " maneuvers due to dropout.");
 end
 
 function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_plot, show_plot, plot_location)
@@ -255,3 +262,7 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
             saveas(fig, plot_location + filename, 'epsc')
         end
 end
+
+ function v = shuffle(v)
+     v = v(randperm(length(v)));
+ end
