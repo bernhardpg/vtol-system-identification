@@ -36,7 +36,9 @@ void compute_dx(
     double t,    /* Time t (scalar). */
     double *x,   /* State vector (length nx). */
     double *u,   /* Input vector (length nu). */
-    double *p  /* p[j] points to the j-th estimated model parameters (a double array). */
+    double *p,  /* p[j] points to the j-th estimated model parameters (a double array). */
+		int nu_rows,
+		int nu_cols
    )
 {
     /*
@@ -82,6 +84,36 @@ void compute_dx(
 		c_m_q = p[28];
 		c_m_delta_e = p[29];
 
+		if (true)
+		{
+			// Find index of point before t
+			int i = 0;
+			double curr_t = u[i];
+			while (true)
+			{
+				curr_t = u[i];
+				if (curr_t > t) break;
+				i = i+1;
+			}
+
+			double x0, x1, y0, y1, xp, yp;
+			x0 = u[i - 1];
+			x1 = u[i];
+
+			int var_num = 1;
+			y0 = u[i - 1 + nu_rows * var_num];
+			y1 = u[i + nu_rows * var_num];
+
+			xp = t;
+			yp = y0 + ((y1-y0)/(x1-x0)) * (xp - x0);
+
+			dx[0] = yp;
+			dx[1] = 0;
+			dx[2] = 0;
+			dx[3] = 0;
+		}
+
+		/*
 		// Extract state
     double theta, ang_q, vel_u, vel_w;
     theta = x[0];
@@ -133,6 +165,7 @@ void compute_dx(
 		dx[1] = q_dot;
 		dx[2] = u_dot;
 		dx[3] = w_dot;
+		*/
 }
 
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -140,7 +173,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 {
     /* Declaration of input and output arguments. */
     double t, *x, *u, *params, *dx, *y;
-    int     i, np, nu, nx;
+    int     i, np, nu_rows, nu_cols, nx;
     const mxArray *auxvar = NULL; /* Cell array of additional data. */
 
     if (nrhs < 3) {
@@ -160,7 +193,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     /* Determine number of inputs and states. */
     nx = mxGetNumberOfElements(prhs[1]); /* Number of states. */
-    nu = mxGetNumberOfElements(prhs[2]); /* Number of inputs. */
+    nu_rows = mxGetM(prhs[2]); /* Number of inputs. */
+    nu_cols = mxGetN(prhs[2]); /* Number of inputs. */
 
     /* Obtain double data pointers from mxArrays. */
     t = mxGetScalar(prhs[0]);  /* Current time value (scalar). */
@@ -173,5 +207,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
     dx      = mxGetPr(plhs[0]); /* State derivative values. */
 
     /* Call function for state derivative update. */
-    compute_dx(dx, t, x, u, params);
+    compute_dx(dx, t, x, u, params, nu_rows, nu_cols);
 }
