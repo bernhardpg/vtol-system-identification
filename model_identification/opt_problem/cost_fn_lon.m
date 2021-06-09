@@ -1,13 +1,4 @@
-function cost = cost_fn_lon(x, dt, seq_data, y0, tspan, y_lon_seq_m, const_params)
-    % Add decision variables to params before integrating
-    all_params = [const_params;
-                  x'];
-    
-    % Integrate dynamics
-    
-    [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, seq_data, all_params), tspan, y0);
-    y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2));
-
-    % Squared cost
-    cost = sum(diag((y_lon_seq_m - y_pred)' * (y_lon_seq_m - y_pred)));
+function cost = cost_fn_lon(x, w, residual_weight, R_hat, dt, seq_data, y0, tspan, z, const_params)
+    v = calc_residuals(z, seq_data, const_params, x, dt, tspan, y0);
+    cost = 0.5 * sum(diag(residual_weight * v / R_hat * w * v'));
 end
