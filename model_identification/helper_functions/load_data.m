@@ -1,5 +1,4 @@
 % Maneuver settings
-maneuver_type = "pitch_211";
 data_path = "data/aggregated_data/" + maneuver_type + "/";
 
 % Load training data

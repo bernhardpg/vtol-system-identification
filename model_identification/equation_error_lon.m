@@ -219,36 +219,3 @@ plot(t_plot, c_X, '--'); hold on;
 xlabel("time [s]")
 plot(t_plot, c_X_hat); hold on
 legend("c_X", "c_X (predicted)")
-
-
-
-
-%%
-function [y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_variables_str, R_sq_prev)
-    [y_hat, F0, R_sq, cov_th, th_hat] = regression_analysis(X, z);
-
-    disp("Independent variables: [" + indep_variables_str + "]")
-    fprintf("F0: ")
-    fprintf([repmat('%4.2f ',1,length(F0)) '\n'], F0);
-    disp("R_sq: " + R_sq);
-    if abs(R_sq_prev) > 1e-3
-        R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
-        if R_sq_change < 0.5
-            disp("WARNING: Too low change");
-        end
-        fprintf('Change in R_sq: %2.4f %%\n', R_sq_change);
-    end
-end
-
-function [] = explore_next_var(z, variables_to_test, variables_to_test_str)
-    disp("Testing new terms:")
-    r = calculate_partial_correlation(variables_to_test, z);
-    disp("r: " + variables_to_test_str);
-    fprintf(['   ' repmat('%5.3f ',1,length(r)) '\n'], r);
-    disp(" ")
-end
-
-function [T] = calc_propeller_force(n_p)
-    aircraft_properties; % to get rho and diam_pusher
-    T = rho * prop_diam_pusher ^ 4 * c_T_0_pusher * n_p .^ 2;
-end

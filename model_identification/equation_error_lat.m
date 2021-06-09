@@ -1,3 +1,8 @@
+clc; clear all; close all;
+maneuver_type = "roll_211";
+load_data;
+
+% TODO: Remove maneuver with CRAZY high c_Y!!
 %% LATERAL MODES
 % NOTE: FOR THIS I FIRST NEED TO LOAD LAT DATA!
 
@@ -21,37 +26,40 @@ z = c_Y; % Output measurements
 indep_vars_str = "1 v_hat";
 vars_to_test_str = "p_hat r_hat delta_a delta_r";
 vars_to_test = [p_hat r_hat delta_a delta_r];
-[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, 0);
+[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) v_hat delta_r]; % Regressor
+X = [ones(N, 1) v_hat p_hat]; % Regressor
 z = c_Y; % Output measurements
-indep_vars_str = "1 v_hat delta_r";
-vars_to_test_str = "p_hat r_hat delta_a";
-vars_to_test = [p_hat r_hat delta_a];
-[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, 0);
+indep_vars_str = "1 v_hat p_hat";
+[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
+
+vars_to_test_str = "r_hat delta_a delta_r";
+vars_to_test = [r_hat delta_a delta_r];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) v_hat delta_r delta_a]; % Regressor
+X = [ones(N, 1) v_hat p_hat r_hat]; % Regressor
 z = c_Y; % Output measurements
-indep_vars_str = "1 v_hat delta_r delta_a";
-vars_to_test_str = "p_hat r_hat";
-vars_to_test = [p_hat r_hat];
-[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, 0);
+indep_vars_str = "1 v_hat p_hat r_hat";
+[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
+
+vars_to_test_str = "delta_a delta_r";
+vars_to_test = [delta_a delta_r];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) v_hat p_hat delta_r delta_a]; % Regressor
+X = [ones(N, 1) v_hat p_hat r_hat delta_a]; % Regressor
 z = c_Y; % Output measurements
-indep_vars_str = "1 v_hat p_hat delta_r delta_a";
-vars_to_test_str = "r_hat";
-vars_to_test = [r_hat];
-[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, 0);
+indep_vars_str = "1 v_hat p_hat r_hat delta_a";
+[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
+
+vars_to_test_str = "delta_r";
+vars_to_test = [delta_r];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) v_hat p_hat r_hat delta_r delta_a]; % Regressor
+X = [ones(N, 1) v_hat p_hat r_hat delta_a delta_r]; % Regressor
 z = c_Y; % Output measurements
-indep_vars_str = "1 v_hat p_hat r_hat delta_r delta_a";
-[c_Y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str, 0);
+indep_vars_str = "1 v_hat p_hat r_hat delta_a delta_r";
+[c_Y_hat, th_hat, cov_th, F0, R_sq] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
 
 fig = figure;
 fig.Position = [100 100 1700 500];

@@ -71,7 +71,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
 
         % Manuever with dropout causes spikes in derivatives
         % Skip these
-        error_treshold = 150 * pi / 180;
+        error_treshold = 200 * pi / 180;
         if (max(abs(p_m)) > error_treshold) || (max(abs(q_m)) > error_treshold) || (max(abs(r_m)) > error_treshold)
             num_discarded_maneuvers = num_discarded_maneuvers + 1;
             continue;
@@ -186,7 +186,7 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
         plot(t, rad2deg(phi), t_recorded, rad2deg(phi_recorded), '--'); 
         legend("\phi", "\phi (recorded)")
         ylabel("[deg]")
-        ylim([-50 50])
+        ylim([-70 70])
         
         subplot(num_plots,2,3)
         plot(t, rad2deg(theta), t_recorded, rad2deg(theta_recorded), '--'); 
@@ -210,7 +210,7 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
         subplot(num_plots,2,7)
         plot(t, rad2deg(p));
         legend("p")
-        ylim([-2*180/pi 2*180/pi]);
+        ylim([-3.5*180/pi 3.5*180/pi]);
         ylabel("[deg/s]")
         
         subplot(num_plots,2,9)
@@ -233,7 +233,7 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
         
         subplot(num_plots,2,15)
         plot(t, v);
-        ylim([-5 5]);
+        ylim([-10 10]);
         legend("v")
         ylabel("[m/s]")
         
@@ -256,8 +256,8 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
         ylim([-28 28])
         
         subplot(num_plots,2,8)
-        plot(t, rad2deg(delta_e_sp), t, rad2deg(delta_e), '--');
-        legend("\delta_e_sp", "\delta_e (estimated)")
+        plot(t, rad2deg(delta_r_sp), t, rad2deg(delta_r), '--');
+        legend("\delta_r_sp", "\delta_r (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         

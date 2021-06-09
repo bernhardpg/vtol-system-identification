@@ -6,9 +6,7 @@ import numpy as np
 # The metadata is used by data_handler.m to know where to look for what data.
 
 
-def create_maneuver_dict(
-   maneuver_type="not_set", maneuver_start=-1, maneuver_end=-1
-):
+def create_maneuver_dict(maneuver_type="not_set", maneuver_start=-1, maneuver_end=-1):
     d = {
         "type": maneuver_type,
         "start_s": maneuver_start,
@@ -17,9 +15,7 @@ def create_maneuver_dict(
     return d
 
 
-def set_maneuver_times(
-    exp_dict, maneuver_indices, maneuver_times, maneuver_type
-):
+def set_maneuver_times(exp_dict, maneuver_indices, maneuver_times, maneuver_type):
     for maneuver_i in maneuver_indices:
         start_time = -1
         end_time = -1
@@ -46,9 +42,7 @@ exp1["Maneuvers"] = {}
 sweep_maneuver_indices = np.arange(1, 32)
 maneuvers_w_dropout = [1, 8, 17, 21]
 skip = [2]  # too close to other maneuvers
-set_maneuver_times(
-    exp1, sweep_maneuver_indices, {}, "sweep"
-)
+set_maneuver_times(exp1, sweep_maneuver_indices, {}, "sweep")
 
 # Pick some random cruise flight times
 exp1_cruise_times = {
@@ -140,7 +134,6 @@ pitch_211_maneuver_indices = np.arange(1, 22)
 pitch_211_nt_maneuver_indices = np.arange(22, 37)
 roll_211_maneuver_indices = np.arange(37, 57)
 roll_211_nt_maneuver_indices = np.arange(57, 100)
-yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 yaw_211_nt_maneuver_indices = np.arange(113, 149)
 sweep_maneuver_indices = np.arange(177, 192)
 
@@ -179,19 +172,17 @@ set_maneuver_times(
 
 # Correct roll maneuver times
 roll_211_maneuver_times = {
-    37: [-1, 1365],  # Take both 37,38,39,40 in one as they are so close
+    37: [1347, 1351],
+    38: [-1, 1356],
+    39: [1355.5, 1360],
+    40: [1359, 1363],
     41: [-1, 1379],  # Remove 42
     43: [1385.5, 1390],  # remove other exp and dropout
-    44: [1389, 1400],  # Take 44 and 45
-    46: [-1, 1429.5],  # dropout
-    47: [1432.5, 1443],  # 47 and 48
-    49: [-1, 1466],  # 47 and 48
-    51: [-1, 1477],  # 51 and 52
+    44: [1389, 1394],
+    45: [1393, 1397.4],
 }
 
-set_maneuver_times(
-    exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211"
-)
+set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
 
 roll_211_nt_maneuver_times = {
     57: [-1, 1551],  # 57 and 58
@@ -199,16 +190,6 @@ roll_211_nt_maneuver_times = {
     76: [-1, 1764],  # 61 and 62
     92: [-1, 1990],  # 92 and 93
 }
-
-roll_211_nt_skip = [
-    58,  # already used
-    61,  # already used
-    68,  # dropout
-    77,  # already used
-    78,  # dropout
-    82,  # dropout
-    91,  # dropout
-]
 
 set_maneuver_times(
     exp3,
@@ -220,12 +201,14 @@ set_maneuver_times(
 
 # Correct yaw maneuver times
 yaw_211_maneuver_times = {
-    105: [-1, 2320],  # 105 - 110
+    102: [-1, 2225], # maneuver 3
+    104: [-1, 2249.5], # maneuver 5
+    104: [-1, 2249.5],
+    123: [-1, 3071],
 }
+yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 
-set_maneuver_times(
-    exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211"
-)
+set_maneuver_times(exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211")
 
 yaw_211_nt_maneuver_times = {}
 
@@ -285,11 +268,22 @@ exp5["LogName"] = "2021_04_18_flight_2_static_curves_no_thrust_211_roll"
 exp5["Number"] = 5
 exp5["Maneuvers"] = {}
 
-sweep_maneuver_times = {}
-
-# Correct sweep times
 sweep_maneuver_indices = np.arange(1, 32)
-set_maneuver_times(exp5, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
+set_maneuver_times(exp5, sweep_maneuver_indices, {}, "sweep")
+
+roll_211_maneuver_indices = np.arange(32, 76)
+roll_maneuver_times = {
+    41: [-1, 927],  # maneuver 29
+    43: [940.5, -1],
+    51: [-1, 1011],
+    52: [-1, 1028.5],
+    53: [1028, -1],
+    55: [-1, 1068.5],
+    58: [-1, 1098.5],
+    59: [-1, 1102],
+    60: [1101, -1],
+}
+set_maneuver_times(exp5, roll_211_maneuver_indices, roll_maneuver_times, "roll_211")
 
 ##############
 # Experiment 6
@@ -299,11 +293,12 @@ exp6 = {}
 exp6["LogName"] = "2021_3_25_freehand_2_1_1_maneuvers"
 exp6["Number"] = 6
 exp6["Maneuvers"] = {}
-roll_maneuver_indices = np.arange(1, 26)  # Not quite sure about these
+roll_maneuver_indices = np.arange(1, 25)
 pitch_maneuver_indices = np.arange(25, 53)
-yaw_maneuver_indices = np.arange(57, 66)
+yaw_maneuver_indices = np.arange(53, 66)
 set_maneuver_times(exp6, roll_maneuver_indices, {}, "roll_211")
 set_maneuver_times(exp6, pitch_maneuver_indices, {}, "pitch_211")
+set_maneuver_times(exp6, yaw_maneuver_indices, {}, "yaw_211")
 
 
 ##################
