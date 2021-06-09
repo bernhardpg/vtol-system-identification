@@ -71,15 +71,15 @@ if 1
 
         % Integration interval
         tspan = t_m(1):dt:t_m(end);
-        y0 = [theta_m(1) q_m(1) u_m(1) w_m(1)];
+        i = 50;
+        y0 = [theta_m(i) q_m(i) u_m(i) w_m(i)];
 
         input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
         lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
         test_matrix = [t_m input_seq_m lat_state_seq_m];
-        dy_dt = test_function_c(t_m(1), y0, test_matrix, all_params)
-        
+
         tic
-        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics(t, y, t_seq, input, y_lat, all_params), tspan, y0);
+        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics(t, y, test_matrix, all_params), tspan, y0);
         toc
         
         plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...

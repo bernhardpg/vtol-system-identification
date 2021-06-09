@@ -30,6 +30,32 @@
 #include "mex.h"
 #include "math.h"
 
+double interp(double x0, double x1, double y0, double y1, double xp)
+{
+		double yp = y0 + ((y1 - y0) / (x1 - x0)) * (xp - x0);
+		return yp;
+}
+
+void compute_u_at_t(double t, double *u, double *u_at_t, int nu_rows, int nu_cols)
+{
+		int interp_end_index = 0;
+		double curr_t = u[interp_end_index];
+		while (true)
+		{
+			curr_t = u[interp_end_index];
+			if (curr_t > t) break;
+			++interp_end_index;
+		}
+
+		for (int col_i = 0; col_i < nu_cols; ++col_i)
+		{
+			double y0 = u[interp_end_index - 1 + nu_rows * (col_i + 1)];
+			double y1 = u[interp_end_index + nu_rows * (col_i + 1)];
+
+			u_at_t[col_i] = interp(u[interp_end_index - 1], u[interp_end_index], y0, y1, t);
+		}
+}
+
 /* State equations. */
 void compute_dx(
     double *dx,  /* Vector of state derivatives (length nx). */
@@ -84,36 +110,6 @@ void compute_dx(
 		c_m_q = p[28];
 		c_m_delta_e = p[29];
 
-		if (true)
-		{
-			// Find index of point before t
-			int i = 0;
-			double curr_t = u[i];
-			while (true)
-			{
-				curr_t = u[i];
-				if (curr_t > t) break;
-				i = i+1;
-			}
-
-			double x0, x1, y0, y1, xp, yp;
-			x0 = u[i - 1];
-			x1 = u[i];
-
-			int var_num = 1;
-			y0 = u[i - 1 + nu_rows * var_num];
-			y1 = u[i + nu_rows * var_num];
-
-			xp = t;
-			yp = y0 + ((y1-y0)/(x1-x0)) * (xp - x0);
-
-			dx[0] = yp;
-			dx[1] = 0;
-			dx[2] = 0;
-			dx[3] = 0;
-		}
-
-		/*
 		// Extract state
     double theta, ang_q, vel_u, vel_w;
     theta = x[0];
@@ -165,8 +161,8 @@ void compute_dx(
 		dx[1] = q_dot;
 		dx[2] = u_dot;
 		dx[3] = w_dot;
-		*/
 }
+
 
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[])
@@ -202,10 +198,14 @@ void mexFunction(int nlhs, mxArray *plhs[],
     u = mxGetPr(prhs[2]);  /* All inputs at all times */
     params = mxGetPr(prhs[3]);  /* Parameters */
 
+		/* Interpolate to find input at the current time */
+		double u_at_t[nu_cols];
+		compute_u_at_t(t, u, u_at_t, nu_rows, nu_cols);
+
     /* Create matrix for the return arguments. */
     plhs[0] = mxCreateDoubleMatrix(nx, 1, mxREAL);
     dx      = mxGetPr(plhs[0]); /* State derivative values. */
 
     /* Call function for state derivative update. */
-    compute_dx(dx, t, x, u, params, nu_rows, nu_cols);
+    compute_dx(dx, t, x, u_at_t, params, nu_rows, nu_cols);
 }
