@@ -1,19 +1,7 @@
 clc; clear all; close all;
+load_data;
 
-% Maneuver settings
-maneuver_type = "pitch_211";
-data_path = "data/aggregated_data/" + maneuver_type + "/";
 
-% Load data
-[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, c_X, c_Y, c_Z, c_l, c_m, c_n, maneuver_start_indices]...
-    = load_variables_from_file(data_path);
-dt = t(2) - t(1);
-
-% Explanatory variables for equation-error
-[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-
-% Create a time vector for plotting of all maneuvers
-t_plot = 0:dt:length(t)*dt - dt;
 
 %%
 %%%

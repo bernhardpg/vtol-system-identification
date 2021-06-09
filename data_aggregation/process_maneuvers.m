@@ -25,7 +25,7 @@ dt = 1 / 50;
 
 % Calculate states and their derivatives using splines
 maneuvers_to_skip = [1]; % dropout that went unoticed by automatic test
-[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
+[t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
     = collect_data_from_all_maneuvers(maneuvers_to_skip, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
         save_maneuver_plot, show_maneuver_plot, plot_location);
 
@@ -33,7 +33,7 @@ maneuvers_to_skip = [1]; % dropout that went unoticed by automatic test
 [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot);
 
 % Collect data
-data = [t phi theta psi p q r u v w a_x a_y a_z p_dot q_dot r_dot delta_a delta_e delta_r n_p c_X c_Y c_Z c_l c_m c_n];
+data = [t phi theta psi p q r u v w a_x a_y a_z p_dot q_dot r_dot delta_a_sp delta_e_sp delta_r_sp delta_a delta_e delta_r n_p c_X c_Y c_Z c_l c_m c_n];
     
 % Divide in training and validation data
 total_num_maneuvers = length(maneuver_start_indices);

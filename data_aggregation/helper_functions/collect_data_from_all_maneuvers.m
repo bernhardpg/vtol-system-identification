@@ -1,4 +1,4 @@
-function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
+function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
     = collect_data_from_all_maneuvers(maneuvers_to_skip, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
     save_maneuver_plot, show_maneuver_plot, plot_location)
 
@@ -19,6 +19,9 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     p_dot = [];
     q_dot = [];
     r_dot = [];
+    delta_a_sp = [];
+    delta_e_sp = [];
+    delta_r_sp = [];
     delta_a = [];
     delta_e = [];
     delta_r = [];
@@ -91,15 +94,19 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
         t_u_fw_m = t_u_fw_all_maneuvers(maneuver_start_index_u_fw:maneuver_end_index_u_fw,:);
         
         u_fw_m = u_fw_all_maneuvers(maneuver_start_index_u_fw:maneuver_end_index_u_fw,:);
-        delta_a_recorded = u_fw_m(:,1);
-        delta_e_recorded = u_fw_m(:,2);
-        delta_r_recorded = u_fw_m(:,3);
+        delta_a_sp_recorded = u_fw_m(:,1);
+        delta_e_sp_recorded = u_fw_m(:,2);
+        delta_r_sp_recorded = u_fw_m(:,3);
         n_p_recorded = u_fw_m(:,4);
 
-        delta_a_m = interp1(t_u_fw_m, delta_a_recorded, t_m);
-        delta_e_m = interp1(t_u_fw_m, delta_e_recorded, t_m);
-        delta_r_m = interp1(t_u_fw_m, delta_r_recorded, t_m);
+        delta_a_sp_m = interp1(t_u_fw_m, delta_a_sp_recorded, t_m);
+        delta_e_sp_m = interp1(t_u_fw_m, delta_e_sp_recorded, t_m);
+        delta_r_sp_m = interp1(t_u_fw_m, delta_r_sp_recorded, t_m);
         n_p_m = interp1(t_u_fw_m, n_p_recorded, t_m);
+        
+        delta_a_m = est_control_surf_deflection(t_m, delta_a_sp_m);
+        delta_e_m = est_control_surf_deflection(t_m, delta_e_sp_m);
+        delta_r_m = est_control_surf_deflection(t_m, delta_r_sp_m);
 
         % Collect data from all maneuvers
         t = [t;
@@ -134,6 +141,12 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
                  q_dot_m];
         r_dot = [r_dot;
                  r_dot_m];
+        delta_a_sp = [delta_a_sp;
+                   delta_a_sp_m];
+        delta_e_sp = [delta_e_sp;
+                   delta_e_sp_m];
+        delta_r_sp = [delta_r_sp;
+                   delta_r_sp_m];
         delta_a = [delta_a;
                    delta_a_m];
         delta_e = [delta_e;
@@ -144,7 +157,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
                n_p_m];
 
         if save_maneuver_plot || show_maneuver_plot
-            plot_maneuver_comp_real("maneuver_" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_maneuver_plot, show_maneuver_plot, plot_location)
+            plot_maneuver_comp_real("maneuver_" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_maneuver_plot, show_maneuver_plot, plot_location)
         end
     %     
         % Check kinematic consistency
@@ -157,7 +170,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     disp("Loaded " + (num_maneuvers - num_discarded_maneuvers) + " maneuvers." + " Discarded " + num_discarded_maneuvers + " maneuvers due to dropout.");
 end
 
-function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_plot, show_plot, plot_location)
+function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, t_recorded, phi_recorded, theta_recorded, psi_recorded, save_plot, show_plot, plot_location)
 
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
@@ -231,20 +244,20 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
         ylim([-5 10]);
 
         subplot(num_plots,2,4)
-        plot(t, rad2deg(delta_a));
-        legend("\delta_a")
+        plot(t, rad2deg(delta_a_sp), t, rad2deg(delta_a), '--');
+        legend("\delta_a_sp", "\delta_a (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,6)
-        plot(t, rad2deg(delta_e));
-        legend("\delta_e")
+        plot(t, rad2deg(delta_e_sp), t, rad2deg(delta_e), '--');
+        legend("\delta_e_sp", "\delta_e (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,8)
-        plot(t, rad2deg(delta_r));
-        legend("\delta_r")
+        plot(t, rad2deg(delta_e_sp), t, rad2deg(delta_e), '--');
+        legend("\delta_e_sp", "\delta_e (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
@@ -266,3 +279,5 @@ end
  function v = shuffle(v)
      v = v(randperm(length(v)));
  end
+ 
+ 
