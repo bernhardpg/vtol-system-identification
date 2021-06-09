@@ -30,6 +30,16 @@
 #include "mex.h"
 #include "math.h"
 
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+#define bound(x,bl,bu) (min(max(x,bl),bu))
+
 double interp(double x0, double x1, double y0, double y1, double xp)
 {
 		double yp = y0 + ((y1 - y0) / (x1 - x0)) * (xp - x0);
@@ -77,6 +87,7 @@ void compute_dx(
 		// Extract parameters
 		double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,
 			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,
+			servo_time_const_s, servo_rate_lim_rad_s,
 			c_X_0, c_X_u, c_X_w, c_X_w_sq, c_X_q, c_X_n_p,
 			c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,
 			c_m_0, c_m_w, c_m_q, c_m_delta_e;
@@ -88,42 +99,45 @@ void compute_dx(
 		mean_aerodynamic_chord_m = p[4];
 		planform_sqm = p[5];
 		V_nom = p[6];
-		gam_1 = p[7];
-		gam_2 = p[8];
-		gam_3 = p[9];
-		gam_4 = p[10];
-		gam_5 = p[11];
-		gam_6 = p[12];
-		gam_7 = p[13];
-		gam_8 = p[14];
-		J_yy = p[15];
-		c_X_0 = p[16];
-		c_X_u = p[17];
-		c_X_w = p[18];
-		c_X_w_sq = p[19];
-		c_X_q = p[20];
-		c_X_n_p = p[21];
-		c_Z_0 = p[22];
-		c_Z_w = p[23];
-		c_Z_w_sq = p[24];
-		c_Z_delta_e = p[25];
-		c_m_0 = p[26];
-		c_m_w = p[27];
-		c_m_q = p[28];
-		c_m_delta_e = p[29];
+		servo_time_const_s = p[7];
+		servo_rate_lim_rad_s = p[8];
+		gam_1 = p[9];
+		gam_2 = p[10];
+		gam_3 = p[11];
+		gam_4 = p[12];
+		gam_5 = p[13];
+		gam_6 = p[14];
+		gam_7 = p[15];
+		gam_8 = p[16];
+		J_yy = p[17];
+		c_X_0 = p[18];
+		c_X_u = p[19];
+		c_X_w = p[20];
+		c_X_w_sq = p[21];
+		c_X_q = p[22];
+		c_X_n_p = p[23];
+		c_Z_0 = p[24];
+		c_Z_w = p[25];
+		c_Z_w_sq = p[26];
+		c_Z_delta_e = p[27];
+		c_m_0 = p[28];
+		c_m_w = p[29];
+		c_m_q = p[30];
+		c_m_delta_e = p[31];
 
 		// Extract state
-    double theta, ang_q, vel_u, vel_w;
+    double theta, ang_q, vel_u, vel_w, delta_e;
     theta = x[0];
     ang_q = x[1];
     vel_u = x[2];
     vel_w = x[3];
+		delta_e = x[4];
 
 		// Extract inputs
-    double delta_a, delta_e, delta_r, n_p;
-    delta_a = u[0];
-    delta_e = u[1];
-    delta_r = u[2];
+    double delta_a_sp, delta_e_sp, delta_r_sp, n_p;
+    delta_a_sp = u[0];
+    delta_e_sp = u[1];
+    delta_r_sp = u[2];
     n_p = u[3];
 
 		// Extract lateral states which are taken as inputs
@@ -154,15 +168,24 @@ void compute_dx(
     double M = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
 
     double T = 0; // For now don't use thrust. Consider adding at a later point to improve model
+
+		// Dynamics
     double theta_dot = ang_q * cos(phi) - ang_r * sin(phi);
 	  double q_dot = gam_5 * ang_p * ang_r - gam_6 * (pow(ang_p,2) - pow(ang_r,2)) + (1/J_yy) * M;
     double u_dot = ang_r * vel_v - ang_q * vel_w + (1 / mass_kg) * (X - T - mass_kg * g * sin(theta));
     double w_dot = ang_q * vel_u - ang_p * vel_v + (1 / mass_kg) * (Z + mass_kg * g * cos(theta) * cos(phi));
 
+		// Actuator dynamics
+		double delta_e_dot = bound(
+				-delta_e / servo_time_const_s + delta_e_sp / servo_time_const_s,
+				-servo_rate_lim_rad_s, servo_rate_lim_rad_s
+				);
+
 		dx[0] = theta_dot;
 		dx[1] = q_dot;
 		dx[2] = u_dot;
 		dx[3] = w_dot;
+		dx[4] = delta_e_dot;
 }
 
 

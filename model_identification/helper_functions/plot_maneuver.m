@@ -86,7 +86,8 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         ylim([-28 28])
         
         subplot(num_plots,2,6)
-        plot(t, rad2deg(delta_e));
+        plot(t, rad2deg(delta_e), '--'); hold on
+        plot(t_pred, rad2deg(y_pred(:,5)));
         legend("\delta_e")
         ylabel("[deg]");
         ylim([-28 28])
