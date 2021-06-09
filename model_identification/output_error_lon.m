@@ -1,5 +1,6 @@
 clc; clear all; close all;
-load_data;
+%load_data;
+
 
 % Load constants
 aircraft_properties;
@@ -42,7 +43,7 @@ param_names = [
     "c_{m_0}", "c_{m_w}", "c_{m_q}", "c_{m_{\delta_e}}"
     ];
 
-
+%%
 % Collect recorded data
 t_seq = t;
 y_lon_seq = [theta q u w];
@@ -63,7 +64,7 @@ weight = diag([2 2 1 1]);
 % Opt settings
 rng default % For reproducibility
 numberOfVariables = length(x0);
-options = optimoptions('ga','UseParallel', true, 'UseVectorized', false);
+options = optimoptions('ga');%'UseParallel', true, 'UseVectorized', false);
     %'PlotFcn',@gaplotbestf,'Display','iter');
 options.InitialPopulationMatrix = x0;
 options.FunctionTolerance = 1e-02;
@@ -141,11 +142,13 @@ for maneuver_i = 1:num_maneuvers
 end
 
 %%
+
+xs = readmatrix("lon_params.txt");
+xs = rmoutliers(xs);
 chosen_params = median(xs);
-if any(isoutlier(xs))
-   disp("Found outliers")
-end
 param_mads = mad(xs);
+
+%%
 
 figure
 num_params = length(x0);
@@ -156,15 +159,27 @@ for i = 1:num_params
     title(param_names(i));
 end
 
-%%
+%% Validate model
+
+% Load validation data
+maneuver_type = "pitch_211";
+data_path = "data/aggregated_data/" + maneuver_type + "/";
+data = readmatrix(data_path + "data_val.csv");
+maneuver_start_indices = readmatrix(data_path + "maneuver_start_indices_val.csv");
+
+[t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, c_X, c_Y, c_Z, c_l, c_m, c_n]...
+    = extract_variables_from_data(data);
+dt = t(2) - t(1);
+
 % Test plot maneuver
-maneuver_i = 2;
+maneuver_i = 3;
 
 all_params = [const_params;
-              x'];
+              chosen_params'];
 [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
     = get_maneuver_data(maneuver_i, maneuver_start_indices, t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
 
+N = length(t_m);
 y0 = [theta_m(1) q_m(1) u_m(1) w_m(1) delta_e_m(1)];
 
 input_seq_m = [delta_a_sp_m delta_e_sp_m delta_r_sp_m n_p_m];

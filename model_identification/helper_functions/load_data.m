@@ -13,9 +13,5 @@ dt = t(2) - t(1);
 maneuver_indices = [maneuver_start_indices; length(t)]; % Add end index to this
 num_maneuvers = length(maneuver_indices) - 1;
 
-% Explanatory variables for equation-error
+% Create explanatory variables for equation-error
 [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-
-% Create a common time vector for plotting of all maneuvers
-t_plot = 0:dt:length(t)*dt-dt;
-
