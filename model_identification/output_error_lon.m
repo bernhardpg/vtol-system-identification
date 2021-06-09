@@ -61,7 +61,7 @@ y_lon = [theta q u w];
 y_lat = [phi, psi, p, r, v];
 input = [delta_a, delta_e, delta_r, n_p];
 
-if 1
+if 0
     for maneuver_i = 1
         [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
          = get_maneuver_data(maneuver_i, maneuver_start_indices, t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a, delta_e, delta_r, n_p);
@@ -79,7 +79,7 @@ if 1
         test_matrix = [t_m input_seq_m lat_state_seq_m];
 
         tic
-        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics(t, y, test_matrix, all_params), tspan, y0);
+        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, test_matrix, all_params), tspan, y0);
         toc
         
         plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
