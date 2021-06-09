@@ -43,7 +43,9 @@ void compute_u_at_t(double t, double *u, double *u_at_t, int nu_rows, int nu_col
 		while (true)
 		{
 			curr_t = u[interp_end_index];
-			if (curr_t > t) break;
+			// Stop looking if we have moved past t or will go to the end
+			if ((curr_t > t) || (interp_end_index + 1 >= nu_rows))
+				break;
 			++interp_end_index;
 		}
 

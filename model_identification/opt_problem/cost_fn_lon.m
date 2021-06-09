@@ -14,11 +14,11 @@ function cost = cost_fn_lon(x, dt, t_seq, y_lon_seq, y_lat_seq, input_seq, const
         [t_seq_m, y_lon_seq_m, y_lat_seq_m, input_seq_m] = extract_man_data_lon(i, maneuver_indices, t_seq, y_lon_seq, y_lat_seq, input_seq);
        
         % Integrate dynamics
-        tspan = [t_seq_m(1) t_seq_m(end)];
+        
         y0 = y_lon_seq_m(1,:);
         
+        tspan = [t_seq_m(1) t_seq_m(end)];
         [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, [t_seq_m input_seq_m y_lat_seq_m], all_params), tspan, y0);
-        
         y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2));
         
         % Squared cost

@@ -61,32 +61,17 @@ y_lon = [theta q u w];
 y_lat = [phi, psi, p, r, v];
 input = [delta_a, delta_e, delta_r, n_p];
 
-if 0
-    for maneuver_i = 1
-        [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
-         = get_maneuver_data(maneuver_i, maneuver_start_indices, t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a, delta_e, delta_r, n_p);
+tic
+cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+toc
 
-        all_params = [const_params;
-                      x0'];
+tic
+cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+toc
 
-        % Integration interval
-        tspan = t_m(1):dt:t_m(end);
-        i = 50;
-        y0 = [theta_m(i) q_m(i) u_m(i) w_m(i)];
-
-        input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
-        lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
-        test_matrix = [t_m input_seq_m lat_state_seq_m];
-
-        tic
-        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, test_matrix, all_params), tspan, y0);
-        toc
-        
-        plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
-            t_m, y_pred,...
-            false, true, "");
-    end
-end
+tic
+cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+toc
 
 tic
 cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
@@ -107,3 +92,38 @@ writematrix(x, "lon_params.txt")
 
 
 
+
+%% Test stuff. TODO remove this
+if 1
+    %tic
+    for maneuver_i = 1:10
+        [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
+         = get_maneuver_data(maneuver_i, maneuver_start_indices, t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a, delta_e, delta_r, n_p);
+
+        all_params = [const_params;
+                      x0'];
+
+        % Integration interval
+        tspan = t_m(1):dt:t_m(end);
+        i = 1;
+        y0 = [theta_m(i) q_m(i) u_m(i) w_m(i)];
+
+        input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
+        lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
+        test_matrix = [t_m input_seq_m lat_state_seq_m];
+
+        tspan = [t_m(1) t_m(end)];
+       
+        [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, test_matrix, all_params), tspan, y0, options);
+         y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2));
+        
+        plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
+            t_m, y_pred,...
+            false, true, "");
+    end
+    %toc
+end
+
+% tic
+% cost = cost_fn_lon(x0, dt, t_seq, y_lon, y_lat, input, const_params, maneuver_indices);
+% toc
