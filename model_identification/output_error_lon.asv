@@ -70,7 +70,7 @@ options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0));
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 2
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver
@@ -158,7 +158,7 @@ end
 
 %%
 % Test plot maneuver
-maneuver_i = 2;
+maneuver_i = 15;
 
 all_params = [const_params;
               x'];
@@ -177,9 +177,8 @@ tspan = [t_m(1) t_m(end)];
 y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2));
 
 z = [theta_m q_m v_m w_m delta_e_m];
-z_bar = mean(z)';
-R_sq = (diag(y_pred' * z) - N * z_bar.^2) ./ (diag(z' * z) - N * z_bar.^2);
-fprintf(['R_sq: ' repmat('%2.2f  ',1,length(R_sq)) '\n'], R_sq)
+z_bar = mean(z);
+R_sq = (y_pred' * z - N * z_bar.^2) / (diagz' * z - N * z_bar.^2);
 
 plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
     t_m, y_pred,...
