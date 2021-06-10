@@ -9,8 +9,11 @@ load_data;
 
 %%%% Initialize SR %%%%%%
 
+clc;
 F_in = 4;
 F_out = 4;
+
+SS_R_prev = 0;
 
 z = c_Z; % output (= dependent variable)
 N = length(z);
@@ -33,27 +36,39 @@ top_corr_i = pick_next_regressor_i(X_pool, z);
 
 % Select corresponding regressor from original pool
 new_regr = X_pool(:, top_corr_i);
-chosen_regressors_names = [chosen_regressors_names pool_names(top_corr_i)];
+
+% Add regressor to currently chosen regressors
+X_curr_potential = [X_curr new_regr];
+
+% Do regression with new regressors
+[th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr_potential, z);
+
+% Check if hypothesis should be rejected or kept
+F_0 = (SS_R - SS_R_prev) / s_sq;
+if F_0 < F_in
+    disp("Regressor should not be included")
+end
+
+% Include regressor!
+new_regressor_name = pool_names(top_corr_i);
+chosen_regressors_names = [chosen_regressors_names new_regressor_name];
+disp("Regressor " + new_regressor_name + " included!");
+X_curr = X_curr_potential;
 
 % Remove chosen regressor from pool
 X_pool(:, top_corr_i) = [];
 pool_names(top_corr_i) = [];
 
-% Add regressor to currently chosen regressors
-X_curr = [X_curr new_regr];
-
-% Do regression with new regressors
-[th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
-
 fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
 disp("R_sq = " + R_sq + "%");
 disp(" ")
 
-% figure
-% plot(t_plot, z, t_plot, y_hat); hold on
-% legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 
-while true
+
+perform_another_step = true;
+while perform_another_step
+    perform_another_step = false; % Set to true if either a regressor is added or removed
+    
     % Save for comparison
     SS_R_prev = SS_R;
     
@@ -63,9 +78,10 @@ while true
     z_ort = v;
 
     % Make regressor pool orthogonal to current regressors
-    z_interm = [one new_regr];
-    interm_th_hat = LSE(z_interm, X_pool);
-    X_pool_ort = X_pool - z_interm * interm_th_hat;
+    z_interm = X_pool; % Make new LSE with all remaining potential regressors as output variables
+    X_interm = X_curr; % Use current regressors as regressors
+    interm_th_hat = LSE(X_interm, z_interm);
+    X_pool_ort = X_pool - X_interm * interm_th_hat; % Remove everything that can be predicted by current regressors
     
     % Find strongest correlation between regressor and dependent variable
     % that is orthogonal to current model
@@ -73,58 +89,90 @@ while true
     
     % Select corresponding regressor from original pool
     new_regr = X_pool(:, top_corr_i);
-    chosen_regressors_names = [chosen_regressors_names pool_names(top_corr_i)];
-    
-    % Remove chosen regressor from pool
-    X_pool(:, top_corr_i) = [];
-    pool_names(top_corr_i) = [];
     
     % Add regressor to currently chosen regressors
-    X_curr = [X_curr new_regr];
-    [N, Ncols] = size(X_curr);
-    p = Ncols - 1; % do not count bias term
-
-    % Do regression with new regressors
-    [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
+    X_curr_potential = [X_curr new_regr]; % this will be the new regressor matrix IF the hypothesis is accepted
     
+    % Do regression with new regressors
+    [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr_potential, z);
+    
+    % Check if hypothesis should be rejected or kept
     F_0 = (SS_R - SS_R_prev) / s_sq;
-    if F_0 > F_in
-        disp("Regressor should be included")
+    if F_0 < F_in
+        disp("Regressor should not be included")
+    else
+        % Include regressor!
+        new_regressor_name = pool_names(top_corr_i);
+        chosen_regressors_names = [chosen_regressors_names new_regressor_name];
+        disp("Regressor " + new_regressor_name + " included!");
+        X_curr = X_curr_potential;
+
+        % Remove chosen regressor from pool
+        X_pool(:, top_corr_i) = [];
+        pool_names(top_corr_i) = [];
+
+        %%%% Print status %%%%
+        fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
+        disp("F_0 = " + F_0);
+        disp("R_sq = " + R_sq + "%");
+        
+        perform_another_step = true;
     end
     
     %%%% Do backward step %%%%
-    % For all regressors
-    % Calculate SS_r - SS_r
-    % Pick the smallest one
-    % Check if < F0
-    %   remove and repeat
-    %   stop
     
-    F_0_without_j = zeros(p, 1);
-    for j = 2:p+1 % Do not remove bias term
-        % Remove regressor j from regressors and estimate
-        X_without_j = X_curr;
-        X_without_j(:,j) = [];
+    perform_backward_elimination = true;
+    while perform_backward_elimination
+        [~, N_cols] = size(X_curr);
+        F_0_without_j = zeros(N_cols - 1, 1);
+        for j = 2:N_cols % Do not remove bias term
+            % Remove regressor j from regressors and estimate
+            X_without_j = X_curr;
+            X_without_j(:,j) = [];
 
-        [~, ~, ~, SS_R_without_j, ~, s_sq_without_j] = regression_round(X_without_j, z);
-        F_0_without_j(j - 1) = (SS_R - SS_R_without_j) / s_sq_without_j;
-    end
-    F_0_without_j = min(F_0_without_j);
-    if F_0_without_j < F_out
-       disp("Regressor should be removed and this should be repeated")
-    else
-       disp("Move on to next iteration") 
+            [~, ~, ~, SS_R_without_j, ~, s_sq_without_j] = regression_round(X_without_j, z);
+            F_0_without_j(j - 1) = (SS_R - SS_R_without_j) / s_sq_without_j;
+        end
+        
+        [F_0_without_j_min, j] = min(F_0_without_j);
+        if F_0_without_j_min < F_out
+           % Get regressor to remove
+           regr_to_remove = X_curr(:,j);
+           regr_name_to_remove = chosen_regressors_names(j);
+           
+           % Remove from current regressors
+           X_curr(:,j) = [];
+           chosen_regressors_names(j) = [];
+           
+           % Re-add to pool
+           X_pool = [X_pool regr_to_remove];
+           pool_names = [pool_names regr_name_to_remove];
+           
+           disp("Regressor " + regr_name_to_remove + "was removed and this step should be repeated.")
+           
+           % Do regression with new regressors
+           [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
+           
+           %%%% Print status %%%%
+            fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
+            disp("F_0 = " + F_0);
+            disp("R_sq = " + R_sq + "%");
+
+           
+           perform_backward_elimination = true;
+           perform_another_step = true;
+        else
+           disp("No regressors should be removed.")
+           perform_backward_elimination = false;
+        end
     end
     
-    %%%% Print status %%%%
-    fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-    disp("F_0 = " + F_0);
-    disp("R_sq = " + R_sq + "%");
     disp(" ")
-    
-    % Show plot
-    plot(t_plot, y_hat);
 end
+
+figure
+plot(t_plot, z, t_plot, y_hat); hold on
+legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 
 function [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X, z)
     % Calculate total Sum of Squares
