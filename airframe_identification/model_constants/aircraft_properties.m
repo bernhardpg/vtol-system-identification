@@ -47,17 +47,9 @@ prop_diam_top = prop_diam_top_in_inches * kINCH_TO_METER;
 prop_diam_pusher_in_inches = 15;
 prop_diam_pusher = prop_diam_pusher_in_inches * kINCH_TO_METER;
 c_T_top = 0;
-c_T_0_pusher = 0.0861; % See motor_id.m for calculation off this
+c_T_pusher = 0.0861; % See motor_id.m for calculation off this
 c_Q_top = 0;
 c_Q_pusher = 0;
-
-% Convenience constants
-rho_diam_top_pwr_four = rho * prop_diam_top ^ 4; % computed once for efficiency
-rho_diam_top_pwr_five = rho * prop_diam_top ^ 5; % computed once for efficiency
-rho_diam_pusher_pwr_three = rho * prop_diam_pusher ^ 3; % computed once for efficiency
-rho_diam_pusher_pwr_four = rho * prop_diam_pusher ^ 4; % computed once for efficiency
-rho_diam_pusher_pwr_five = rho * prop_diam_pusher ^ 5; % computed once for efficiency
-half_rho_planform = 0.5 * rho * planform_sqm; % computed once for efficiency
 
 % Cruise conditions
 V_nom = 21; % Nominal airspeed, m/s

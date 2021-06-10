@@ -1,9 +1,37 @@
 clc; clear all; close all;
+maneuver_types = ["pitch_211"];
 load_data;
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%
+% Stepwise regression %
+%%%%%%%%%%%%%%%%%%%%%%%
+
+z = c_Z; % output
+N = length(z);
+
+X = [ones(N, 1)]; % regressors
+
+r = 
+
+
+function [r] = calc_corr_coeff(X, z)
+    X_bar = mean(X);
+    N = length(z);
+    z_bar = mean(z);
+    
+    cov_Xz = (X - X_bar)' * (z - z_bar) / (N - 1);
+    var_X = diag((X - X_bar)' * (X - X_bar)) / (N - 1);
+    var_z = diag((z - z_bar)' * (z - z_bar)) / (N - 1);
+    r = cov_Xz ./ sqrt(var_X * var_z);
+end
+
+
 
 
 
 %%
+
 %%%
 % Find most relevant terms for c_Z:
 %%%
@@ -164,22 +192,15 @@ vars_to_test_str = " w_hat q_hat delta_e n_p";
 vars_to_test = [w_hat q_hat delta_e n_p];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) u_hat n_p]; % Regressor
-indep_vars_str = "1 u_hat n_p";
-[~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
-vars_to_test_str = " w_hat q_hat delta_e";
-vars_to_test = [w_hat q_hat delta_e];
-explore_next_var(z, vars_to_test, vars_to_test_str);
-
-X = [ones(N, 1) u_hat w_hat n_p]; % Regressor
-indep_vars_str = "1 u_hat w_hat n_p";
+X = [ones(N, 1) u_hat w_hat]; % Regressor
+indep_vars_str = "1 u_hat w_hat";
 [~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
 vars_to_test_str = "q_hat delta_e";
 vars_to_test = [q_hat delta_e];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) u_hat w_hat q_hat n_p]; % Regressor
-indep_vars_str = "1 u_hat w_hat q_hat n_p";
+X = [ones(N, 1) u_hat w_hat q_hat]; % Regressor
+indep_vars_str = "1 u_hat w_hat q_hat";
 [~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
 vars_to_test_str = "delta_e";
 vars_to_test = [delta_e];
@@ -187,15 +208,23 @@ explore_next_var(z, vars_to_test, vars_to_test_str);
 
 disp("Nonlinear terms");
 
-vars_to_test_str = "u_hat.^2 w_hat.^2 n_p.^2";
-vars_to_test = [u_hat.^2 w_hat.^2 n_p.^2];
+vars_to_test_str = "u_hat.^2 w_hat.^2 n_p.^2 n_p * u_hat";
+vars_to_test = [u_hat.^2 w_hat.^2 n_p.^2 n_p .* u_hat];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
-X = [ones(N, 1) u_hat w_hat w_hat.^2 q_hat n_p]; % Regressor
-indep_vars_str = "1 u_hat w_hat w_hat.^2 q_hat n_p";
+X = [ones(N, 1) u_hat w_hat w_hat.^2 q_hat]; % Regressor
+indep_vars_str = "1 u_hat w_hat w_hat.^2 q_hat";
 [~, ~, ~, ~, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
-vars_to_test_str = "u_hat.^2 n_p.^2";
-vars_to_test = [u_hat.^2 n_p.^2];
+vars_to_test_str = "u_hat.^2 n_p.^2 n_p .* u_hat";
+vars_to_test = [u_hat.^2 n_p.^2 n_p .* u_hat];
+explore_next_var(z, vars_to_test, vars_to_test_str);
+
+X = [ones(N, 1) u_hat u_hat.^2 w_hat w_hat.^2 q_hat]; % Regressor
+indep_vars_str = "1 u_hat u_hat.^2 w_hat w_hat.^2 q_hat";
+[c_X_hat, th_hat, cov_th, F0, R_sq_prev] = stepwise_regression_round(X, z, indep_vars_str, R_sq_prev);
+
+vars_to_test_str = "n_p.^2";
+vars_to_test = [n_p.^2];
 explore_next_var(z, vars_to_test, vars_to_test_str);
 
 X = [ones(N, 1) u_hat u_hat.^2 w_hat w_hat.^2 q_hat n_p]; % Regressor

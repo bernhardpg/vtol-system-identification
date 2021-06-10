@@ -5,11 +5,11 @@ clc; clear all; close all;
 data_location = "data/";
 
 % Plot all ramp tests to find the best one
-if 0
+if false
     data_file = "ramptest_";
     num_ramp_tests = 7;
 
-    for ramp_test_index = 1:num_ramp_tests
+    for ramp_test_index = 5
 
         % Load data
         data = readtable(data_location + data_file + ramp_test_index + ".csv");
@@ -51,10 +51,14 @@ if 0
         plot(t, thrust_N);
         title("Thrust [N]")
         sgtitle("RampTest no. " + ramp_test_index)
+        
+        figure
+        scatter(esc_signal, thrust_N)
 
     end
 end
 
+%%
 % Number 5 looks good
 data_file = "ramptest_5.csv";
 
@@ -142,7 +146,6 @@ title("Motor characteristics")
 
 %%
 
-
 % Follows the following format
 %    pwm = scale * input + offset
 min_pwm = 950; % From PX4 parameters
@@ -155,17 +158,17 @@ disp("[0,1] input to pwm [950,2000] = " + pusher_motor_input_to_pwm_offset + " +
 % Calculate PWM to RPM
 phi = [ones(1, length(esc_signal))
        esc_signal'];
-y = rpm_mechanical;
+y = rev_per_s;
 P = inv(phi * phi');
 B = phi * y;
 theta = P * B;
 
 esc_signal_test = 0:1:2000;
-rpm_estimated = theta(1) + theta(2) * esc_signal_test;
-scatter(esc_signal, rpm_mechanical); hold on;
-plot(esc_signal_test, rpm_estimated);
-xlabel("ESC signal (PWM)")
-ylabel("Input (RPM)")
+rev_per_s_hat = theta(1) + theta(2) * esc_signal_test;
+scatter(esc_signal, rev_per_s); hold on;
+plot(esc_signal_test, rev_per_s_hat);
+xlabel("ESC signal [PWM]")
+ylabel("Input [rev/s]")
 
 % Calculate input to PWM
 disp("pwm_to_rpm = " + theta(1) + " + " + theta(2) + " * pwm");

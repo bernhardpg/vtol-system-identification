@@ -1,22 +1,30 @@
 clc; clear all; close all;
 %load_data;
 
-
 % Load constants
 aircraft_properties;
 const_params = [rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,...
      servo_time_const_s, servo_rate_lim_rad_s,...
+     prop_diam_pusher^4, c_T_pusher,...
      gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,...
      ]';
 
 % Initial guesses from equation-error
-c_X_0 = 0.8702;
-c_X_u = -1.8743;
-c_X_u_sq = 0.7885;
-c_X_w = 0.2157;
-c_X_w_sq = 2.4828;
-c_X_q = -3.1194;
-c_X_n_p = 0.0024;
+% c_X_0 = 0.8702;
+% c_X_u = -1.8743;
+% c_X_u_sq = 0.7885;
+% c_X_w = 0.2157;
+% c_X_w_sq = 2.4828;
+% c_X_q = -3.1194;
+% c_X_n_p = 0.0024;
+
+c_X_0 = 0.3660;
+c_X_u = -0.8596;
+c_X_u_sq = 0.4201;
+c_X_w = 0.2029;
+c_X_w_sq = 2.6789;
+c_X_q = -3.1729;
+c_X_n_p = -3.0610e-04;
 
 c_Z_0 = -0.5384;
 c_Z_w = -5.4921;

@@ -4,7 +4,7 @@ clc; clear all; close all;
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
 
-rng default % Always shuffle the maneuvers in the same way
+rng default % Always shuffle the maneuvers in the same way for reproducability
 
 % Load metadata
 metadata_filename = "data/metadata.json";
@@ -37,7 +37,7 @@ for maneuver_type = maneuver_types
         = collect_data_from_all_maneuvers(maneuvers_to_skip.(maneuver_type), dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
             save_maneuver_plot, show_maneuver_plot, plot_location);
 
-    [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z);
+    [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p);
     [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot);
 
     % Collect data

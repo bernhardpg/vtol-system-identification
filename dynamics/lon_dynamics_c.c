@@ -86,8 +86,9 @@ void compute_dx(
 
 		// Extract parameters
 		double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,
-			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,
 			servo_time_const_s, servo_rate_lim_rad_s,
+			prop_diam_pusher_four, c_T_pusher,
+			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,
 			c_X_0, c_X_u, c_X_w, c_X_w_sq, c_X_q, c_X_n_p,
 			c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,
 			c_m_0, c_m_w, c_m_q, c_m_delta_e;
@@ -101,29 +102,31 @@ void compute_dx(
 		V_nom = p[6];
 		servo_time_const_s = p[7];
 		servo_rate_lim_rad_s = p[8];
-		gam_1 = p[9];
-		gam_2 = p[10];
-		gam_3 = p[11];
-		gam_4 = p[12];
-		gam_5 = p[13];
-		gam_6 = p[14];
-		gam_7 = p[15];
-		gam_8 = p[16];
-		J_yy = p[17];
-		c_X_0 = p[18];
-		c_X_u = p[19];
-		c_X_w = p[20];
-		c_X_w_sq = p[21];
-		c_X_q = p[22];
-		c_X_n_p = p[23];
-		c_Z_0 = p[24];
-		c_Z_w = p[25];
-		c_Z_w_sq = p[26];
-		c_Z_delta_e = p[27];
-		c_m_0 = p[28];
-		c_m_w = p[29];
-		c_m_q = p[30];
-		c_m_delta_e = p[31];
+		prop_diam_pusher_four = p[9];
+		c_T_pusher = p[10];
+		gam_1 = p[11];
+		gam_2 = p[12];
+		gam_3 = p[13];
+		gam_4 = p[14];
+		gam_5 = p[15];
+		gam_6 = p[16];
+		gam_7 = p[17];
+		gam_8 = p[18];
+		J_yy = p[19];
+		c_X_0 = p[20];
+		c_X_u = p[21];
+		c_X_w = p[22];
+		c_X_w_sq = p[23];
+		c_X_q = p[24];
+		c_X_n_p = p[25];
+		c_Z_0 = p[26];
+		c_Z_w = p[27];
+		c_Z_w_sq = p[28];
+		c_Z_delta_e = p[29];
+		c_m_0 = p[30];
+		c_m_w = p[31];
+		c_m_q = p[32];
+		c_m_delta_e = p[33];
 
 		// Extract state
     double theta, ang_q, vel_u, vel_w, delta_e;
@@ -167,7 +170,7 @@ void compute_dx(
     double Z = c_Z * dyn_pressure * planform_sqm;
     double M = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
 
-    double T = 0; // For now don't use thrust. Consider adding at a later point to improve model
+    double T = rho * prop_diam_pusher_four * c_T_pusher * pow(n_p, 2);
 
 		// Dynamics
     double theta_dot = ang_q * cos(phi) - ang_r * sin(phi);
