@@ -15,17 +15,27 @@ F_out = 4;
 
 SS_R_prev = 0;
 
-z = c_Z; % output (= dependent variable)
+z = c_X; % output (= dependent variable)
 N = length(z);
 one = ones(N, 1);
 
 X_curr = [one]; % Chosen regressors
 
 regr = [u_hat w_hat q_hat delta_e n_p]; % Basis regressors
+regr_names = ["u_hat" "w_hat" "q_hat" "delta_e" "n_p"];
 
-X_pool = [regr regr.^2]; % TODO: Add cross-terms?
-pool_names = ["u_hat" "w_hat" "q_hat" "delta_e" "n_p" ...
-    "u_hat_sq" "w_hat_sq" "q_hat_sq" "delta_e_sq" "n_p_sq"
+if false
+    cross_terms = create_cross_terms(regr);
+    cross_terms_names = create_cross_terms_names(regr_names);
+else
+    cross_terms = [];
+    cross_terms_names = [];
+end
+
+X_pool = [regr regr.^2 cross_terms]; % TODO: Add cross-terms?
+pool_names = [regr_names...
+    "u_hat_sq" "w_hat_sq" "q_hat_sq" "delta_e_sq" "n_p_sq"...
+    cross_terms_names
     ];
 chosen_regressors_names = [];
 
@@ -71,6 +81,8 @@ while perform_another_step
     
     % Save for comparison
     SS_R_prev = SS_R;
+    R_sq_prev = R_sq;
+    s_sq_prev = s_sq;
     
     %%%% Do forward step %%%%
     % Calculate new dependent variable that is orthogonal to regressors
@@ -98,13 +110,16 @@ while perform_another_step
     
     % Check if hypothesis should be rejected or kept
     F_0 = (SS_R - SS_R_prev) / s_sq;
-    if F_0 < F_in
-        disp("Regressor should not be included")
+    R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
+    if (F_0 < F_in)
+        disp("Regressor should not be included: Hypothesis not passed with F_0 = " + F_0)
+    elseif R_sq_change < 0.5
+        disp("Regressor should not be included. R_sq_change = " + R_sq_change + "%")
     else
         % Include regressor!
         new_regressor_name = pool_names(top_corr_i);
         chosen_regressors_names = [chosen_regressors_names new_regressor_name];
-        disp("Regressor " + new_regressor_name + " included!");
+        disp("Regressor " + new_regressor_name + " included! F_0 = " + F_0);
         X_curr = X_curr_potential;
 
         % Remove chosen regressor from pool
@@ -131,7 +146,7 @@ while perform_another_step
             X_without_j(:,j) = [];
 
             [~, ~, ~, SS_R_without_j, ~, s_sq_without_j] = regression_round(X_without_j, z);
-            F_0_without_j(j - 1) = (SS_R - SS_R_without_j) / s_sq_without_j;
+            F_0_without_j(j - 1) = (SS_R - SS_R_without_j) / s_sq;
         end
         
         [F_0_without_j_min, j] = min(F_0_without_j);
@@ -154,15 +169,15 @@ while perform_another_step
            [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
            
            %%%% Print status %%%%
-            fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-            disp("F_0 = " + F_0);
-            disp("R_sq = " + R_sq + "%");
+           fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
+           disp("F_0 = " + F_0);
+           disp("R_sq = " + R_sq + "%");
 
            
            perform_backward_elimination = true;
            perform_another_step = true;
         else
-           disp("No regressors should be removed.")
+           disp("No regressors should be removed. F_0_without_j_min = " + F_0_without_j_min)
            perform_backward_elimination = false;
         end
     end
@@ -216,4 +231,37 @@ function [r] = calc_corr_coeff(X, z)
     var_X = diag((X - X_bar)' * (X - X_bar));
     var_z = diag((z - z_bar)' * (z - z_bar));
     r = cov_Xz ./ sqrt(var_X * var_z);
+end
+
+function [cross_terms] = create_cross_terms(X)
+    [N, N_regr] = size(X);
+    N_cross_terms = sum(1:N_regr-1);
+    
+    cross_terms = zeros(N, N_cross_terms);
+    count = 0;
+    for i = 1:N_regr
+        for j = 1:i - 1
+            if i == j
+                continue
+            end
+            cross_terms(:, count + 1) = X(:,i) .* X(:,j);
+            count = count + 1;
+        end
+    end
+end
+
+function [cross_terms_names] = create_cross_terms_names(regr_names)
+    N_regr = length(regr_names);
+    
+    cross_terms_names = [];
+    count = 0;
+    for i = 1:N_regr
+        for j = 1:i - 1
+            if i == j
+                continue
+            end
+            cross_terms_names = [cross_terms_names regr_names(i) + "*" + regr_names(j)];
+            count = count + 1;
+        end
+    end
 end
