@@ -39,6 +39,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     for maneuver_i = maneuvers_to_parse
         % Skip maneuvers
         if any(maneuvers_to_skip(:) == maneuver_i)
+            num_discarded_maneuvers = num_discarded_maneuvers + 1;
             continue
         end
         
@@ -73,6 +74,21 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
         % Skip these
         error_treshold = 200 * pi / 180;
         if (max(abs(p_m)) > error_treshold) || (max(abs(q_m)) > error_treshold) || (max(abs(r_m)) > error_treshold)
+            num_discarded_maneuvers = num_discarded_maneuvers + 1;
+            continue;
+        end
+        % Remove maneuvers with unrealistically high accelrations
+        tres = 100;
+        if (max(abs(a_x_m)) > abs(median(a_x_m)) * tres)...
+                || (max(abs(a_y_m)) > abs(median(a_y_m)) * tres)...
+                || (max(abs(a_z_m)) > abs(median(a_z_m)) * tres)
+            num_discarded_maneuvers = num_discarded_maneuvers + 1;
+            continue;
+        end
+        % Remove maneuvers with unrealistically high ang accelerations
+        if (max(abs(p_dot_m)) > 40)...
+                || (max(abs(q_dot_m)) > 20)...
+                || (max(abs(r_dot_m)) > 20)
             num_discarded_maneuvers = num_discarded_maneuvers + 1;
             continue;
         end

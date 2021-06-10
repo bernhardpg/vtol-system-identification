@@ -4,12 +4,14 @@ clc; clear all; close all;
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
 
+rng default % Always shuffle the maneuvers in the same way
+
 % Load metadata
 metadata_filename = "data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Maneuver settings
-maneuver_types = ["roll_211" "yaw_211"];
+maneuver_types = ["roll_211" "pitch_211" "yaw_211"];
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [12 13 14 15 16 17 40 41 42 44 45 54 58 59 60 64];
 maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automatic test
