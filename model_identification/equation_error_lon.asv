@@ -1,0 +1,155 @@
+clc; clear all; close all;
+maneuver_types = ["pitch_211"];
+load_data;
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%
+% Stepwise regression %
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% Initialize SR %%%%%%
+
+F_in = 4;
+
+z = c_Z; % output (= dependent variable)
+N = length(z);
+one = ones(N, 1);
+
+% Calculate total Sum of Squares
+z_bar = mean(z);
+SS_T = (z - z_bar)' * (z - z_bar);
+
+X_curr = [one]; % Chosen regressors
+
+regr = [u_hat w_hat q_hat delta_e n_p]; % Basis regressors
+
+X_pool = [regr regr.^2]; % TODO: Add cross-terms?
+pool_names = ["u_hat" "w_hat" "q_hat" "delta_e" "n_p" ...
+    "u_hat_sq" "w_hat_sq" "q_hat_sq" "delta_e_sq" "n_p_sq"
+    ];
+chosen_regressors = [];
+
+%%%%%%% START %%%%%
+
+% Find most correlated regressor
+top_corr_i = pick_next_regressor_i(X_pool, z);
+
+% Remove regressor from regressor pool
+chosen_regressors = [chosen_regressors pool_names(top_corr_i)];
+new_regr = X_pool(:, top_corr_i);
+X_pool(:, top_corr_i) = [];
+pool_names(top_corr_i) = [];
+
+% Add regressor
+X_curr = [X_curr new_regr];
+[~, p] = size(X_curr); % Total number of regressors
+p = p - 1; % Do not count bias term
+
+% Do LSE with new set of regressors
+th_hat = LSE(X_curr, z);
+
+% Estimate output
+y_hat = X_curr * th_hat; % Estimated output
+
+% Calculate Regression Sum of Squares
+z_bar = mean(z);
+SS_R = (y_hat - z_bar)' * (y_hat - z_bar);
+
+% Coefficient of Determination
+R_sq = SS_R / SS_T;
+
+v = z - y_hat; % Residuals
+s_sq = (v' * v) / (N - p - 1); % Fit error variance
+
+% Calculate partial F statistics
+F_0 = SS_R / s_sq;
+disp("F_0 = " + F_0);
+disp("R_sq = " + R_sq);
+fprintf(['Chosen regressors: ' repmat('%s, ', 1, length(chosen_regressors)) '\n'], chosen_regressors)
+disp(" ")
+
+if F_0 < F_in
+    disp("F value too low");
+end
+
+figure
+plot(t_plot, z, t_plot, y_hat); hold on
+legend("$z$", "$\hat{z}$", 'Interpreter','latex')
+
+while true
+    % Calculate new dependent variable as component of z that is not yet
+    % explained, i.e. residuals
+    z_new = v;
+
+    % Model each remaining regressor with first regressor and bias
+    X_interm = [one new_regr];
+    interm_th_hat = LSE([one new_regr], X_pool);
+    % Remove part of remaining candidate regressors in the direction of terms
+    % already included in the model
+    X_pool_new = X_pool - X_interm * interm_th_hat;
+    
+    
+    
+    % Show plot
+    plot(t_plot, y_hat);
+end
+
+function [] = test(X_pool_orthogonaliz, X_pool)
+    % Find most correlated regressor from new regressors
+    top_corr_i = pick_next_regressor_i(X_pool_new, z_new);
+    
+    % Create new regressor and remove from regressor pool
+    chosen_regressors = [chosen_regressors pool_names(top_corr_i)];
+    new_regr = X_pool(:, top_corr_i);
+    X_pool(:, top_corr_i) = [];
+    pool_names(top_corr_i) = [];
+    
+    % Add regressor to current regressors
+    X_curr = [X_curr new_regr];
+    [~, p] = size(X_curr); % Total number of regressors
+    p = p - 1; % Do not count bias term
+
+    % Do LSE with new set of regressors
+    th_hat = LSE(X_curr, z);
+
+    % Estimate output
+    y_hat = X_curr * th_hat; % Estimated output
+
+    % Calculate Regression Sum of Squares
+    SS_R = (y_hat - z_bar)' * (y_hat - z_bar);
+    
+    % Coefficient of Determination
+    R_sq = SS_R / SS_T;
+
+    v = z - y_hat; % Residuals
+    s_sq = (v' * v) / (N - p - 1); % Fit error variance
+
+    % Calculate partial F statistics
+    F_0 = SS_R / s_sq;
+    
+    % Print status
+    fprintf(['Chosen regressors: ' repmat('%s, ', 1, length(chosen_regressors)) '\n'], chosen_regressors)
+    disp("F_0 = " + F_0);
+    disp("R_sq = " + R_sq);
+    disp(" ")
+end
+
+function [top_corr_i] = pick_next_regressor_i(X_pool, z)
+    r = calc_corr_coeff(X_pool, z);
+    [~, top_corr_i] = max(abs(r));
+end
+
+function [th_hat] = LSE(X, z)
+    D = (X' * X)^(-1);
+    th_hat = D * X' * z;
+end
+
+function [r] = calc_corr_coeff(X, z)
+    X_bar = mean(X);
+    z_bar = mean(z);
+    
+    cov_Xz = (X - X_bar)' * (z - z_bar);
+    var_X = diag((X - X_bar)' * (X - X_bar));
+    var_z = diag((z - z_bar)' * (z - z_bar));
+    r = cov_Xz ./ sqrt(var_X * var_z);
+end
