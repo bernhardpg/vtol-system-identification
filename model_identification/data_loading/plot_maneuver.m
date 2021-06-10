@@ -80,7 +80,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         ylim([-5 10]);
 
         subplot(num_plots,2,4)
-        plot(t, rad2deg(delta_a));
+        plot(t, rad2deg(delta_a), '--'); hold on
         plot(t_pred, rad2deg(delta_a_sp));
         legend("\delta_a")
         ylabel("[deg]");
@@ -94,7 +94,7 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         ylim([-28 28])
         
         subplot(num_plots,2,8)
-        plot(t, rad2deg(delta_r));
+        plot(t, rad2deg(delta_r), '--'); hold on
         plot(t_pred, rad2deg(delta_r_sp));
         legend("\delta_r")
         ylabel("[deg]");
