@@ -16,10 +16,11 @@ x0_lat = [
      c_l_0, c_l_p, c_l_r, c_l_v, c_l_delta_a,...
      c_n_0, c_n_p, c_n_r, c_n_v, c_n_delta_r,...
      ];
+x_lat = [0.0502    1.5157   -0.7445   -0.1535    0.1872   -0.0075   -0.2793    0.2030   -0.0532    0.1762    0.0001   -0.0851   -0.0987    0.0681   -0.0772];
  
 all_params = [const_params;
               x_lon';
-              x0_lat'];
+              x_lat'];
 
 % Collect recorded data
 t_seq = t;
@@ -31,7 +32,7 @@ save_plot = true;
 show_plot = false;
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 3
+for maneuver_i = 1
     % Get data for desired maneuver
     [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
         = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
@@ -51,19 +52,6 @@ for maneuver_i = 3
         plot_maneuver_full("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
             t_m, y_pred,...
             false, true, "", R_sq_m);
-    end
-    
-    R_sq_theta = calc_R_sq(theta_m, y_pred(:,1));
-    R_sq_q = calc_R_sq(q_m, y_pred(:,2));
-    R_sq_u = calc_R_sq(u_m, y_pred(:,3));
-    R_sq_w = calc_R_sq(w_m, y_pred(:,4));
-    R_sq_m = [R_sq_theta R_sq_q R_sq_u R_sq_w];
-    R_sq(maneuver_i,:) = R_sq_m;
-    
-    if save_plot || show_plot
-        plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
-            t_m, y_pred,...
-            save_plot, false, plot_output_location, R_sq_m);
     end
 end
 

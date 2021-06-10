@@ -183,12 +183,12 @@ void compute_dx(
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
     double c_X = c_X_0 + c_X_w * w_hat + c_X_w_sq * pow(w_hat,2) + c_X_q * q_hat + c_X_q_sq * pow(q_hat,2) + c_X_delta_e * delta_e;
-    double c_Y = c_Y_0 + c_Y_p * p_hat + c_Y_v * vel_v + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
+    double c_Y = c_Y_0 + c_Y_p * p_hat + c_Y_v * v_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
     double c_Z = c_Z_0 + c_Z_w * w_hat + c_Z_w_sq * q_hat + c_Z_delta_e * delta_e;
 
-    double c_l = c_l_0 + c_l_p * p_hat + c_l_r * r_hat + c_l_v * vel_v + c_l_delta_a * delta_a;
+    double c_l = c_l_0 + c_l_p * p_hat + c_l_r * r_hat + c_l_v * v_hat + c_l_delta_a * delta_a;
     double c_m = c_m_0 + c_m_w * w_hat + c_m_q * q_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2);
-    double c_n = c_n_0 + c_n_p * p_hat + c_n_r * r_hat + c_n_v * vel_v + c_n_delta_r * delta_r;
+    double c_n = c_n_0 + c_n_p * p_hat + c_n_r * r_hat + c_n_v * v_hat + c_n_delta_r * delta_r;
 
     double X = c_X * dyn_pressure * planform_sqm;
     double Y = c_Y * dyn_pressure * planform_sqm;
