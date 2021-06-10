@@ -1,4 +1,4 @@
-function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, n_p, t_pred, y_pred, save_plot, show_plot, plot_location)
+function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, delta_a_sp, delta_e_sp, delta_r_sp, n_p, t_pred, y_pred, save_plot, show_plot, plot_location)
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
         % Plot
@@ -81,19 +81,21 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
 
         subplot(num_plots,2,4)
         plot(t, rad2deg(delta_a));
+        plot(t_pred, rad2deg(delta_a_sp));
         legend("\delta_a")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,6)
         plot(t, rad2deg(delta_e), '--'); hold on
-        plot(t_pred, rad2deg(y_pred(:,5)));
+        plot(t_pred, rad2deg(delta_e_sp));
         legend("\delta_e")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,8)
         plot(t, rad2deg(delta_r));
+        plot(t_pred, rad2deg(delta_r_sp));
         legend("\delta_r")
         ylabel("[deg]");
         ylim([-28 28])

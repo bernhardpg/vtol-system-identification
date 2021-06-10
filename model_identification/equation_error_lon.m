@@ -7,12 +7,12 @@ load_data;
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
+regr = [u_hat w_hat q_hat delta_e]; % Basis regressors
+regr_names = ["u" "w" "q" "delta_e"];
+use_cross_terms = false;
+
 clc
 z = c_X; % output (= dependent variable)
-
-regr = [u_hat w_hat q_hat delta_e]; % Basis regressors
-regr_names = ["u_hat" "w_hat" "q_hat" "delta_e"];
-use_cross_terms = false;
 [th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
 print_parameters("c_X", th_hat, th_names);
 
@@ -21,10 +21,6 @@ plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 
 z = c_Z; % output (= dependent variable)
-
-regr = [u_hat w_hat q_hat delta_e]; % Basis regressors
-regr_names = ["u_hat" "w_hat" "q_hat" "delta_e"];
-use_cross_terms = false;
 [th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
 print_parameters("c_Z", th_hat, th_names);
 
@@ -33,10 +29,6 @@ plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 
 z = c_m; % output (= dependent variable)
-
-regr = [u_hat w_hat q_hat delta_e]; % Basis regressors
-regr_names = ["u_hat" "w_hat" "q_hat" "delta_e"];
-use_cross_terms = false;
 [th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
 print_parameters("c_m", th_hat, th_names);
 
@@ -49,14 +41,17 @@ function [] = print_parameters(coeff_name, th_hat, th_names)
     num_params = length(th_hat);
     for i = 1:num_params
         if i == 1
-            disp(coeff_name + "_0 = " + th_hat(i));
+            disp(coeff_name + "_0 = " + th_hat(i) + ";");
         else
-            disp(coeff_name + "_" + th_names(i - 1) + " = " + th_hat(i));
+            disp(coeff_name + "_" + th_names(i - 1) + " = " + th_hat(i) + ";");
         end
     end
+    disp(" ");
 end
 
 function [th_hat, chosen_regressors_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms)
+    disp("##### STEPWISE REGRESSION ROUND #####")
+
     %%%% Initialize SR %%%%%%
     F_in = 4;
     F_out = 4;
@@ -77,8 +72,9 @@ function [th_hat, chosen_regressors_names, y_hat] = stepwise_regression(z, regr,
     end
 
     X_pool = [regr regr.^2 cross_terms];
+    regr_names_sq = regr_names + "_sq";
     pool_names = [regr_names...
-        "u_hat_sq" "w_hat_sq" "q_hat_sq" "delta_e_sq" "n_p_sq"...
+        regr_names_sq...
         cross_terms_names
         ];
     chosen_regressors_names = [];
@@ -155,7 +151,7 @@ function [th_hat, chosen_regressors_names, y_hat] = stepwise_regression(z, regr,
         R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
         if (F_0 < F_in)
             disp("Regressor should not be included: Hypothesis not passed with F_0 = " + F_0)
-        elseif R_sq_change < 0.5
+        elseif R_sq_change < 0.6
             disp("Regressor should not be included. R_sq_change = " + R_sq_change + "%")
         else
             % Include regressor!

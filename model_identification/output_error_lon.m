@@ -1,5 +1,6 @@
 clc; clear all; close all;
-%load_data;
+maneuver_types = "pitch_211";
+load_data;
 
 % Load constants
 aircraft_properties;
@@ -10,45 +11,34 @@ const_params = [rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_
      ]';
 
 % Initial guesses from equation-error
-% c_X_0 = 0.8702;
-% c_X_u = -1.8743;
-% c_X_u_sq = 0.7885;
-% c_X_w = 0.2157;
-% c_X_w_sq = 2.4828;
-% c_X_q = -3.1194;
-% c_X_n_p = 0.0024;
+c_X_0 = -0.10676;
+c_X_w_sq = 2.4881;
+c_X_q_sq = 384.334;
+c_X_w = 0.18813;
+c_X_q = -6.7117;
+c_X_delta_e = -0.089002;
+ 
+c_Z_0 = -0.51936;
+c_Z_w = -5.4734;
+c_Z_delta_e = -0.41619;
+c_Z_w_sq = 5.6644;
 
-c_X_0 = 0.3660;
-c_X_u = -0.8596;
-c_X_u_sq = 0.4201;
-c_X_w = 0.2029;
-c_X_w_sq = 2.6789;
-c_X_q = -3.1729;
-c_X_n_p = -3.0610e-04;
-
-c_Z_0 = -0.5384;
-c_Z_w = -5.4921;
-c_Z_w_sq = 7.2941;
-c_Z_q = -14.9348;
-c_Z_delta_e = -0.7653;
-c_Z_delta_e_sq = -0.9647;
-
-c_m_0 = 0.0099;
-c_m_w = -1.2951;
-c_m_q = -19.9529;
-c_m_delta_e = -0.8361;
-c_m_delta_e_sq = -0.5335;
+c_m_0 = 0.010407;
+c_m_w = -1.2759;
+c_m_delta_e = -0.82402;
+c_m_q = -19.7565;
+c_m_delta_e_sq = -0.50257;
 
 x0 = [
-     c_X_0, c_X_u, c_X_w, c_X_w_sq, c_X_q, c_X_n_p,...
+     c_X_0, c_X_w, c_X_w_sq, c_X_q, c_X_q_sq, c_X_delta_e,...
      c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,...
-     c_m_0, c_m_w, c_m_q, c_m_delta_e,...
+     c_m_0, c_m_w, c_m_q, c_m_delta_e, c_m_delta_e_sq,...
      ];
  
 param_names = [
-    "c_{X_0}", "c_{X_u}", "c_{X_w}", "c_{X_{w^2}}", "c_{X_q}", "c_{X_{np}}",...
-    "c_{Z_0}", "c_{Z_w}", "c_{Z_{w^2}}", "c_{Z_{\delta_e}}",...
-    "c_{m_0}", "c_{m_w}", "c_{m_q}", "c_{m_{\delta_e}}"
+    "c_X_0", "c_X_w", "c_X_w_sq", "c_X_q", "c_X_q_sq", "c_X_delta_e",...
+    "c_Z_0", "c_Z_w", "c_Z_w_sq", "c_Z_delta_e",...
+    "c_m_0", "c_m_w", "c_m_q", "c_m_delta_e", "c_m_delta_e_sq",...
     ];
 
 %%
@@ -56,7 +46,7 @@ param_names = [
 t_seq = t;
 y_lon_seq = [theta q u w];
 y_lat_seq = [phi, psi, p, r, v];
-input_seq = [delta_a_sp, delta_e_sp, delta_r_sp, n_p];
+input_seq = [delta_a, delta_e, delta_r, n_p]; % Actuator dynamics simulated beforehand
 
 
 %%
@@ -72,20 +62,20 @@ weight = diag([2 2 1 1]);
 % Opt settings
 rng default % For reproducibility
 numberOfVariables = length(x0);
-options = optimoptions('ga');%'UseParallel', true, 'UseVectorized', false);
-    %'PlotFcn',@gaplotbestf,'Display','iter');
+options = optimoptions('ga','UseParallel', true, 'UseVectorized', false,...
+    'PlotFcn',@gaplotbestf,'Display','iter');
 options.InitialPopulationMatrix = x0;
 options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0));
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 1
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver
     [t_seq_m, y_lon_seq_m, y_lat_seq_m, input_seq_m] = extract_man_data_lon(maneuver_i, maneuver_indices, t_seq, y_lon_seq, y_lat_seq, input_seq);
     delta_e_m = input_seq(:,1);
-    y0 = [y_lon_seq_m(1,:) delta_e_m(1)]; % Add actuator dynamics
+    y0 = y_lon_seq_m(1,:); % Add actuator dynamics
     data_seq_maneuver = [t_seq_m input_seq_m y_lat_seq_m];
     N = length(data_seq_maneuver);
     residual_weight = diag(linspace(1,0,N)); % Weight states in the beginning more
@@ -209,18 +199,19 @@ plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m
     false, true, "");
 
 
-%% Test stuff. TODO remove this
+%% Plotting and maneuver testing
 if 1
     %tic
     for maneuver_i = 1
-        [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
-         = get_maneuver_data(maneuver_i, maneuver_start_indices, t_seq, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a, delta_e, delta_r, n_p);
+        [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
+             = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
+
 
         all_params = [const_params;
                       x'];
 
         % Integration interval
-        y0 = [theta_m(1) q_m(1) u_m(1) w_m(1) delta_e(1)];
+        y0 = [theta_m(1) q_m(1) u_m(1) w_m(1)];
 
         input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
         lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
@@ -232,7 +223,7 @@ if 1
         [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, maneuver_seq, all_params), tspan, y0);
         y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2));
         
-        plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m, n_p_m,...
+        plot_maneuver("maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
             t_m, y_pred,...
             false, true, "");
     end
