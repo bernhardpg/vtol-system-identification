@@ -10,14 +10,11 @@ load_data;
 %%%% Initialize SR %%%%%%
 
 F_in = 4;
+F_out = 4;
 
 z = c_Z; % output (= dependent variable)
 N = length(z);
 one = ones(N, 1);
-
-% Calculate total Sum of Squares
-z_bar = mean(z);
-SS_T = (z - z_bar)' * (z - z_bar);
 
 X_curr = [one]; % Chosen regressors
 
@@ -46,22 +43,21 @@ pool_names(top_corr_i) = [];
 X_curr = [X_curr new_regr];
 
 % Do regression with new regressors
-[th_hat, y_hat, v, R_sq, F_0] = regression_round(X_curr, z, SS_T);
+[th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
 
 fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-disp("F_0 = " + F_0);
 disp("R_sq = " + R_sq + "%");
 disp(" ")
 
-if F_0 < F_in
-    disp("F value too low");
-end
-
-figure
-plot(t_plot, z, t_plot, y_hat); hold on
-legend("$z$", "$\hat{z}$", 'Interpreter','latex')
+% figure
+% plot(t_plot, z, t_plot, y_hat); hold on
+% legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 
 while true
+    % Save for comparison
+    SS_R_prev = SS_R;
+    
+    %%%% Do forward step %%%%
     % Calculate new dependent variable that is orthogonal to regressors
     % currently in model (= residuals)
     z_ort = v;
@@ -85,11 +81,42 @@ while true
     
     % Add regressor to currently chosen regressors
     X_curr = [X_curr new_regr];
+    [N, Ncols] = size(X_curr);
+    p = Ncols - 1; % do not count bias term
 
     % Do regression with new regressors
-    [th_hat, y_hat, v, R_sq, F_0] = regression_round(X_curr, z, SS_T);
+    [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X_curr, z);
     
-    % Print status
+    F_0 = (SS_R - SS_R_prev) / s_sq;
+    if F_0 > F_in
+        disp("Regressor should be included")
+    end
+    
+    %%%% Do backward step %%%%
+    % For all regressors
+    % Calculate SS_r - SS_r
+    % Pick the smallest one
+    % Check if < F0
+    %   remove and repeat
+    %   stop
+    
+    F_0_without_j = zeros(p, 1);
+    for j = 2:p+1 % Do not remove bias term
+        % Remove regressor j from regressors and estimate
+        X_without_j = X_curr;
+        X_without_j(:,j) = [];
+
+        [~, ~, ~, SS_R_without_j, ~, s_sq_without_j] = regression_round(X_without_j, z);
+        F_0_without_j(j - 1) = (SS_R - SS_R_without_j) / s_sq_without_j;
+    end
+    F_0_without_j = min(F_0_without_j);
+    if F_0_without_j < F_out
+       disp("Regressor should be removed and this should be repeated")
+    else
+       disp("Move on to next iteration") 
+    end
+    
+    %%%% Print status %%%%
     fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
     disp("F_0 = " + F_0);
     disp("R_sq = " + R_sq + "%");
@@ -99,7 +126,11 @@ while true
     plot(t_plot, y_hat);
 end
 
-function [th_hat, y_hat, v, R_sq, F_0] = regression_round(X, z, SS_T)
+function [th_hat, y_hat, v, SS_R, R_sq, s_sq] = regression_round(X, z)
+    % Calculate total Sum of Squares
+    z_bar = mean(z);
+    SS_T = (z - z_bar)' * (z - z_bar);
+
     % Do LSE with new set of regressors
     th_hat = LSE(X, z);
 
@@ -114,12 +145,9 @@ function [th_hat, y_hat, v, R_sq, F_0] = regression_round(X, z, SS_T)
     R_sq = SS_R / SS_T * 100;
 
     v = z - y_hat; % Residuals
-    [N, p] = size(X);
-    p = p - 1; % Do not count bias term
-    s_sq = (v' * v) / (N - p - 1); % Fit error variance
-
-    % Calculate partial F statistics
-    F_0 = SS_R / s_sq;
+    [N, N_cols] = size(X);
+    p = N_cols - 1; % Do not count bias term
+    s_sq = (v' * v) / (N - p - 1); % Fit error variance, calculated with new regressor
 end
 
 function [top_corr_i] = pick_next_regressor_i(X_pool, z)
