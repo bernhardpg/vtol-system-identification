@@ -4,10 +4,11 @@ clc; clear all; close all;
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
 
+disp("Setting random seed to default to guarantee reproducability");
 rng default % Always shuffle the maneuvers in the same way for reproducability
 
 % Load metadata
-metadata_filename = "data/metadata.json";
+metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % Maneuver settings
@@ -23,7 +24,7 @@ for maneuver_type = maneuver_types
     disp("Processing " + maneuver_type + " maneuvers.");
     
     % Plot settings
-    plot_location = "data/maneuver_plots/" + maneuver_type + "/";
+    plot_location = "data/flight_data/maneuver_plots/" + maneuver_type + "/";
 
     % Set data params
     dt = 1 / 50;
@@ -56,7 +57,7 @@ for maneuver_type = maneuver_types
     maneuver_start_indices_val = maneuver_start_indices_val - maneuver_start_indices_val(1) + 1; % Make this start at 1 for logged data
 
     % Save all data
-    output_data_path = "data/aggregated_data/" + maneuver_type + "/";
+    output_data_path = "data/flight_data/aggregated_data/" + maneuver_type + "/";
     mkdir(output_data_path)
     writematrix(data_train, output_data_path + "data_train.csv");
     writematrix(data_val, output_data_path + "data_val.csv");

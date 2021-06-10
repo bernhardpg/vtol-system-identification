@@ -1,7 +1,7 @@
 *.swp
 *.ulg
-data/data_raw/log_files/*
-data/data_raw/log_files/csv/*
+data/flight_data/data_raw/log_files/*
+data/flight_data/data_raw/log_files/csv/*
 data/servo_tests/video_files/*
 #
 ### Mac
