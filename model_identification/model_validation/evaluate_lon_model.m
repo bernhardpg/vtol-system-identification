@@ -16,7 +16,8 @@ x0 = [
      ];
 
 % Process parameters found from output-error
-xs = readmatrix("lon_params.txt");
+results_path = "model_identification/output_error/results/";
+xs = readmatrix(results_path + "1_lon_params_all_lon_maneuvers.csv");
 xs = rmoutliers(xs);
 x = median(xs);
 param_mads = mad(xs);
@@ -36,7 +37,7 @@ save_plot = true;
 show_plot = false;
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 8
+for maneuver_i = 1:5
     % Get data for desired maneuver
     [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
         = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);

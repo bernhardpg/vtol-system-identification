@@ -200,19 +200,19 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
 
         subplot(num_plots,2,1)
         plot(t, rad2deg(phi), t_recorded, rad2deg(phi_recorded), '--'); 
-        legend("\phi", "\phi (recorded)")
+        legend("$\phi$", "$\phi$ (recorded)")
         ylabel("[deg]")
         ylim([-70 70])
         
         subplot(num_plots,2,3)
         plot(t, rad2deg(theta), t_recorded, rad2deg(theta_recorded), '--'); 
-        legend("\theta", "\theta (recorded)")
+        legend("$\theta$", "$\theta$ (recorded)")
         ylabel("[deg]")
         ylim([-30 30])
 
         subplot(num_plots,2,5)
         plot(t, rad2deg(psi), t_recorded, rad2deg(psi_recorded), '--'); 
-        legend("\psi", "\psi (recorded)")
+        legend("$\psi$", "$\psi$ (recorded)")
         ylabel("[deg]")
         psi_mean_deg = mean(rad2deg(psi));
         ylim([psi_mean_deg - 50 psi_mean_deg + 50])
@@ -261,25 +261,25 @@ function [] = plot_maneuver_comp_real(fig_name, t, phi, theta, psi, p, q, r, u, 
 
         subplot(num_plots,2,4)
         plot(t, rad2deg(delta_a_sp), t, rad2deg(delta_a), '--');
-        legend("\delta_a_sp", "\delta_a (estimated)")
+        legend("$\delta_a^{sp}$", "$\delta_a$ (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,6)
         plot(t, rad2deg(delta_e_sp), t, rad2deg(delta_e), '--');
-        legend("\delta_e_sp", "\delta_e (estimated)")
+        legend("$\delta_e^{sp}$", "$\delta_e$ (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,8)
         plot(t, rad2deg(delta_r_sp), t, rad2deg(delta_r), '--');
-        legend("\delta_r_sp", "\delta_r (estimated)")
+        legend("$\delta_r^{sp}$", "$\delta_r$ (estimated)")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,10)
         plot(t, n_p);
-        legend("n_p");
+        legend("$n_p$");
         ylabel("[rev/s]");
         ylim([0 130])
         
