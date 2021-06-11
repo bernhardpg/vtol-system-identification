@@ -43,7 +43,7 @@ function [] = evaluate_full_model(maneuvers_to_test, maneuver_types, x, save_plo
         if save_plot || show_plot
             plot_maneuver_full("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
                 t_m, y_pred,...
-                false, true, "", R_sq_m);
+                save_plot, show_plot, plot_output_location, R_sq_m);
         end
     end
 end

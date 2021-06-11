@@ -11,12 +11,15 @@ rng default % Always shuffle the maneuvers in the same way for reproducability
 metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
+% How much data to keep for validation
+val_ratio = 0.2;
+
 % Maneuver settings
-maneuver_types = ["roll_211" "pitch_211" "yaw_211"];
+maneuver_types = ["roll_211"];
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [12 13 14 15 16 17 40 41 42 44 45 54 58 59 60 64];
 maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automatic test
-maneuvers_to_skip.("yaw_211") = [1 4 7 ];
+maneuvers_to_skip.("yaw_211") = [1 4 7];
 save_maneuver_plot = false;
 show_maneuver_plot = false;
 
@@ -46,7 +49,6 @@ for maneuver_type = maneuver_types
 
     % Divide in training and validation data
     total_num_maneuvers = length(maneuver_start_indices);
-    val_ratio = 0.2;
     num_val_maneuvers = floor(total_num_maneuvers * val_ratio);
     num_train_maneuvers = total_num_maneuvers - num_val_maneuvers;
 

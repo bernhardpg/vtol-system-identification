@@ -2,8 +2,69 @@ clc; clear all; close all;
 
 % Load parameters from all runs
 results_path = "model_identification/output_error/results/";
+xs = readmatrix(results_path + "4_full_model_params.csv");
+
+n_bins = 20;
+
+param_names = [
+    "c_X_0", "c_X_w", "c_X_w^2", "c_X_q", "c_X_q^2", "c_X_delta_e",...
+    "c_Z_0", "c_Z_w", "c_Z_w^2", "c_Z_delta_e",...
+    "c_m_0", "c_m_w", "c_m_q", "c_m_delta_e", "c_m_delta_e^2",...
+    "c_Y_0", "c_Y_p", "c_Y_v", "c_Y_delta_a", "c_Y_delta_r",...
+    "c_l_0", "c_l_p", "c_l_r", "c_l_v", "c_l_delta_a",...
+    "c_n_0", "c_n_p", "c_n_r", "c_n_v", "c_n_delta_r",...
+    ];
+[~, n_params] = size(xs);
+figure
+for i = 1:n_params
+    subplot(5,round(n_params/5),i)
+    histogram(xs(:,i), n_bins);
+    title(param_names(i));
+end
+sgtitle("All parameters")
+xs = rmoutliers(xs);
+x = median(xs);
+
+
+
+%%
+% Load parameters from all runs
+results_path = "model_identification/output_error/results/";
 xs_lon = readmatrix(results_path + "1_lon_params_all_lon_maneuvers.csv");
 xs_lat = readmatrix(results_path + "2_lat_params_all_lat_maneuvers.csv");
+
+n_bins = 10;
+
+param_names_lon = [
+    "c_X_0", "c_X_w", "c_X_w^2", "c_X_q", "c_X_q^2", "c_X_delta_e",...
+    "c_Z_0", "c_Z_w", "c_Z_w^2", "c_Z_delta_e",...
+    "c_m_0", "c_m_w", "c_m_q", "c_m_delta_e", "c_m_delta_e^2",...
+    ];
+[~, n_params_lon] = size(xs_lon);
+figure
+for i = 1:n_params_lon
+    subplot(1,n_params_lon,i)
+    histogram(xs_lon(:,i), n_bins);
+    title(param_names_lon(i));
+end
+sgtitle("Longitudinal parameters")
+
+
+param_names_lat = [
+     "c_Y_0", "c_Y_p", "c_Y_v", "c_Y_delta_a", "c_Y_delta_r",...
+     "c_l_0", "c_l_p", "c_l_r", "c_l_v", "c_l_delta_a",...
+     "c_n_0", "c_n_p", "c_n_r", "c_n_v", "c_n_delta_r",...
+     ];
+[~, n_params_lat] = size(xs_lat);
+figure
+for i = 1:n_params_lat
+    subplot(1,n_params_lat,i)
+    histogram(xs_lat(:,i), n_bins);
+    title(param_names_lat(i));
+end
+sgtitle("Lateral parameters")
+
+
 
 % Calculate median parameters and use this as param
 % Longitudinal model fit to pure lon model where lat states are taken as they are
@@ -21,15 +82,13 @@ x = [x_lon x_lat];
 writematrix(x, results_path + "3_chosen_model_params.csv");
 
 %%
-x = [-0.0947565530079021,0.139398703947964,2.40029553727352,-11.7708407170177,639.316946524285,-0.0396226409839468,-0.477503070278427,-4.9928307378831,3.94250638810824,-0.610510762194976,0.0137134335471995,-1.35850824924436,-26.8341777193958,-0.946623650779093,-0.707394391883844,0.0229901460175752,0.696444364574421,-0.625911653228454,-0.200249675223384,0.420355763175705,-0.00536477126410978,-0.371710607005147,0.156507176398939,-0.0450429658949077,0.150446307969574,9.52922483673506e-05,-0.0932418846766781,-0.120284959296711,0.117734628396492,-0.0492868472124431];
-
 % Test model
-data_type = "train";
-maneuver_types = ["roll_211"];
+data_type = "val";
+maneuver_types = ["roll_211" "pitch_211" "yaw_211"];
 load_data; % Loads all states and inputs
-maneuvers_to_test = [1 2];
-save_plot = false;
-show_plot = true;
+maneuvers_to_test = [1 2 3 11 12 13 21 22 23];
+save_plot = true;
+show_plot = false;
 evaluate_full_model(maneuvers_to_test, maneuver_types, x, save_plot, show_plot,...
     maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
 

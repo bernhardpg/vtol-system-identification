@@ -1,5 +1,5 @@
 clc; clear all; close all;
-maneuver_types = ["roll_211", "yaw_211"];
+maneuver_types = ["roll_211" "yaw_211"];
 data_type = "train";
 load_data;
 
@@ -24,6 +24,7 @@ print_eq_error_params("c_Y", th_hat, th_names);
 figure
 plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
+title("c_Y")
 
 z = c_l; % output (= dependent variable)
 [th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
@@ -32,6 +33,7 @@ print_eq_error_params("c_l", th_hat, th_names);
 figure
 plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
+title("c_l")
 
 z = c_n; % output (= dependent variable)
 [th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
@@ -40,3 +42,4 @@ print_eq_error_params("c_n", th_hat, th_names);
 figure
 plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
+title("c_n")
