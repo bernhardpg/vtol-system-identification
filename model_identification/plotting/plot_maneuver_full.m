@@ -15,6 +15,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$\phi$", "$\hat{\phi}$");
         ylabel("[deg]")
         ylim([-50 50])
+        title("fit = " + R_sq(1) + "%");
         
         subplot(num_plots,2,3)
         plot(t, rad2deg(theta), '--'); hold on
@@ -22,6 +23,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$\theta$", "$\hat{\theta}$");
         ylabel("[deg]")
         ylim([-30 30])
+        title("fit = " + R_sq(2) + "%");
 
         subplot(num_plots,2,5)
         plot(t, rad2deg(psi), '--'); hold on
@@ -30,6 +32,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         ylabel("[deg]")
         psi_mean_deg = mean(rad2deg(psi));
         ylim([psi_mean_deg - 50 psi_mean_deg + 50])
+        title("fit = " + R_sq(3) + "%");
 
         subplot(num_plots,2,7)
         plot(t, rad2deg(p), '--'); hold on
@@ -37,6 +40,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$p$", "$\hat{p}$");
         ylim([-2*180/pi 2*180/pi]);
         ylabel("[deg/s]")
+        title("fit = " + R_sq(4) + "%");
         
         subplot(num_plots,2,9)
         plot(t, rad2deg(q), '--'); hold on
@@ -44,7 +48,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$q$", "$\hat{q}$");
         ylim([-2*180/pi 2*180/pi]);
         ylabel("[deg/s]")
-        title("fit = " + R_sq(2) + "%");
+        title("fit = " + R_sq(5) + "%");
 
         subplot(num_plots,2,11)
         plot(t, rad2deg(r), '--'); hold on
@@ -52,6 +56,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         ylim([-2*180/pi 2*180/pi]);
         legend("$r$", "$\hat{r}$");
         ylabel("[deg/s]")
+        title("fit = " + R_sq(6) + "%");
 
         subplot(num_plots,2,13)
         plot(t, u, '--'); hold on
@@ -59,14 +64,15 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$u$", "$\hat{u}$")
         ylabel("[m/s]")
         ylim([15 27]);
-        title("fit = " + R_sq(3) + "%");
+        title("fit = " + R_sq(7) + "%");
         
         subplot(num_plots,2,15)
         plot(t, v, '--'); hold on
         plot(t_pred, y_pred(:,8));
-        ylim([-5 5]);
+        ylim([-10 10]);
         legend("$v$", "$\hat{v}$")
         ylabel("[m/s]")
+        title("fit = " + R_sq(8) + "%");
         
         subplot(num_plots,2,17)
         plot(t, w, '--'); hold on
@@ -74,7 +80,7 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         legend("$w$", "$\hat{w}$")
         ylabel("[m/s]")
         ylim([-5 10]);
-        title("fit = " + R_sq(4) + "%");
+        title("fit = " + R_sq(9) + "%");
         
         subplot(num_plots,2,2)
         plot(t, V);
