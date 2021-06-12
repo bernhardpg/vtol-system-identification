@@ -1,4 +1,4 @@
-function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z, regr, regr_names, use_cross_terms)
+function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names)
     disp("##### STEPWISE REGRESSION ROUND #####")
 
     %%%% Initialize SR %%%%%%
@@ -8,13 +8,20 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
     N = length(z);
     one = ones(N, 1);
 
-    X_curr = [one]; % Chosen regressors
+    regr_curr = [1]; % Chosen regressors
+    X = [ones(N,1) regr regr.^2];
+    [~, total_num_regressors] = size(X);
+    regr_names = ["1" regr_names regr_names+"_sq"];
+    [~, num_linear_regressors] = size(regr);
+    regr_pool = 2:num_linear_regressors; % Remaining regressors to choose from
     
+    X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
     y_hat = X_curr * th_hat;
     RSS_prev = calc_RSS(y_hat, z);
 
-    if use_cross_terms
+    % TODO: Either remove or use this
+    if false
         cross_terms = create_cross_terms(regr);
         cross_terms_names = create_cross_terms_names(regr_names);
     else
@@ -22,59 +29,49 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
         cross_terms_names = [];
     end
 
-    %X_pool = [regr regr.^2 cross_terms];
-    X_pool = [regr cross_terms];
-    %regr_names_sq = regr_names + "_sq";
-    pool_names = [regr_names...
-     %   regr_names_sq...
-        cross_terms_names
-        ];
-    chosen_regressors_names = [];
-
     %%%%%%% START %%%%%
 
     % Find most correlated regressor
-    fprintf(['Regressors: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
-    top_corr_index = pick_next_regressor_i(X_pool, z);
-
-    % Select corresponding regressor from original pool
-    new_regr = X_pool(:, top_corr_index);
+    %fprintf(['Regressors: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
+    
+    X_pool = X(:,regr_pool);
+    top_corr_i = pick_next_regressor_i(X_pool, z);
+    new_regr = regr_pool(top_corr_i);
 
     % Add regressor to currently chosen regressors
-    X_potential = [X_curr new_regr];
+    regr_potential = [regr_curr new_regr];
 
     % Do regression with potential new regressor set
+    X_potential = X(:,regr_potential);
     th_hat = LSE(X_potential, z);
     y_hat = X_potential * th_hat;
     
     % Check if hypothesis should be rejected or kept
     RSS = calc_RSS(y_hat, z);
-    [N, np] = size(X_potential);
+    np = length(regr_potential);
     F0 = calc_F_value(RSS_prev, RSS, np - 1, np, N);
+    R_sq = calc_R_sq(y_hat, z);
     if F0 < F_in
         disp("Regressor should not be included")
     end
 
     % Include regressor!
-    new_regressor_name = pool_names(top_corr_index);
-    chosen_regressors_names = [chosen_regressors_names new_regressor_name];
-    disp("Regressor " + new_regressor_name + " included!");
-    X_curr = X_potential;
+    new_regressor_name = regr_names(new_regr);
+    regr_curr = regr_potential;
 
-    fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-    R_sq = calc_R_sq(y_hat, z);
+    disp("Regressor " + new_regressor_name + " included!");
+    %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
     disp("R_sq = " + R_sq + "%");
     disp(" ")
     
     % Remove chosen regressor from pool
-    X_pool(:, top_corr_index) = [];
-    pool_names(top_corr_index) = [];
+    regr_pool(regr_pool == new_regr) = [];
 
     % Repeat procedure until no improvements can be made
     perform_another_step = true;
     tested_nonlinear_terms = false;
     while perform_another_step
-        fprintf(['Regressor pool: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
+        %fprintf(['Regressor pool: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
         
         perform_another_step = false; % Set to true if either a regressor is added or removed
 
@@ -84,18 +81,21 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
         
         %%% Forward step %%%
         % Find next potential regressor
-        top_corr_index = calc_strongest_orth_corr(y_hat, z, X_pool, X_curr);
-        new_regr = X_pool(:, top_corr_index);
-        X_potential = [X_curr new_regr]; % this will be the new regressor matrix IF the hypothesis is accepted
+        X_curr = X(:,regr_curr);
+        X_pool = X(:,regr_pool);
+        top_corr_i = calc_strongest_orth_corr(y_hat, z, X_pool, X_curr);
+        new_regr = regr_pool(top_corr_i);
+        regr_potential = [regr_curr new_regr]; % this will be the new regressors IF the hypothesis is accepted
 
         % Do regression with potential new regressor set
+        X_potential = X(:,regr_potential);
         th_hat = LSE(X_potential, z);
         y_hat = X_potential * th_hat;
         
         % Check if hypothesis should be rejected or kept
         RSS = calc_RSS(y_hat, z);
         R_sq = calc_R_sq(y_hat, z);
-        [N, np] = size(X_potential);
+        np = length(regr_potential);
         F0 = calc_F_value(RSS_prev, RSS, np - 1, np, N);
         R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
         
@@ -105,17 +105,15 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
             disp("Regressor should not be included. Change in R_sq would be = " + R_sq_change + "%")
         else
             % Include regressor!
-            new_regressor_name = pool_names(top_corr_index);
-            chosen_regressors_names = [chosen_regressors_names new_regressor_name];
-            X_curr = X_potential;
+            new_regressor_name = regr_names(new_regr);
+            regr_curr = regr_potential;
 
             % Remove chosen regressor from pool
-            X_pool(:, top_corr_index) = [];
-            pool_names(top_corr_index) = [];
+            regr_pool(regr_pool == new_regr) = [];
 
             %%%% Print status %%%%
             disp("Regressor " + new_regressor_name + " included! F0 = " + F0 + ", change in R_sq = " + R_sq_change + "%");
-            fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
+            %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
             disp("R_sq = " + R_sq + "%");
 
             perform_another_step = true;
@@ -128,13 +126,15 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
         while perform_backward_elimination
             
             % Calculate F_0 for each regressor
-            [N, np] = size(X_curr);
-            F0_s = zeros(np - 1, 1);
-            for j = 2:np % Do not remove bias term
-                
-                % Remove regressor j from regressors
-                X_without_j = X_curr;
-                X_without_j(:,j) = [];
+            np = length(regr_curr);
+            F0_s = Inf(total_num_regressors, 1); % initialize all values to inf so that non-used regressors wont get removed
+            for j = regr_curr
+                if j == 1 % Do not remove bias term
+                    continue;
+                end
+                regr_without_j = regr_curr;
+                regr_without_j(regr_without_j == j) = [];
+                X_without_j = X(:,regr_without_j);
 
                 % Do regression with potential new regressor set
                 th_hat = LSE(X_without_j, z);
@@ -144,7 +144,7 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
                 RSS_without_j = calc_RSS(y_hat, z); % Note, now RSS is the one with fewer terms!
                 F0 = calc_F_value(RSS_without_j, RSS, np - 1, np, N);
                 
-                F0_s(j - 1) = F0;
+                F0_s(j) = F0;
             end
 
             % If F0_min > F_out, then null hypothesis (which is that model
@@ -154,29 +154,25 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
             [F0_min, j] = min(F0_s);
             if F0_min < F_out
                % Get regressor to remove
-               regr_to_remove = X_curr(:,j);
-               regr_name_to_remove = chosen_regressors_names(j);
+               regr_to_remove = regr_curr(j);
 
                % Remove from current regressors
-               X_curr(:,j) = [];
-               chosen_regressors_names(j) = [];
+               regr_curr(regr_curr == regr_to_remove) = [];
 
-               % Do regression with potential new regressor set
+               % Do regression with new regressor set
                 th_hat = LSE(X_curr, z);
                 y_hat = X_curr * th_hat;
-
-                % Check if hypothesis should be rejected or kept
                 RSS = calc_RSS(y_hat, z);
                 R_sq = calc_R_sq(y_hat, z);
                 R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
 
-               % Do another step
+               % Do another step?
                 perform_backward_elimination = true;
                perform_another_step = true;
                 
                %%%% Print status %%%%
                disp("Regressor " + regr_name_to_remove + " was removed. F0 = " + F0_min);
-               fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
+               %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
                disp("R_sq = " + R_sq + "%, indicating a change of " + R_sq_change + "%");
             else
                disp("No regressors should be removed.")
@@ -192,8 +188,7 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
                 perform_another_step = true;
                 
                 % Add non-linear terms to pool
-                X_pool = [X_pool regr.^2];
-                pool_names = [pool_names regr_names+"_sq"];
+                regr_pool = [regr_pool num_linear_regressors+1:total_num_regressors];
             else
                 disp("Linear terms and nonlinear terms tested. Finished.")
             end
@@ -202,13 +197,16 @@ function [th_hat, chosen_regressors_names, y_hat, R_sq] = stepwise_regression(z,
     end
 
     % Do final regression round
+    X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
     y_hat = X_curr* th_hat;
     RSS = calc_RSS(y_hat, z);
     R_sq = calc_R_sq(y_hat, z);
+    
+    chosen_regr_names = regr_names(regr_curr);
 end
 
-function [top_corr_indexndex] = calc_strongest_orth_corr(y_hat, z, X_pool, X_curr)
+function [top_corr_index] = calc_strongest_orth_corr(y_hat, z, X_pool, X_curr)
     v = z - y_hat;
     
     % Calculate new dependent variable that is orthogonal to regressors
@@ -223,7 +221,7 @@ function [top_corr_indexndex] = calc_strongest_orth_corr(y_hat, z, X_pool, X_cur
 
     % Find strongest correlation between regressor and dependent variable
     % that is orthogonal to current model        
-    top_corr_indexndex = pick_next_regressor_i(X_pool_ort, z_ort);
+    top_corr_index = pick_next_regressor_i(X_pool_ort, z_ort);
 end
 
 
@@ -299,7 +297,7 @@ end
 
 function [top_corr_index] = pick_next_regressor_i(X_pool, z)
     r = calc_corr_coeff(X_pool, z);
-    fprintf(['Correlations: ' repmat('%2.2f ',1,length(r)) '\n'], r);
+    %fprintf(['Correlations: ' repmat('%2.2f ',1,length(r)) '\n'], r);
     [~, top_corr_index] = max(abs(r));
 end
 
