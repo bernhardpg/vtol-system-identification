@@ -33,7 +33,7 @@ zs_val = [c_X c_Z c_m];
 clc
 z = zs(:,1);
 z_val = zs_val(:,1);
-[th_hat, th_names, y_hat] = stepwise_regression(z, z_val, regr, regr_val, regr_names);
+[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names);
 print_eq_error_params("c_X", th_hat, th_names);
 
 figure
@@ -41,11 +41,10 @@ plot(t_plot, z, t_plot, y_hat); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 title("c_X")
 
-%%
 
 z = zs(:,2);
 z_val = zs_val(:,2);
-[th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
+[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names);
 print_eq_error_params("c_Z", th_hat, th_names);
 
 figure
@@ -55,7 +54,7 @@ title("c_Z")
 
 z = zs(:,3);
 z_val = zs_val(:,3);
-[th_hat, th_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms);
+[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names);
 print_eq_error_params("c_m", th_hat, th_names);
 
 figure

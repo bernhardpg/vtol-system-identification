@@ -6,10 +6,12 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
     F_out = 4;
 
     N = length(z);
-    one = ones(N, 1);
+    N_val = length(z_val);
 
     regr_curr = [1]; % Chosen regressors
     X = [ones(N,1) regr regr.^2];
+    X_val = [ones(N_val,1) regr_val regr_val.^2];
+    
     [~, total_num_regressors] = size(X);
     regr_names = ["1" regr_names regr_names+"_sq"];
     [~, num_linear_regressors] = size(regr);
@@ -18,16 +20,9 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
     X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
     y_hat = X_curr * th_hat;
-    RSS_prev = calc_RSS(y_hat, z);
-
-    % TODO: Either remove or use this
-    if false
-        cross_terms = create_cross_terms(regr);
-        cross_terms_names = create_cross_terms_names(regr_names);
-    else
-        cross_terms = [];
-        cross_terms_names = [];
-    end
+    
+    y_hat_val = X_val(:,regr_curr) * th_hat;
+    RSS_val_prev = calc_RSS(y_hat_val, z_val);
 
     %%%%%%% START %%%%%
 
@@ -45,12 +40,17 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
     X_potential = X(:,regr_potential);
     th_hat = LSE(X_potential, z);
     y_hat = X_potential * th_hat;
+    y_hat_val = X_val(:,regr_potential) * th_hat;
     
     % Check if hypothesis should be rejected or kept
-    RSS = calc_RSS(y_hat, z);
+    RSS_val = calc_RSS(y_hat_val, z_val);
     np = length(regr_potential);
-    F0 = calc_F_value(RSS_prev, RSS, np - 1, np, N);
+    F0 = calc_F_value(RSS_val_prev, RSS_val, np - 1, np, N_val);
+    
     R_sq = calc_R_sq(y_hat, z);
+    R_sq_val = calc_R_sq(y_hat_val, z_val);
+    
+    
     if F0 < F_in
         disp("Regressor should not be included")
     end
@@ -61,7 +61,7 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
 
     disp("Regressor " + new_regressor_name + " included!");
     %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-    disp("R_sq = " + R_sq + "%");
+    disp("R_sq (training) = " + R_sq + "%, " + "R_sq (validation) = " + R_sq_val + "%");
     disp(" ")
     
     % Remove chosen regressor from pool
@@ -76,8 +76,8 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
         perform_another_step = false; % Set to true if either a regressor is added or removed
 
         % Save for comparison
-        RSS_prev = RSS;
-        R_sq_prev = R_sq;
+        RSS_val_prev = RSS_val;
+        R_sq_val_prev = R_sq_val;
         
         %%% Forward step %%%
         % Find next potential regressor
@@ -91,18 +91,20 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
         X_potential = X(:,regr_potential);
         th_hat = LSE(X_potential, z);
         y_hat = X_potential * th_hat;
+        y_hat_val = X_val(:,regr_potential) * th_hat;
         
         % Check if hypothesis should be rejected or kept
-        RSS = calc_RSS(y_hat, z);
+        RSS_val = calc_RSS(y_hat_val, z_val);
         R_sq = calc_R_sq(y_hat, z);
+        R_sq_val = calc_R_sq(y_hat_val, z_val);
         np = length(regr_potential);
-        F0 = calc_F_value(RSS_prev, RSS, np - 1, np, N);
-        R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
+        F0 = calc_F_value(RSS_val_prev, RSS_val, np - 1, np, N_val);
+        R_sq_val_change = (R_sq_val - R_sq_val_prev) / R_sq_val_prev * 100;
         
         if (F0 < F_in)
-            disp("Regressor should not be included: Hypothesis not passed with F0 = " + F0)
-        elseif R_sq_change < 0.5
-            disp("Regressor should not be included. Change in R_sq would be = " + R_sq_change + "%")
+            disp("Regressor should not be included: " + regr_names(new_regr) + ". Hypothesis not passed with F0 (validation) = " + F0)
+        elseif R_sq_val_change < 0.5
+            disp("Regressor should not be included: " + regr_names(new_regr) + ". Change in R_sq (validation) would be = " + R_sq_val_change + "%")
         else
             % Include regressor!
             new_regressor_name = regr_names(new_regr);
@@ -112,9 +114,9 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
             regr_pool(regr_pool == new_regr) = [];
 
             %%%% Print status %%%%
-            disp("Regressor " + new_regressor_name + " included! F0 = " + F0 + ", change in R_sq = " + R_sq_change + "%");
+            disp("Regressor " + new_regressor_name + " included! F0 = " + F0 + ", change in R_sq (validation) = " + R_sq_val_change + "%");
             %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-            disp("R_sq = " + R_sq + "%");
+            disp("R_sq (training) = " + R_sq + "%, " + "R_sq (validation) = " + R_sq_val + "%");
 
             perform_another_step = true;
         end
@@ -128,52 +130,60 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
             % Calculate F_0 for each regressor
             np = length(regr_curr);
             F0_s = Inf(total_num_regressors, 1); % initialize all values to inf so that non-used regressors wont get removed
-            for j = regr_curr
-                if j == 1 % Do not remove bias term
+            
+            RSS_val = calc_RSS(y_hat_val, z_val);
+            R_sq_val_prev = R_sq_val;
+            for regr_to_test_for_removal = regr_curr
+                if regr_to_test_for_removal == 1 % Do not remove bias term
                     continue;
                 end
                 regr_without_j = regr_curr;
-                regr_without_j(regr_without_j == j) = [];
+                regr_without_j(regr_without_j == regr_to_test_for_removal) = [];
                 X_without_j = X(:,regr_without_j);
 
                 % Do regression with potential new regressor set
-                th_hat = LSE(X_without_j, z);
-                y_hat = X_without_j * th_hat;
+                th_hat_wo_j = LSE(X_without_j, z);
+                y_hat_wo_j = X_without_j * th_hat_wo_j;
+                y_hat_val_wo_j = X_val(:,regr_without_j) * th_hat_wo_j;
+                R_sq_val_without_j = calc_R_sq(y_hat_val_wo_j, z_val);
 
                 % Check if hypothesis should be rejected or kept
-                RSS_without_j = calc_RSS(y_hat, z); % Note, now RSS is the one with fewer terms!
-                F0 = calc_F_value(RSS_without_j, RSS, np - 1, np, N);
-                
-                F0_s(j) = F0;
+                RSS_val_without_j = calc_RSS(y_hat_val_wo_j, z_val);
+                if RSS_val_without_j < RSS_val
+                    disp("test")
+                end
+                F0 = calc_F_value(RSS_val_without_j, RSS_val, np - 1, np, N_val);
+                F0_s(regr_to_test_for_removal) = F0;
             end
 
             % If F0_min > F_out, then null hypothesis (which is that model
             % without jth regressor is better) is discarded. Otherwise,
             % null hypothesis is actually stronger, and we need to remove
             % the regressor.
-            [F0_min, j] = min(F0_s);
+            [F0_min, regr_to_remove] = min(F0_s);
             if F0_min < F_out
-               % Get regressor to remove
-               regr_to_remove = regr_curr(j);
-
                % Remove from current regressors
                regr_curr(regr_curr == regr_to_remove) = [];
 
                % Do regression with new regressor set
-                th_hat = LSE(X_curr, z);
-                y_hat = X_curr * th_hat;
-                RSS = calc_RSS(y_hat, z);
-                R_sq = calc_R_sq(y_hat, z);
-                R_sq_change = (R_sq - R_sq_prev) / R_sq_prev * 100;
+               X_curr = X(:,regr_curr);
+               th_hat = LSE(X_curr, z);
+               y_hat = X_curr * th_hat;
+               y_hat_val = X_val(:,regr_curr) * th_hat;
+               RSS_val = calc_RSS(y_hat_val, z_val);
+               R_sq = calc_R_sq(y_hat, z);
+               R_sq_val = calc_R_sq(y_hat_val, z_val);
+               R_sq_val_change = (R_sq_val - R_sq_val_prev) / R_sq_val_prev * 100;
 
                % Do another step?
-                perform_backward_elimination = true;
+               perform_backward_elimination = true;
                perform_another_step = true;
                 
                %%%% Print status %%%%
-               disp("Regressor " + regr_name_to_remove + " was removed. F0 = " + F0_min);
+               regr_name_to_remove = regr_names(regr_to_remove);
+               disp("Regressor " + regr_name_to_remove + " was removed. F0 = " + F0_min + ", change in R_sq (validation) = " + R_sq_val_change + "%");
                %fprintf(['Chosen regressors: ' repmat('%s ', 1, length(chosen_regressors_names)) '\n'], chosen_regressors_names)
-               disp("R_sq = " + R_sq + "%, indicating a change of " + R_sq_change + "%");
+               disp("R_sq (training) = " + R_sq + "%, " + "R_sq (validation) = " + R_sq_val + "%");
             else
                disp("No regressors should be removed.")
                fprintf(['F0 = ' repmat('%2.2f ', 1, length(F0_s)) '\n'], F0_s)
@@ -199,7 +209,7 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
     % Do final regression round
     X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
-    y_hat = X_curr* th_hat;
+    y_hat = X_curr * th_hat;
     RSS = calc_RSS(y_hat, z);
     R_sq = calc_R_sq(y_hat, z);
     
