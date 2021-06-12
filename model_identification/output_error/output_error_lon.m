@@ -6,14 +6,10 @@ load_data;
 load_const_params;
 
 % Initial guesses from equation-error
-%equation_error_results_lon;
-% x0 = [
-%      c_X_0, c_X_w, c_X_w_sq, c_X_q, c_X_q_sq, c_X_delta_e,...
-%      c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,...
-%      c_m_0, c_m_w, c_m_q, c_m_delta_e, c_m_delta_e_sq,...
-%      ];
- 
-x0 = [-0.115920805902387,0.156281281950372,2.32460201237834,-7.9382086027081,436.184683689802,-0.0728327479472255,-0.492589114461516,-5.09298511014772,5.44655922010417,-0.493694389006571,0.0124609085217012,-1.30769932159146,-22.7273993975172,-0.865389423811632,-0.601385788123869];
+equation_error_results_lon;
+x0 = [  c_X_0, c_X_q, c_X_u, c_X_w, c_X_w_sq, c_X_delta_e,...
+        c_Z_0, c_Z_w, c_Z_delta_e,...
+        c_m_0, c_m_q, c_m_w, c_m_delta_e, c_m_delta_e_sq, c_m_delta_r_sq];
 
 % Collect recorded data
 t_seq = t;
@@ -26,7 +22,7 @@ input_seq = [delta_a, delta_e, delta_r, n_p]; % Actuator dynamics simulated befo
 % Optimization
 
 % Variable bounds
-allowed_param_change = 0.8;
+allowed_param_change = 0.05;
 LB = min([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
 UB = max([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
 
@@ -35,14 +31,14 @@ weight = diag([1 1 1 1]);
 % Opt settings
 rng default % For reproducibility
 numberOfVariables = length(x0);
-options = optimoptions('ga','UseParallel', true, 'UseVectorized', false);
-    %'PlotFcn',@gaplotbestf,'Display','iter');
+options = optimoptions('ga','UseParallel', true, 'UseVectorized', false,...
+    'PlotFcn',@gaplotbestf,'Display','iter');
 options.InitialPopulationMatrix = x0;
 options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0));
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 1
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver
@@ -51,7 +47,7 @@ for maneuver_i = 1:num_maneuvers
     y0 = y_lon_seq_m(1,:); % Add actuator dynamics
     data_seq_maneuver = [t_seq_m input_seq_m y_lat_seq_m];
     N = length(data_seq_maneuver);
-    residual_weight = diag(linspace(1,0.6,N)); % Weight states in the beginning more
+    residual_weight = diag(linspace(1,1,N)); % Weight states in the beginning more
     tspan = [t_seq_m(1) t_seq_m(end)];
 
     % Initial calculations for maneuver
@@ -113,3 +109,55 @@ for maneuver_i = 1:num_maneuvers
 end
 
 display("Finished running output-error");
+
+%% Check result
+maneuver_types = "yaw_211";
+data_type = "val";
+load_data;
+
+all_params = [const_params;
+              x0'];
+show_plot = true;
+save_plot = false;
+plot_output_location = "";
+
+R_sq = zeros(num_maneuvers, 4);
+for maneuver_i = [1]
+    % Get data for desired maneuver
+    [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
+        = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
+    input_seq_m = [delta_a_m delta_e_m delta_r_m n_p_m];
+    lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
+    maneuver_seq_m = [t_m input_seq_m lat_state_seq_m];
+
+    % Integrate dynamics
+    y0 = [theta_m(1) q_m(1) u_m(1) w_m(1)];
+    tspan = [t_m(1) t_m(end)];
+
+    % Integrate dynamics
+    [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_c(t, y, maneuver_seq_m, all_params), tspan, y0);
+    y_pred = interp1(t_pred, y_pred, t_m);
+
+    R_sq_theta = calc_R_sq(theta_m, y_pred(:,1));
+    R_sq_q = calc_R_sq(q_m, y_pred(:,2));
+    R_sq_u = calc_R_sq(u_m, y_pred(:,3));
+    R_sq_w = calc_R_sq(w_m, y_pred(:,4));
+    R_sq_m = [R_sq_theta R_sq_q R_sq_u R_sq_w];
+    R_sq(maneuver_i,:) = R_sq_m;
+    
+    if save_plot || show_plot
+        plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
+            t_m, y_pred,...
+            save_plot, show_plot, plot_output_location, R_sq_m);
+    end
+end
+
+function [R_sq] = calc_R_sq(z, y_hat)
+    % Calculate total Sum of Squares
+    z_bar = mean(z);
+    SS_T = (z - z_bar)' * (z - z_bar);
+    SS_E = (z - y_hat)' * (z - y_hat); % Residual Sum of Squares
+    
+    % Coefficient of Determination
+    R_sq = (1 - SS_E/SS_T) * 100;
+end

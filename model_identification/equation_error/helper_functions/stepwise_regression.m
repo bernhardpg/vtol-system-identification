@@ -1,4 +1,4 @@
-function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names)
+function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names, min_r_sq_change)
     disp("##### STEPWISE REGRESSION ROUND #####")
 
     %%%% Initialize SR %%%%%%
@@ -103,7 +103,7 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
         
         if (F0 < F_in)
             disp("Regressor should not be included: " + regr_names(new_regr) + ". Hypothesis not passed with F0 (validation) = " + F0)
-        elseif R_sq_val_change < 0.5
+        elseif R_sq_val_change < min_r_sq_change
             disp("Regressor should not be included: " + regr_names(new_regr) + ". Change in R_sq (validation) would be = " + R_sq_val_change + "%")
         else
             % Include regressor!

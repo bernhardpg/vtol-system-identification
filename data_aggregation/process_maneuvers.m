@@ -4,6 +4,8 @@ clc; clear all; close all;
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
 
+set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
+
 disp("Setting random seed to default to guarantee reproducability");
 rng default % Always shuffle the maneuvers in the same way for reproducability
 
@@ -15,10 +17,10 @@ metadata = read_metadata(metadata_filename);
 val_ratio = 0.2;
 
 % Maneuver settings
-maneuver_types = ["roll_211"];
+maneuver_types = ["yaw_211"];
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [12 13 14 15 16 17 40 41 42 44 45 54 58 59 60 64];
-maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automatic test
+maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automated test
 maneuvers_to_skip.("yaw_211") = [1 4 7];
 save_maneuver_plot = false;
 show_maneuver_plot = false;

@@ -88,10 +88,7 @@ void compute_dx(
 		double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,
 			servo_time_const_s, servo_rate_lim_rad_s,
 			prop_diam_pusher_four, c_T_pusher,
-			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy,
-			c_X_0, c_X_w, c_X_w_sq, c_X_q, c_X_q_sq, c_X_delta_e,
-			c_Z_0, c_Z_w, c_Z_w_sq, c_Z_delta_e,
-			c_m_0, c_m_w, c_m_q, c_m_delta_e, c_m_delta_e_sq;
+			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy;
 
 		rho = p[0];
 		mass_kg = p[1];
@@ -113,21 +110,29 @@ void compute_dx(
 		gam_7 = p[17];
 		gam_8 = p[18];
 		J_yy = p[19];
+
+		double c_X_0, c_X_q, c_X_u, c_X_w, c_X_w_sq, c_X_delta_e,
+					 c_Z_0, c_Z_w, c_Z_delta_e,
+					 c_m_0, c_m_q, c_m_w, c_m_delta_e, c_m_delta_e_sq, c_m_delta_r_sq;
+
 		c_X_0 = p[20];
-		c_X_w = p[21];
-		c_X_w_sq = p[22];
-		c_X_q = p[23];
-		c_X_q_sq = p[24];
+		c_X_q = p[21];
+		c_X_u = p[22];
+		c_X_w = p[23];
+		c_X_w_sq = p[24];
 		c_X_delta_e = p[25];
+
 		c_Z_0 = p[26];
 		c_Z_w = p[27];
-		c_Z_w_sq = p[28];
-		c_Z_delta_e = p[29];
-		c_m_0 = p[30];
+		c_Z_delta_e = p[28];
+
+		c_m_0 = p[29];
+		c_m_q = p[30];
 		c_m_w = p[31];
-		c_m_q = p[32];
-		c_m_delta_e = p[33];
-		c_m_delta_e_sq = p[34];
+		c_m_delta_e = p[32];
+		c_m_delta_e_sq = p[33];
+		c_m_delta_r_sq = p[34];
+
 
 		// Extract state
     double theta, ang_q, vel_u, vel_w;
@@ -162,9 +167,9 @@ void compute_dx(
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_X = c_X_0 + c_X_w * w_hat + c_X_w_sq * pow(w_hat,2) + c_X_q * q_hat + c_X_q_sq * pow(q_hat,2) + c_X_delta_e * delta_e;
-    double c_Z = c_Z_0 + c_Z_w * w_hat + c_Z_w_sq * q_hat + c_Z_delta_e * delta_e;
-    double c_m = c_m_0 + c_m_w * w_hat + c_m_q * q_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2);
+    double c_X = c_X_0 + c_X_q * q_hat + c_X_u * u_hat + c_X_w * w_hat + c_X_w_sq * pow(w_hat,2) + c_X_delta_e * delta_e;
+    double c_Z = c_Z_0 + c_Z_w * w_hat + c_Z_delta_e * delta_e;
+    double c_m = c_m_0 + c_m_q * q_hat + c_m_w * w_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2) + c_m_delta_r_sq * pow(delta_r,2);
 
     double X = c_X * dyn_pressure * planform_sqm;
     double Z = c_Z * dyn_pressure * planform_sqm;
@@ -184,7 +189,6 @@ void compute_dx(
 		dx[1] = q_dot;
 		dx[2] = u_dot;
 		dx[3] = w_dot;
-		dx[4]
 }
 
 
