@@ -28,10 +28,14 @@ x = median(xs);
 
 
 %%
-% Load parameters from all runs
-results_path = "model_identification/output_error/results/";
-xs_lon = readmatrix(results_path + "1_lon_params_all_lon_maneuvers.csv");
-xs_lat = readmatrix(results_path + "2_lat_params_all_lat_maneuvers.csv");
+%results_path = "model_identification/output_error/results/";
+%xs_lon = readmatrix(results_path + "lon_multiple_runs/run_1.csv");
+xs_lon = readmatrix("lon_params_free.txt");
+xs_lon = rmoutliers(xs_lon);
+%x_lon = median(xs_lon);
+% lon_param_mads = mad(xs_lon);
+% writematrix(x_lon, results_path + "lon_multiple_runs/run_1_medians.csv");
+% writematrix(lon_param_mads, results_path + "lon_multiple_runs/run_1_mads.csv");
 
 n_bins = 10;
 
@@ -43,13 +47,14 @@ param_names_lon = [
 [~, n_params_lon] = size(xs_lon);
 figure
 for i = 1:n_params_lon
-    subplot(1,n_params_lon,i)
+    subplot(3,round(n_params_lon/3),i)
     histogram(xs_lon(:,i), n_bins);
     title(param_names_lon(i));
 end
 sgtitle("Longitudinal parameters")
 
-
+%%
+xs_lat = readmatrix(results_path + "2_lat_params_all_lat_maneuvers.csv");
 param_names_lat = [
      "c_Y_0", "c_Y_p", "c_Y_v", "c_Y_delta_a", "c_Y_delta_r",...
      "c_l_0", "c_l_p", "c_l_r", "c_l_v", "c_l_delta_a",...

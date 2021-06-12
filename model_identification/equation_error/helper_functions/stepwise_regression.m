@@ -1,4 +1,4 @@
-function [th_hat, chosen_regressors_names, y_hat] = stepwise_regression(z, regr, regr_names, use_cross_terms)
+function [th_hat, chosen_regressors_names, y_hat, s_sq] = stepwise_regression(z, regr, regr_names, use_cross_terms)
     disp("##### STEPWISE REGRESSION ROUND #####")
 
     %%%% Initialize SR %%%%%%

@@ -3,7 +3,7 @@ clc; clear all; close all;
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
 maneuver_types = ["pitch_211"];
-data_type = "val";
+data_type = "train";
 load_data;
 load_const_params;
 
@@ -16,11 +16,13 @@ x0 = [
      ];
 
 % Process parameters found from output-error
-results_path = "model_identification/output_error/results/";
-xs = readmatrix(results_path + "1_lon_params_all_lon_maneuvers.csv");
-xs = rmoutliers(xs);
-x = median(xs);
-param_mads = mad(xs);
+% results_path = "model_identification/output_error/results/";
+% xs = readmatrix(results_path + "1_lon_params_all_lon_maneuvers.csv");
+% xs = rmoutliers(xs);
+% x = median(xs);
+% param_mads = mad(xs);
+
+x = [-0.111925680009147,0.141072571504531,2.28943710223534,-8.57425736831141,457.156123588578,-0.0660816091398904,-0.444819734127511,-4.86047827171242,5.72626840696546,-0.529148294921257,0.0136670851550782,-1.27644852505548,-24.9535375158438,-0.901860223196586,-0.660562053661063];
 
 all_params = [const_params;
               x'];
@@ -33,11 +35,11 @@ input_seq = [delta_a, delta_e, delta_r, n_p]; % Actuator dynamics simulated befo
 
 % Generate plot of all validation maneuvers
 plot_output_location = "model_identification/model_validation/validation_plots/lon_model/";
-save_plot = true;
-show_plot = false;
+save_plot = false;
+show_plot = true;
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 1:5
+for maneuver_i = 1
     % Get data for desired maneuver
     [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m]...
         = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p);
@@ -63,7 +65,7 @@ for maneuver_i = 1:5
     if save_plot || show_plot
         plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_e_m, delta_r_m,  delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, n_p_m,...
             t_m, y_pred,...
-            save_plot, false, plot_output_location, R_sq_m);
+            save_plot, show_plot, plot_output_location, R_sq_m);
     end
 end
 

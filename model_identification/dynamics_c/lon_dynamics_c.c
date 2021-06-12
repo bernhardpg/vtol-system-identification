@@ -184,6 +184,7 @@ void compute_dx(
 		dx[1] = q_dot;
 		dx[2] = u_dot;
 		dx[3] = w_dot;
+		dx[4]
 }
 
 
