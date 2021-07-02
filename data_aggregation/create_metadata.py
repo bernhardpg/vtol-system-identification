@@ -220,7 +220,7 @@ set_maneuver_times(
 )
 
 sweep_maneuver_times = {}
-set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
+#set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
 
 
 # Add freehand times

@@ -11,11 +11,11 @@ show_plot = false;
 num_experiments = length(metadata.Experiments);
 %experiments_to_parse = 1:num_experiments;
 experiments_to_parse = [1:6];
-maneuver_types_to_parse = [...
+maneuver_types_to_parse = [
+    "sweep",...
     "roll_211", "roll_211_no_throttle",...
     "pitch_211", "pitch_211_no_throttle",...
     "yaw_211", "yaw_211_no_throttle",...
-    "sweep",...
     ];
 
 for i = experiments_to_parse
@@ -210,7 +210,7 @@ end
 
 function [maneuver_length_s] = get_default_maneuver_length_s(maneuver_type) 
         if maneuver_type == "sweep"
-            maneuver_length_s = 4;
+            maneuver_length_s = 8;
         elseif (maneuver_type == "roll_211") || (maneuver_type == "roll_211_no_throttle")
             maneuver_length_s = 3;
         elseif (maneuver_type == "pitch_211") || (maneuver_type == "pitch_211_no_throttle")
@@ -226,7 +226,7 @@ end
 function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneuver_type) 
         if maneuver_type == "sweep"
             padding_start_s = 1;
-            padding_end_s = 0;
+            padding_end_s = 1;
         elseif (maneuver_type == "pitch_211") || (maneuver_type == "pitch_211_no_throttle")
             padding_start_s = 2;
             padding_end_s = 2;
@@ -237,10 +237,10 @@ function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneu
 end
 
 function [] = save_output(experiment_number, output_data)
-        data_output_location = "data/flight_data/data_raw/experiments/";
+        experiment_location = "data/flight_data/data_raw/experiments/";
 
         if ~isempty(output_data.sweep.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/sweep/output/";
             mkdir(data_output_location);
             
@@ -257,7 +257,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.roll_211.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/roll_211/output/";
             mkdir(data_output_location);
             
@@ -274,7 +274,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.roll_211_no_throttle.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/roll_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -291,7 +291,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.pitch_211.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/pitch_211/output/";
             mkdir(data_output_location);
             
@@ -308,7 +308,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.pitch_211_no_throttle.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/pitch_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -325,7 +325,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.yaw_211.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/yaw_211/output/";
             mkdir(data_output_location);
             
@@ -342,7 +342,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.yaw_211_no_throttle.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/yaw_211_no_throttle/output/";
             mkdir(data_output_location);
             
@@ -359,7 +359,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.freehand.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/freehand/output/";
             mkdir(data_output_location);
             
@@ -376,7 +376,7 @@ function [] = save_output(experiment_number, output_data)
         end
         
         if ~isempty(output_data.cruise.t_state)
-            data_output_location = data_output_location + "experiment_" + string(experiment_number) ...
+            data_output_location = experiment_location + "experiment_" + string(experiment_number) ...
                 + "/cruise/output/";
             mkdir(data_output_location);
             
