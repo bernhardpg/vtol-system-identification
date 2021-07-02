@@ -23,7 +23,7 @@ N_data_points = length(inputs)-1;
 
 % Rudder
 figure
-left_rudder_angle_deg = [90, 96, 103, 110, 112] - kDEG_OFFSET;
+left_rudder_angle_deg = [90, 96, 103, 110, 112] - kDEG_OFFSET; % Measured rudder angles
 actual_px4_inputs_rudder = inputs + trim_yaw;
 
 plot(actual_px4_inputs_rudder, left_rudder_angle_deg, '-o'); hold on
@@ -43,7 +43,7 @@ ylabel("Deflection [deg]")
 
 % Elevator
 figure
-left_elevator_angle_deg = [90, 97, 105, 113, 115] - kDEG_OFFSET;
+left_elevator_angle_deg = [90, 97, 105, 113, 115] - kDEG_OFFSET;  % Measured elevator angles
 actual_px4_inputs_elevator = inputs + trim_pitch;
 
 plot(actual_px4_inputs_elevator, left_elevator_angle_deg, '-o'); hold on
@@ -64,7 +64,7 @@ ylabel("Deflection [deg]")
 
 % Aileron
 figure
-left_aileron_angle_deg = [90, 99, 107, 115, 115] - kDEG_OFFSET;
+left_aileron_angle_deg = [90, 99, 107, 115, 115] - kDEG_OFFSET;  % Measured aileron angles
 actual_px4_inputs_aileron = inputs + trim_roll;
 
 plot(actual_px4_inputs_aileron, left_aileron_angle_deg, '-o'); hold on

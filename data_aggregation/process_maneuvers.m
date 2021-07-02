@@ -14,7 +14,11 @@ metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % How much data to keep for validation
-val_ratio = 0.2;
+val_ratio = 0.3;
+
+% Plot settings
+save_maneuver_plot = false;
+show_maneuver_plot = false;
 
 % Maneuver settings
 maneuver_types = [
@@ -30,8 +34,6 @@ maneuvers_to_skip.("pitch_211_no_throttle") = [];
 maneuvers_to_skip.("yaw_211") = [1 4 7];
 maneuvers_to_skip.("yaw_211_no_throttle") = [];
 maneuvers_to_skip.("sweep") = [];
-save_maneuver_plot = false;
-show_maneuver_plot = false;
 
 for maneuver_type = maneuver_types
     disp("Processing " + maneuver_type + " maneuvers.");
@@ -55,7 +57,7 @@ for maneuver_type = maneuver_types
     [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot, n_p);
 
     % Collect data
-    data = [t phi theta psi p q r u v w a_x a_y a_z p_dot q_dot r_dot delta_a_sp delta_e_sp delta_r_sp delta_a delta_e delta_r n_p c_X c_Y c_Z c_l c_m c_n];
+    data = [t phi theta psi p q r u v w a_x a_y a_z p_dot q_dot r_dot delta_a_sp delta_e_sp delta_r_sp delta_a delta_e delta_r n_p c_X c_Y c_Z c_l c_m c_n c_L c_D];
 
     % Divide in training and validation data
     total_num_maneuvers = length(maneuver_start_indices);

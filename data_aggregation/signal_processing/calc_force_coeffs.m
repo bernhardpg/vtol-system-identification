@@ -29,6 +29,6 @@ function [c_L, c_D] = calc_lift_drag_coeff(u, w, c_X, c_Z)
              sin(-aoa(i)) cos(-aoa(i))];
         c(:,i) = R * [c_X(i); c_Z(i)];
     end
-    c_D = -c(1,:);
-    c_L = -c(2,:);
+    c_D = -c(1,:)';
+    c_L = -c(2,:)';
 end

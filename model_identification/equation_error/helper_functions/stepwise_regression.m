@@ -50,7 +50,6 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
     R_sq = calc_R_sq(y_hat, z);
     R_sq_val = calc_R_sq(y_hat_val, z_val);
     
-    
     if F0 < F_in
         disp("Regressor should not be included")
     end
@@ -74,10 +73,15 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
         %fprintf(['Regressor pool: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
         
         perform_another_step = false; % Set to true if either a regressor is added or removed
-
-        % Save for comparison
-        RSS_val_prev = RSS_val;
-        R_sq_val_prev = R_sq_val;
+        
+        % Calculate current RSS and R_sq
+        X_curr = X(:,regr_curr);
+        th_hat = LSE(X_curr, z);
+        y_hat = X_curr * th_hat;
+        y_hat_val = X_val(:,regr_curr) * th_hat;
+        RSS_val_prev = calc_RSS(y_hat_val, z_val);
+        R_sq_prev = calc_R_sq(y_hat, z);
+        R_sq_val_prev = calc_R_sq(y_hat_val, z_val);
         
         %%% Forward step %%%
         % Find next potential regressor
@@ -103,8 +107,13 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
         
         if (F0 < F_in)
             disp("Regressor should not be included: " + regr_names(new_regr) + ". Hypothesis not passed with F0 (validation) = " + F0)
+            regr_pool(regr_pool == new_regr) = [];
+            perform_another_step = true;
         elseif R_sq_val_change < min_r_sq_change
             disp("Regressor should not be included: " + regr_names(new_regr) + ". Change in R_sq (validation) would be = " + R_sq_val_change + "%")
+            % Remove regressor from pool
+            regr_pool(regr_pool == new_regr) = [];
+            perform_another_step = true;
         else
             % Include regressor!
             new_regressor_name = regr_names(new_regr);
@@ -191,6 +200,9 @@ function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val
             end
         end
 
+        if isempty(regr_pool)
+            perform_another_step = false;
+        end
         if ~perform_another_step
             if ~tested_nonlinear_terms
                 disp("No more to do with linear terms, test non-linear terms")

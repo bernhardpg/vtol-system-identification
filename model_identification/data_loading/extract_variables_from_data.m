@@ -1,4 +1,4 @@
-function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, c_X, c_Y, c_Z, c_l, c_m, c_n]...
+function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, c_X, c_Y, c_Z, c_l, c_m, c_n, c_L, c_D]...
     = extract_variables_from_data(data)
     t = data(:,1);
     phi = data(:,2);
@@ -29,4 +29,6 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     c_l = data(:,27);
     c_m = data(:,28);
     c_n = data(:,29);
+    c_L = data(:,30);
+    c_D = data(:,31);
 end
