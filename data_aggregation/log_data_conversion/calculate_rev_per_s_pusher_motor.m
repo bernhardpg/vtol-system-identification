@@ -14,5 +14,6 @@ function [rev_per_s] = convert_pusher_pwm_to_rev_per_s(pwm_signal)
     pusher_motor_constants;
     
     % Never let rev_per_s be negative
-    rev_per_s = max(pwm_to_rpm_scale .* pwm_signal + pwm_to_rpm_offset, 0);
+    rev_per_s = pwm_to_rps_th0 + pwm_to_rps_th1 * pwm_signal + pwm_to_rps_th2 * pwm_signal.^2;
+    rev_per_s = max(rev_per_s, 0);
 end
