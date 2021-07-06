@@ -111,25 +111,25 @@ void compute_dx(
 		gam_8 = p[18];
 		J_yy = p[19];
 
-		double c_D_0, c_D_alpha, c_D_q, c_D_alpha_sq, c_D_delta_e, c_L_0, c_L_alpha, c_L_delta_e, c_m_0, c_m_alpha, c_m_q, c_m_delta_e, c_m_delta_e_sq, c_m_alpha_sq;
+		double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_q, c_D_delta_e, c_L_0, c_L_alpha, c_L_alpha_sq, c_L_q, c_L_delta_e, c_m_0, c_m_alpha, c_m_q, c_m_delta_e, c_m_delta_e_sq;
 
 		c_D_0 = p[20];
 		c_D_alpha = p[21];
-		c_D_q = p[22];
-		c_D_alpha_sq = p[23];
+		c_D_alpha_sq = p[22];
+		c_D_q = p[23];
 		c_D_delta_e = p[24];
 
 		c_L_0 = p[25];
 		c_L_alpha = p[26];
-		c_L_delta_e = p[27];
+		c_L_alpha_sq = p[27];
+		c_L_q = p[28];
+		c_L_delta_e = p[29];
 
-		c_m_0 = p[28];
-		c_m_alpha = p[29];
-		c_m_q = p[30];
-		c_m_delta_e = p[31];
-		c_m_delta_e_sq = p[32];
-		c_m_alpha_sq = p[33];
-
+		c_m_0 = p[30];
+		c_m_alpha = p[31];
+		c_m_q = p[32];
+		c_m_delta_e = p[33];
+		c_m_delta_e_sq = p[34];
 
 		// Extract state
     double theta, ang_q, vel_u, vel_w;
@@ -163,6 +163,7 @@ void compute_dx(
 
     double alpha = atan2(vel_w, vel_u);
 
+		// TODO: Unused, remove!
     double u_hat = vel_u / V_nom;
     double v_hat = vel_v / V_nom;
     double w_hat = vel_w / V_nom;
@@ -170,18 +171,18 @@ void compute_dx(
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_m = c_m_0 + c_m_alpha * alpha + c_m_q * q_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2) + c_m_alpha_sq * pow(alpha,2);
+    double c_m = c_m_0 + c_m_alpha * alpha + c_m_q * q_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2);
     double M = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
 
-    double c_L = c_L_0 + c_L_alpha * alpha + c_L_delta_e * delta_e;
+    double c_L = c_L_0 + c_L_alpha * alpha + c_L_delta_e * delta_e + c_L_alpha_sq * pow(alpha,2) + c_L_q * q_hat;
     double c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * pow(alpha, 2) + c_D_q * q_hat + c_D_delta_e * delta_e;
 
     double D = c_D * dyn_pressure * planform_sqm;
-    double Lift = c_L * dyn_pressure * planform_sqm;
+    double L = c_L * dyn_pressure * planform_sqm;
 
     // Rotate from stability frame to body frame
-    double X = -cos(alpha) * D + sin(alpha) * Lift;
-    double Z = -sin(alpha) * D - cos(alpha) * Lift;
+    double X = -cos(alpha) * D + sin(alpha) * L;
+    double Z = -sin(alpha) * D - cos(alpha) * L;
 
     double T = rho * prop_diam_pusher_four * c_T_pusher * pow(n_p, 2);
 
