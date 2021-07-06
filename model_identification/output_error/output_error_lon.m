@@ -7,24 +7,25 @@ load_const_params;
 
 % Initial guesses from equation-error
 equation_error_results_lon;
-x0 = [  c_X_0, c_X_q, c_X_u, c_X_w, c_X_w_sq, c_X_delta_e,...
-        c_Z_0, c_Z_w, c_Z_delta_e,...
-        c_m_0, c_m_q, c_m_w, c_m_delta_e, c_m_delta_e_sq, c_m_delta_r_sq];
-
+x0 = [c_D_0 c_D_alpha c_D_q c_D_alpha_sq c_D_delta_e c_L_0 c_L_alpha c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq c_m_alpha_sq];
 % Collect recorded data
 t_seq = t;
 y_lon_seq = [theta q u w];
 y_lat_seq = [phi, psi, p, r, v];
-input_seq = [delta_a, delta_e, delta_r, n_p]; % Actuator dynamics simulated beforehand
+input_seq = [delta_a, delta_vl, delta_vr, n_p]; % Actuator dynamics simulated beforehand
 
 
 %%
 % Optimization
 
 % Variable bounds
-allowed_param_change = 0.05;
-LB = min([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
-UB = max([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
+% allowed_param_change = 0.05;
+% LB = min([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
+% UB = max([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
+
+% Only constrain sign of coefficients
+LB = min([sign(x0) * eps ; sign(x0) * inf]);
+UB = max([sign(x0) * eps ; sign(x0) * inf]);
 
 weight = diag([1 1 1 1]);
 

@@ -1,34 +1,17 @@
-% Old with only X, Z and elevator and rudder separate
-% c_X_0 = -0.11286;
-% c_X_w = 0.18361;
-% c_X_q = -7.8647;
-% c_X_w_sq = 2.5595;
-% c_X_delta_e = -0.091926;
-% 
-% c_Z_0 = -0.51936;
-% c_Z_w = -5.4734;
-% c_Z_w_sq = 5.6644;
-% c_Z_delta_e = -0.41619;
-% 
-% c_m_0 = 0.010407;
-% c_m_w = -1.2759;
-% c_m_q = -19.7565;
-% c_m_delta_e = -0.82402;
-% c_m_delta_e_sq = -0.50257;
+c_D_0 = 0.12011;
+c_D_alpha = 0.23531;
+c_D_alpha_sq = 2.1417;
+c_D_q = 9.5086;
+c_D_delta_e = 0.14421;
 
-% New with aoa and atail
-c_X_0 = -0.11875;
-c_X_alpha = 0.13329;
-c_X_q = -7.4943;
-c_X_alpha_sq = 2.2331;
-c_X_delta_v_sum = -0.10985;
+c_L_0 = 0.53708;
+c_L_alpha = 4.623;
+c_L_alpha_sq = -3.5345;
+c_L_q_hat = 8.9413;
+c_L_delta_e = 0.50311;
 
-c_Z_0 = -0.51484;
-c_Z_alpha = -4.1796;
-c_Z_delta_v_sum = -0.35115;
-
-c_m_0 = 0.0071366;
-c_m_alpha = -1.0169;
-c_m_q = -13.9444;
-c_m_delta_v_sum = -0.6742;
-c_m_delta_v_sum_sq = -0.3932;
+c_m_0 = 0.0080136;
+c_m_alpha = -1.1373;
+c_m_q = -19.5825;
+c_m_delta_e = -0.80845;
+c_m_delta_e_sq = -0.48648;

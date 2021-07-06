@@ -1,4 +1,4 @@
-function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, delta_a_sp, delta_e_sp, delta_r_sp, n_p, t_pred, y_pred, save_plot, show_plot, plot_location, R_sq)
+function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_vl, delta_vr, delta_a_sp, delta_vl_sp, delta_vr_sp, n_p, t_pred, y_pred, save_plot, show_plot, plot_location, R_sq)
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
         % Plot
@@ -96,16 +96,16 @@ function [] = plot_maneuver_full(fig_name, t, phi, theta, psi, p, q, r, u, v, w,
         ylim([-28 28])
         
         subplot(num_plots,2,6)
-        plot(t, rad2deg(delta_e), '--'); hold on
-        plot(t_pred, rad2deg(delta_e_sp));
-        legend("$\delta_e$")
+        plot(t, rad2deg(delta_vl), '--'); hold on
+        plot(t_pred, rad2deg(delta_vl_sp));
+        legend("$\delta_{vl}$")
         ylabel("[deg]");
         ylim([-28 28])
         
         subplot(num_plots,2,8)
-        plot(t, rad2deg(delta_r), '--'); hold on
-        plot(t_pred, rad2deg(delta_r_sp));
-        legend("$\delta_r$")
+        plot(t, rad2deg(delta_vr), '--'); hold on
+        plot(t_pred, rad2deg(delta_vr_sp));
+        legend("$\delta_{vr}$")
         ylabel("[deg]");
         ylim([-28 28])
         

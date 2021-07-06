@@ -14,7 +14,7 @@ metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
 % How much data to keep for validation
-val_ratio = 0.3;
+val_ratio = 0.25;
 
 % Plot settings
 save_maneuver_plot = false;

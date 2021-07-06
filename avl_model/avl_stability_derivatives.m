@@ -30,6 +30,8 @@ c_n_beta =   0.111040;
 
 % Convert all control derivatives to rad instead of deg
 c_L_delta_e = c_L_delta_e * 180 / pi;
+c_Y_delta_a = c_Y_delta_a * 180 / pi;
+c_Y_delta_r = c_Y_delta_r * 180 / pi;
 c_D_delta_e = c_D_delta_e * 180 / pi;
 c_l_delta_a = c_l_delta_a * 180 / pi;
 c_l_delta_r = c_l_delta_r * 180 / pi;

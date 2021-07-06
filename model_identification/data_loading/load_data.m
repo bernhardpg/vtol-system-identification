@@ -24,7 +24,10 @@ end
 [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p, c_X, c_Y, c_Z, c_l, c_m, c_n, c_L, c_D]...
     = extract_variables_from_data(data);
 dt = t(2) - t(1);
-aoa = atan2(w, u);
+aoa_alpha = atan2(w, u);
+V = sqrt(u.^2 + v.^2 + w.^2);
+beta = asin(v ./ V);
+
 
 maneuver_indices = [maneuver_start_indices; length(t)]; % Add end index to maneuver indices to make handling of last maneuver easier
 num_maneuvers = length(maneuver_indices) - 1;

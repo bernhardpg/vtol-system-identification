@@ -119,7 +119,7 @@ end
 
 
 %%
-xs = readmatrix("lon_params.txt");
+xs = readmatrix("lon_params_free.txt");
 xs = rmoutliers(xs);
 x = median(xs);
 param_mads = mad(xs);

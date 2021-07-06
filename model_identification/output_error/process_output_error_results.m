@@ -1,10 +1,12 @@
 clc; clear all; close all;
 
 % Load parameters from all runs
-results_path = "model_identification/output_error/results/";
-xs = readmatrix(results_path + "4_full_model_params.csv");
+%results_path = "model_identification/output_error/results/";
+%xs = readmatrix(results_path + "4_full_model_params.csv");
 
-n_bins = 20;
+xs = readmatrix("lon_params_free.txt");
+
+n_bins = 40;
 
 param_names = [
     "c_X_0", "c_X_w", "c_X_w^2", "c_X_q", "c_X_q^2", "c_X_delta_e",...
@@ -19,7 +21,7 @@ figure
 for i = 1:n_params
     subplot(5,round(n_params/5),i)
     histogram(xs(:,i), n_bins);
-    title(param_names(i));
+    %title(param_names(i));
 end
 sgtitle("All parameters")
 xs = rmoutliers(xs);
