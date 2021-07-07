@@ -7,7 +7,7 @@ load_const_params;
 
 % Initial guesses from equation-error
 equation_error_results_lon;
-x0 = [c_D_0 c_D_alpha c_D_q c_D_alpha_sq c_D_delta_e c_L_0 c_L_alpha c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq c_m_alpha_sq];
+x0_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq];
 % Collect recorded data
 t_seq = t;
 y_lon_seq = [theta q u w];
@@ -19,27 +19,28 @@ input_seq = [delta_a, delta_vl, delta_vr, n_p]; % Actuator dynamics simulated be
 % Optimization
 
 % Variable bounds
-allowed_param_change = 0.8;
-LB = min([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
-UB = max([x0 * (1 - allowed_param_change); x0 * (1 + allowed_param_change)]);
+allowed_param_change = 0.5;
+LB = min([x0_lon * (1 - allowed_param_change); x0_lon * (1 + allowed_param_change)]);
+UB = max([x0_lon * (1 - allowed_param_change); x0_lon * (1 + allowed_param_change)]);
 
 % % Only constrain sign of coefficients
-% LB = min([sign(x0) * eps ; sign(x0) * inf]);
-% UB = max([sign(x0) * eps ; sign(x0) * inf]);
+% LB = min([sign(x0_lon) * eps ; sign(x0_lon) * inf]);
+% UB = max([sign(x0_lon) * eps ; sign(x0_lon) * inf]);
+
 weight = diag([1 1 1 1]);
 
 % Opt settings
 rng default % For reproducibility
-numberOfVariables = length(x0);
-%options = optimoptions('ga','UseVectorized', false,... %'UseParallel', true, 
-%    'PlotFcn',@gaplotbestf,'Display','iter');
-options = optimoptions('fmincon','Algorithm','sqp','UseParallel', true);
+numberOfVariables = length(x0_lon);
+options = optimoptions('ga','UseVectorized', false,'Display','iter','UseParallel', true);
+    %'PlotFcn',@gaplotbestf);
+%options = optimoptions('fmincon','Algorithm','sqp');%,'UseParallel', true);
 
-%options.InitialPopulationMatrix = x0;
+options.InitialPopulationMatrix = x0_lon;
 options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
-xs = zeros(num_maneuvers, length(x0));
+xs = zeros(num_maneuvers, length(x0_lon));
 for maneuver_i = 1:num_maneuvers
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
@@ -52,12 +53,12 @@ for maneuver_i = 1:num_maneuvers
     tspan = [t_seq_m(1) t_seq_m(end)];
 
     % Initial calculations for maneuver
-    residuals_0 = calc_residuals_lon(y_lon_seq_m, data_seq_maneuver, const_params, x0, dt, tspan, y0);
+    residuals_0 = calc_residuals_lon(y_lon_seq_m, data_seq_maneuver, const_params, x0_lon, dt, tspan, y0);
     R_hat_0 = diag(diag(residuals_0' * residuals_0) / N); % Assume cross-covariances to be zero
-    fval_0 = cost_fn_lon(x0, weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lon_seq_m, const_params);
+    fval_0 = cost_fn_lon(x0_lon, weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lon_seq_m, const_params);
     
     % Set initial values
-    x = x0;
+    x = x0_lon;
     fval = fval_0;
     R_hat = R_hat_0;
     
@@ -73,11 +74,11 @@ for maneuver_i = 1:num_maneuvers
         R_hat_prev = R_hat;
 
         % Solve optimization problem with previous covariance matrix
-        %options.InitialPopulationMatrix = x;
+        options.InitialPopulationMatrix = x;
         FitnessFunction = @(x) cost_fn_lon(x, weight, residual_weight, R_hat, dt, data_seq_maneuver, y0, tspan, y_lon_seq_m, const_params);
         tic
-        %[x,fval] = ga(FitnessFunction,numberOfVariables,[],[],[],[],LB,UB,[],options);
-        [x, fval] = fmincon(FitnessFunction,x,[],[],[],[],[],[],[],options);
+        [x,fval] = ga(FitnessFunction,numberOfVariables,[],[],[],[],LB,UB,[],options);
+        %[x, fval] = fmincon(FitnessFunction,x,[],[],[],[],LB,UB,[],options);
         toc
         
         % Calc new covariance matrix
@@ -109,7 +110,7 @@ for maneuver_i = 1:num_maneuvers
     
     xs(maneuver_i,:) = x;
     
-    writematrix(xs, "lon_params_free.txt")
+    writematrix(xs, "lon_params_ga.txt")
 end
 
 display("Finished running output-error");

@@ -21,7 +21,7 @@ zs = [c_Y c_l c_n];
 % Force n moment to include function dependency on r
 N = length(c_n);
 X_n_moment = [ones(N,1) beta p_hat r_hat delta_a delta_r];
-th_names = ["1" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
+th_names = ["1" "beta" "p" "r" "delta_a" "delta_r"];
 th_hat = LSE(X_n_moment, c_n);
 y_hat = X_n_moment * th_hat;
 RSS = calc_RSS(y_hat, c_n);
@@ -50,7 +50,7 @@ zs_val = [c_Y c_l c_n];
 %%%%%%%%%%%%%%%%%%%%%%%
 
 
-min_r_sq_change = 0.7; % Demand at least 2% improvement to add a regressor
+min_r_sq_change = 0.65; % Demand at least 2% improvement to add a regressor
 
 z = zs(:,1);
 z_val = zs_val(:,1);

@@ -111,32 +111,36 @@ void compute_dx(
 		gam_8 = p[18];
 		J_yy = p[19];
 
-		double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_q, c_D_delta_e, c_L_0, c_L_alpha, c_L_alpha_sq, c_L_q, c_L_delta_e, c_m_0, c_m_alpha, c_m_q, c_m_delta_e, c_m_delta_e_sq;
 
-		c_D_0 = p[20];
-		c_D_alpha = p[21];
-		c_D_alpha_sq = p[22];
-		c_D_q = p[23];
-		c_D_delta_e = p[24];
+		double c_Y_0, c_Y_beta, c_Y_p, c_Y_r, c_Y_delta_a, c_Y_delta_r, c_l_0, c_l_beta, c_l_p, c_l_r, c_l_delta_a, c_n_0, c_n_beta, c_n_p, c_n_r, c_n_delta_a, c_n_delta_r;
 
-		c_L_0 = p[25];
-		c_L_alpha = p[26];
-		c_L_alpha_sq = p[27];
-		c_L_q = p[28];
-		c_L_delta_e = p[29];
+		c_Y_0 = p[20];
+		c_Y_beta = p[21];
+		c_Y_p = p[22];
+		c_Y_r = p[23];
+		c_Y_delta_a = p[24];
+		c_Y_delta_r = p[25];
 
-		c_m_0 = p[30];
-		c_m_alpha = p[31];
-		c_m_q = p[32];
-		c_m_delta_e = p[33];
-		c_m_delta_e_sq = p[34];
+		c_l_0 = p[26];
+		c_l_beta = p[27];
+		c_l_p = p[28];
+		c_l_r = p[29];
+		c_l_delta_a = p[30];
+
+		c_n_0 = p[31];
+		c_n_beta = p[32];
+		c_n_p = p[33];
+		c_n_r = p[34];
+		c_n_delta_a = p[35];
+		c_n_delta_r = p[36];
 
 		// Extract state
-    double theta, ang_q, vel_u, vel_w;
-    theta = x[0];
-    ang_q = x[1];
-    vel_u = x[2];
-    vel_w = x[3];
+    double phi, psi, ang_p, ang_r, vel_v;
+    phi = x[0];
+		psi = x[1];
+		ang_p = x[2];
+		ang_r = x[3];
+		vel_v = x[4];
 
 		// Extract inputs
     double delta_a, delta_vl, delta_vr, n_p;
@@ -145,25 +149,26 @@ void compute_dx(
     delta_vr = u[2];
     n_p = u[3];
 
+		// Extract lon states which are taken as inputs
+		double theta, ang_q, vel_u, vel_w;
+		theta = u[4];
+		ang_q = u[5];
+		vel_u = u[6];
+		vel_w = u[7];
+
 		// These are computed for convenience. There is no rudder or elevator on the actual UAV
 		double delta_e = 0.5 * (delta_vl + delta_vr);
 		double delta_r = 0.5 * (-delta_vl + delta_vr);
-
-		// Extract lateral states which are taken as inputs
-		double phi, psi, ang_p, ang_r, vel_v;
-		phi = u[4];
-		psi = u[5];
-		ang_p = u[6];
-		ang_r = u[7];
-		vel_v = u[8];
 
 		// Calculate forces and moments
     double V = sqrt(pow(vel_u, 2) + pow(vel_v, 2) + pow(vel_w, 2));
     double dyn_pressure = 0.5 * rho * pow(V, 2);
 
     double alpha = atan2(vel_w, vel_u);
+		double beta = asin(vel_v / V);
 
-		// TODO: Unused, remove!
+		// Compute normalized states
+		// TODO: Some of these are not used
     double u_hat = vel_u / V_nom;
     double v_hat = vel_v / V_nom;
     double w_hat = vel_w / V_nom;
@@ -171,32 +176,30 @@ void compute_dx(
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_m = c_m_0 + c_m_alpha * alpha + c_m_q * q_hat + c_m_delta_e * delta_e + c_m_delta_e_sq * pow(delta_e,2);
+    double c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p * p_hat + c_Y_r * r_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
+    double c_l = c_l_0 + c_l_beta * beta + c_l_p * p_hat + c_l_r * r_hat + c_l_delta_a * delta_a;
+    double c_n = c_n_0 + c_n_beta * beta + c_n_p * p_hat + c_n_r * r_hat + c_n_delta_a * delta_a + c_n_delta_r * delta_r;
 
-    double c_L = c_L_0 + c_L_alpha * alpha + c_L_delta_e * delta_e + c_L_alpha_sq * pow(alpha,2) + c_L_q * q_hat;
-    double c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * pow(alpha, 2) + c_D_q * q_hat + c_D_delta_e * delta_e;
-    double D = c_D * dyn_pressure * planform_sqm;
-    double L = c_L * dyn_pressure * planform_sqm;
-
-    // Rotate from stability frame to body frame
-    double X = -cos(alpha) * D + sin(alpha) * L;
-    double Z = -sin(alpha) * D - cos(alpha) * L;
-    double M = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
-
-    double T = rho * prop_diam_pusher_four * c_T_pusher * pow(n_p, 2);
+    double Y = c_Y * dyn_pressure * planform_sqm;
+    double L = c_l * dyn_pressure * planform_sqm * wingspan_m;
+    double N = c_n * dyn_pressure * planform_sqm * wingspan_m;
 
 		// Dynamics
-    double theta_dot = ang_q * cos(phi) - ang_r * sin(phi);
-	  double q_dot = gam_5 * ang_p * ang_r - gam_6 * (pow(ang_p,2) - pow(ang_r,2)) + (1/J_yy) * M;
-    double u_dot = ang_r * vel_v - ang_q * vel_w + (1 / mass_kg) * (X + T - mass_kg * g * sin(theta));
-    double w_dot = ang_q * vel_u - ang_p * vel_v + (1 / mass_kg) * (Z + mass_kg * g * cos(theta) * cos(phi));
+    double phi_dot = ang_p + (ang_q * sin(phi) + ang_r * cos(phi)) * tan(theta);
+    double psi_dot = (ang_q * sin(phi) + ang_r * cos(phi)) * (1 / cos(theta));
 
-		// NOTE: Actuator dynamics are not included here for computational efficiency. The actuators is an isolated system, and is therefore solved a-priori.
+	  double p_dot = gam_1 * ang_p * ang_q - gam_2 * ang_q * ang_r + gam_3 * L + gam_4 * N;
+		double r_dot = gam_7 * ang_p * ang_q - gam_1 * ang_q * ang_r + gam_4 * L + gam_8 * N;
 
-		dx[0] = theta_dot;
-		dx[1] = q_dot;
-		dx[2] = u_dot;
-		dx[3] = w_dot;
+    double v_dot = ang_p * vel_w - ang_r * vel_u + (1 / mass_kg) * (Y + mass_kg * g * cos(theta) * sin(phi));
+
+		// NOTE: Actuator dynamics are not included here for computational efficiency. The actuators is an isolated system, and is therefore simulated a-priori.
+
+		dx[0] = phi_dot;
+		dx[1] = psi_dot;
+		dx[2] = p_dot;
+		dx[3] = r_dot;
+		dx[4] = v_dot;
 }
 
 

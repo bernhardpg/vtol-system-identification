@@ -1,4 +1,4 @@
-function [t_seq_m, y_lon_seq_m, y_lat_seq_m, input_seq_m] = extract_man_data_lon(i, maneuver_indices, t_seq, y_lon_seq, y_lat_seq, input_seq)
+function [t_seq_m, y_lon_seq_m, y_lat_seq_m, input_seq_m] = extract_man_data(i, maneuver_indices, t_seq, y_lon_seq, y_lat_seq, input_seq)
     m_start = maneuver_indices(i);
     m_end = maneuver_indices(i + 1) - 1;
 
