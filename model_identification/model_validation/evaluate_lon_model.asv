@@ -2,15 +2,15 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["yaw_211"];
+maneuver_types = ["pitch_211"];
 data_type = "val";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
 plot_output_location = "model_identification/model_validation/validation_plots/lon_model/yaw_maneuvers/";
-save_plot = true;
-show_plot = false;
+save_plot = false;
+show_plot = true;
 
 test_initial = false;
 
@@ -158,7 +158,7 @@ y_lat_seq = [phi, psi, p, r, v];
 input_seq = [delta_a, delta_vr, delta_vl, n_p]; % Actuator dynamics simulated beforehand
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 1
     % Get data for desired maneuver
 [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
     = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p, p_dot, q_dot, r_dot);
@@ -186,14 +186,39 @@ for maneuver_i = 1:num_maneuvers
     R_sq_m = [R_sq_theta R_sq_q R_sq_u R_sq_w];
     R_sq(maneuver_i,:) = R_sq_m;
     
-
+    aoa_alpha_m = atan2(w_m, u_m);
+    [p_hat_m, q_hat_m, r_hat_m, u_hat_m, v_hat_m, w_hat_m] = calc_explanatory_vars(p_m, q_m, r_m, u_m, v_m, w_m);
+    [c_D_m, c_L_m, c_m_m] = calc_coeffs(x_lon, aoa_alpha_m, q_hat_m, delta_e_m);
+    
+    q_pred = y_pred(:,2);
+    u_pred = y_pred(:,3);
+    w_pred = y_pred(:,4);
+    [~, q_hat_pred, ~, u_hat_pred, ~, w_hat_pred] = calc_explanatory_vars(p_m, q_pred, r_m, u_pred, v_m, w_pred);
+    aoa_alpha_pred = atan2(w_pred, u_pred);
+    [c_D_pred, c_L_pred, c_m_pred] = calc_coeffs(x_lon, aoa_alpha_pred, q_hat_pred, delta_e_m);
+    
+    figure
+    subplot(3,1,1)
+    plot(t_m, c_D_pred); hold on
+    plot(t_m, c_D_m);
+    legend("$\hat{c_D}$", "$c_D$");
+    
+    subplot(3,1,2)
+    plot(t_m, c_L_pred); hold on
+    plot(t_m, c_L_m);
+    legend("$\hat{c_L}$", "$c_D$");
+    
+    subplot(3,1,3)
+    plot(t_m, c_m_pred); hold on
+    plot(t_m, c_m_m);
+    legend("$\hat{c_m}$", "$c_m$");
+   
+    
     if save_plot || show_plot
-        plot_maneuver_lon("traj_val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
+        plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
             t_m, [y_pred acc],...
             save_plot, show_plot, plot_output_location, R_sq_m);
-        plot_coeffs_lon("coeffs_val_maneuver" + maneuver_i, x_lon, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
-            t_m, [y_pred acc],...
-            save_plot, show_plot, plot_output_location, R_sq_m);
+        
     end
 end
 
