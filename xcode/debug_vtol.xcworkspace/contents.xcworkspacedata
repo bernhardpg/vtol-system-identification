@@ -2,18 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:../model/vtol_linear_c.c">
-   </FileRef>
-   <FileRef
-      location = "group:../model/longitudinal_model_c.c">
-   </FileRef>
-   <FileRef
-      location = "group:../test_function_c.c">
-   </FileRef>
-   <FileRef
-      location = "group:../model/longitudinal_model_w_actuator_dynamics_c.c">
-   </FileRef>
-   <FileRef
-      location = "group:../models/longitudinal_model_c.c">
+      location = "group:../model_identification/dynamics_c/lon_dynamics_liftdrag_w_rudder_c.c">
    </FileRef>
 </Workspace>

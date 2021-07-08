@@ -255,25 +255,6 @@ function F = calc_F_value(RSS1, RSS2, p1, p2, N)
     F = ((RSS1 - RSS2) / (p2 - p1)) / (RSS2 / (N - p2));
 end
 
-function [RSS] = calc_RSS(y_hat, z)
-    % Calculate Regression Sum of Squares
-    RSS = (y_hat - z)' * (y_hat - z);
-end
-
-function [TSS] = calc_TSS(z)
-   % Calculate total Sum of Squares
-    z_bar = mean(z);
-    TSS = (z - z_bar)' * (z - z_bar);
-end
-
-function [R_sq] = calc_R_sq(y_hat, z)
-    RSS = calc_RSS(y_hat, z);
-    TSS = calc_TSS(z);
-    
-    % Coefficient of Determination
-    R_sq = (1 - (RSS / TSS)) * 100;
-end
-
 % Calculate fit error variance. This assumes that the model structure is
 % adequate, and is only used because it is unlikely that time series flight
 % data will exactly repeat the same independent variable setting. See p.

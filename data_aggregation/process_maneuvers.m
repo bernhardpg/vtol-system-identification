@@ -17,13 +17,13 @@ metadata = read_metadata(metadata_filename);
 val_ratio = 0.25;
 
 % Plot settings
-save_maneuver_plot = false;
+save_maneuver_plot = true;
 show_maneuver_plot = false;
 
 % Maneuver settings
 maneuver_types = [
-   "roll_211"...
-   "pitch_211"...
+   %"roll_211"...
+   %"pitch_211"...
    "yaw_211"...
     ];
 maneuvers_to_skip = {};

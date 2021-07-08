@@ -22,7 +22,9 @@ else
     xs = readmatrix("lon_params_ga.txt");
     %xs = rmoutliers(xs);
     x_lon = median(xs);
+    x_lon = [x_lon -0.01];
     param_mads = mad(xs);
+    writematrix(x_lon, "lon_params_medians.txt");
 end
 
 %% Plot distributions
@@ -171,7 +173,7 @@ for maneuver_i = 1:num_maneuvers
     % Integrate dynamics
     disp("Simulating dynamics for maneuver " + maneuver_i);
     tic
-    [t_pred, y_pred] = ode23s(@(t,y) lon_dynamics_liftdrag_c(t, y, maneuver_seq_m, all_params), tspan, y0);
+    [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_liftdrag_w_rudder_c(t, y, maneuver_seq_m, all_params), tspan, y0);
     toc
     y_pred = interp1(t_pred, y_pred, t_m);
 
