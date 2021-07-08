@@ -48,18 +48,17 @@ double interp(double x0, double x1, double y0, double y1, double xp)
 
 void compute_u_at_t(double t, double *u, double *u_at_t, int nu_rows, int nu_cols)
 {
-		int interp_end_index = 0;
+		int interp_end_index = 1;
 		double curr_t = u[interp_end_index];
-		while (true)
+		// Move index to the location where we are at the closest next time step
+		// in the input sequence
+		while ((curr_t < t) && (interp_end_index < nu_rows - 1))
 		{
-			curr_t = u[interp_end_index];
-			// Stop looking if we have moved past t or will go to the end
-			if ((curr_t > t) || (interp_end_index + 1 >= nu_rows))
-				break;
-			++interp_end_index;
+			interp_end_index++;
+			curr_t = u[interp_end_index]; // First column in u is timestamp
 		}
 
-		for (int col_i = 0; col_i < nu_cols; ++col_i)
+		for (int col_i = 0; col_i < nu_cols - 1; ++col_i)
 		{
 			double y0 = u[interp_end_index - 1 + nu_rows * (col_i + 1)];
 			double y1 = u[interp_end_index + nu_rows * (col_i + 1)];
