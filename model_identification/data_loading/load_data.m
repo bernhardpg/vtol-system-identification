@@ -28,6 +28,11 @@ aoa_alpha = atan2(w, u);
 V = sqrt(u.^2 + v.^2 + w.^2);
 beta = asin(v ./ V);
 
+delta_e = 0.5 * (delta_vl + delta_vr);
+delta_r = 0.5 * (-delta_vl + delta_vr);
+delta_e_sp = 0.5 * (delta_vl_sp + delta_vr_sp);
+delta_r_sp = 0.5 * (-delta_vl_sp + delta_vr_sp);
+
 
 maneuver_indices = [maneuver_start_indices; length(t)]; % Add end index to maneuver indices to make handling of last maneuver easier
 num_maneuvers = length(maneuver_indices) - 1;

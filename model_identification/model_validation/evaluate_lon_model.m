@@ -2,15 +2,15 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["yaw_211"];
+maneuver_types = ["pitch_211"];
 data_type = "val";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
 plot_output_location = "model_identification/model_validation/validation_plots/lon_model/yaw_maneuvers/";
-save_plot = true;
-show_plot = false;
+save_plot = false;
+show_plot = true;
 
 test_initial = false;
 
@@ -20,6 +20,7 @@ if test_initial
     x_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq];
 else
     xs = readmatrix("lon_params_ga.txt");
+    xs = xs(1:4,:); % TODO remove
     %xs = rmoutliers(xs);
     x_lon = median(xs);
     x_lon = [x_lon -0.01];
@@ -153,15 +154,14 @@ all_params = [const_params;
 
 % Collect recorded data
 t_seq = t;
-y_lon_seq = [theta q u w];
 y_lat_seq = [phi, psi, p, r, v];
 input_seq = [delta_a, delta_vr, delta_vl, n_p]; % Actuator dynamics simulated beforehand
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 1
     % Get data for desired maneuver
-    [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m]...
-        = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p);
+[t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_e_sp_m, delta_r_sp_m, delta_a_m, delta_e_m, delta_r_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
+    = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, p_dot, q_dot, r_dot);
     input_seq_m = [delta_a_m delta_vl_m delta_vr_m n_p_m];
     lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
     maneuver_seq_m = [t_m input_seq_m lat_state_seq_m];
@@ -174,8 +174,10 @@ for maneuver_i = 1:num_maneuvers
     disp("Simulating dynamics for maneuver " + maneuver_i);
     tic
     [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_liftdrag_w_rudder_c(t, y, maneuver_seq_m, all_params), tspan, y0);
-    toc
     y_pred = interp1(t_pred, y_pred, t_m);
+    acc = calc_acc_lon(y_pred, maneuver_seq_m, all_params);
+    toc
+    
 
     R_sq_theta = calc_R_sq(theta_m, y_pred(:,1));
     R_sq_q = calc_R_sq(q_m, y_pred(:,2));
@@ -185,8 +187,8 @@ for maneuver_i = 1:num_maneuvers
     R_sq(maneuver_i,:) = R_sq_m;
     
     if save_plot || show_plot
-        plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m,...
-            t_m, y_pred,...
+        plot_maneuver("val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
+            t_m, [y_pred acc],...
             save_plot, show_plot, plot_output_location, R_sq_m);
     end
 end

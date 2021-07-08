@@ -1,6 +1,11 @@
-function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_e, delta_r, delta_a_sp, delta_e_sp, delta_r_sp, n_p, t_pred, y_pred, save_plot, show_plot, plot_location, R_sq)
+function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delta_a, delta_vl, delta_vr, delta_a_sp, delta_vl_sp, delta_vr_sp, n_p, a_x, a_y, a_z, p_dot, q_dot, r_dot, t_pred, y_pred, save_plot, show_plot, plot_location, R_sq)
         V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
 
+        delta_e = 0.5 * (delta_vl + delta_vr);
+        delta_r = 0.5 * (-delta_vl + delta_vr);
+        delta_e_sp = 0.5 * (delta_vl_sp + delta_vr_sp);
+        delta_r_sp = 0.5 * (-delta_vl_sp + delta_vr_sp);
+        
         % Plot
         fig = figure;
         if ~show_plot
@@ -108,6 +113,25 @@ function [] = plot_maneuver(fig_name, t, phi, theta, psi, p, q, r, u, v, w, delt
         ylabel("[rev/s]");
         ylim([0 130])
         
+        subplot(num_plots,2,12)
+        plot(t_pred, y_pred(:,5)); hold on
+        plot(t, a_x);
+        legend("$a_x$");
+        ylabel("[m/s^2]");
+        
+        subplot(num_plots,2,14)
+        plot(t_pred, y_pred(:,6)); hold on
+        plot(t, a_z);
+        legend("$a_z$");
+        ylabel("[m/s^2]");
+        
+        subplot(num_plots,2,16)
+        plot(t_pred, y_pred(:,7)); hold on
+        plot(t, q_dot);
+        legend("$\dot{q}$");
+        ylabel("[m/s^2]");
+        
+
         sgtitle(fig_name);
         
         if save_plot

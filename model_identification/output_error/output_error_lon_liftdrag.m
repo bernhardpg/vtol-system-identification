@@ -41,7 +41,7 @@ options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0_lon));
-for maneuver_i = 1
+for maneuver_i = 1:num_maneuvers
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver
