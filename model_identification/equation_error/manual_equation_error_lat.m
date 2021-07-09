@@ -9,6 +9,8 @@ clear all;
 % Load validation data
 %%%
 
+disp("## Standard equation-error for lon model")
+
 maneuver_types = ["roll_211" "yaw_211"];
 data_type = "val";
 load_data;
@@ -18,7 +20,6 @@ c_n_val = c_n;
 t_val_plot = 0:dt:length(t)*dt-dt;
 
 N = length(c_Y);
-[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
 X_val = [ones(N,1) beta p_hat r_hat delta_a delta_r]; % Needs to be changed if separate regressors are to be used for separate coeffs
 
 %%% Plot figures
@@ -29,9 +30,6 @@ X_val = [ones(N,1) beta p_hat r_hat delta_a delta_r]; % Needs to be changed if s
 
 data_type = "train";
 load_data;
-
-% Create explanatory variables
-[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
 
 % Basis regressors
 N = length(c_Y);
@@ -92,3 +90,5 @@ plot(t_val_plot, z_val, t_val_plot, y_hat); hold on
 legend(name, name + " hat", 'Interpreter','latex')
 title(name + " " + "R^2 = " + R_sq + "%")
 print_eq_error_params(name, th_hat, th_names);
+
+sgtitle("Standard Equation-Error Lateral Model")

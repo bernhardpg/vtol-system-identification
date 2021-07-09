@@ -24,8 +24,8 @@ input_seq = [delta_a delta_vl delta_vr n_p]; % Actuator dynamics simulated befor
 % Constructed such that the parameters can vary more away from 0, but not
 % change sign
 allowed_param_change = 0.5;
-LB = min([x0_lat * (1 - allowed_param_change); x0_lat * (1 + 4 * allowed_param_change)]);
-UB = max([x0_lat * (1 - allowed_param_change); x0_lat * (1 + 4 * allowed_param_change)]);
+LB = min([x0_lat * (1 - allowed_param_change); x0_lat * (1 + 8 * allowed_param_change)]);
+UB = max([x0_lat * (1 - allowed_param_change); x0_lat * (1 + 8 * allowed_param_change)]);
 
 weight = diag([1 0 1 1 1 1 1 1]); % Do not weight yaw as it does not affect aircraft motion
 
@@ -34,13 +34,13 @@ rng default % For reproducibility
 numberOfVariables = length(x0_lat);
 %options = optimoptions('ga','UseParallel', true, 'UseVectorized', false,...
 %    'PlotFcn',@gaplotbestf,'Display','iter');
-options = optimoptions('ga','UseVectorized', false,'Display','iter');%,'UseParallel', true);
+options = optimoptions('ga','UseVectorized', false,'Display','iter','UseParallel', true);
 options.InitialPopulationMatrix = x0_lat;
 options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0_lat));
-for maneuver_i = 1
+for maneuver_i = 1:num_maneuvers
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver

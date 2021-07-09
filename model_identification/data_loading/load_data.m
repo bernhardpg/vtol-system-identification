@@ -28,6 +28,13 @@ aoa_alpha = atan2(w, u);
 V = sqrt(u.^2 + v.^2 + w.^2);
 beta = asin(v ./ V);
 
+% Create explanatory variables
+[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
+
+aircraft_properties; % V_nom
+V = sqrt(u.^2 + v.^2 + w.^2);
+V_hat = V / V_nom;
+
 delta_e = 0.5 * (delta_vl + delta_vr);
 delta_r = 0.5 * (-delta_vl + delta_vr);
 delta_e_sp = 0.5 * (delta_vl_sp + delta_vr_sp);

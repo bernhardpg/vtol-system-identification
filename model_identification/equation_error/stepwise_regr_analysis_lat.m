@@ -1,4 +1,4 @@
-clc; clear all; close all;
+clear all;
 
 %%%
 % This script calculates the best model for lateral coeffs using
@@ -11,9 +11,6 @@ clc; clear all; close all;
 maneuver_types = ["roll_211" "yaw_211"];
 data_type = "train";
 load_data;
-
-% Create explanatory variables
-[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
 
 % Basis regressors
 regr = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
@@ -31,9 +28,6 @@ zs = [c_Y c_l c_n];
 data_type = "val";
 load_data;
 
-[p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-
-delta_r = (-delta_vl + delta_vr) / 2;
 regr_val = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
 nonlin_regr_val = [beta.^2];
 
@@ -82,4 +76,4 @@ plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
 title("c_n: " + "R^2 = " + R_sq_val + "%")
 
-sgtitle("Equation-error Lat coeffs")
+sgtitle("Stepwise-Regression Equation-Error Lateral model")
