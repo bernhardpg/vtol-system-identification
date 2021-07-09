@@ -69,7 +69,7 @@
 
 
 % Directly from AVL
-avl_c_L_0 = 0.46517; % see zero_aoa_flight.txt
+avl_c_L_0 = % se
 
 % See stability_derivatives_trim.txt
 % Longitudinal coeffs

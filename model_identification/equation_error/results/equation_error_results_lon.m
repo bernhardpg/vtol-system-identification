@@ -14,4 +14,4 @@ c_m_0 = 0.0080136;
 c_m_alpha = -1.1373;
 c_m_q = -19.5825;
 c_m_delta_e = -0.80845;
-c_m_delta_e_sq = -0.48648;
+c_m_delta_e_sq = -0.48648; % TODO: This is not a dependency I should have!!

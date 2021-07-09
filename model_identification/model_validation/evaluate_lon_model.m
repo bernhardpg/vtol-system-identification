@@ -2,15 +2,16 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["yaw_211"];
-data_type = "val";
+maneuver_types = ["pitch_211"];
+data_type = "train";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
 plot_output_location = "model_identification/model_validation/validation_plots/lon_model/yaw_maneuvers/";
-save_plot = true;
-show_plot = false;
+save_plot = false;
+show_plot = true;
+plot_height = 1.0;
 
 test_initial = false;
 
@@ -20,12 +21,11 @@ if test_initial
     x_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq];
 else
     xs = readmatrix("lon_params_ga.txt");
-    xs = xs(1:25,:); % TODO remove
     %xs = rmoutliers(xs);
     x_lon = median(xs);
-    x_lon = [x_lon -0.01];
     param_mads = mad(xs);
     writematrix(x_lon, "lon_params_medians.txt");
+    x_lon = [x_lon -0.3];
 end
 
 %% Plot distributions
@@ -36,11 +36,13 @@ figure
 for i = 1:n_params
     subplot(5,round(n_params/5),i)
     histogram(xs(:,i), n_bins);
-    xlim(calc_bounds(x_lon(i), 0.5));
+    xlim(calc_bounds(x_lon(i), plot_height));
     %title(param_names(i));
 end
 
 %% Plot error bars
+avl_stability_derivatives;
+
 figure
 
 param_i = 1;
@@ -48,105 +50,132 @@ subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D0}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 2;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\alpha}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 3;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\alpha^2}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 4;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{Dq}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 5;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\delta_e}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 6;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+scatter(1, avl_c_L_0, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{L0}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 7;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
-    'MarkerEdgeColor','red','MarkerFaceColor','red')
+    'MarkerEdgeColor','red','MarkerFaceColor','red');
+hold on
+scatter(1, avl_c_L_alpha, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{L\alpha}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 8;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{L\alpha^2}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 9;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
-    'MarkerEdgeColor','red','MarkerFaceColor','red')
+    'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
 title("c_{Lq}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+scatter(1, avl_c_L_q, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 10;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+scatter(1, avl_c_L_delta_e, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{L\delta_e}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 11;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{m0}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 12;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+scatter(1, avl_c_m_alpha, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{m\alpha}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 13;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+scatter(1, avl_c_m_q, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{mq}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 14;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+scatter(1, avl_c_m_delta_e, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 title("c_{m\delta_e}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 15;
 subplot(3,5,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{m\delta_e^2}");
-ylim(calc_bounds(x_lon(param_i), 0.5));
+ylim(calc_bounds(x_lon(param_i), plot_height));
 
 %% Generate trajectory plots on validation data
 all_params = [const_params;
@@ -158,7 +187,7 @@ y_lat_seq = [phi, psi, p, r, v];
 input_seq = [delta_a, delta_vr, delta_vl, n_p]; % Actuator dynamics simulated beforehand
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 2
     % Get data for desired maneuver
 [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
     = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p, p_dot, q_dot, r_dot);
