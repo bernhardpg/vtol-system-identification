@@ -71,7 +71,7 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
 
     % Repeat procedure until no improvements can be made
     perform_another_step = true;
-    tested_nonlinear_terms = false;
+    test_nonlinear_terms = false;
     while perform_another_step
         fprintf(['Regressor pool: ' repmat('%s ', 1, length(regr_names(regr_pool))) '\n'], regr_names(regr_pool)) 
         perform_another_step = false; % Set to true if either a regressor is added or removed
@@ -123,6 +123,10 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
 
             % Reset regressor pool and remove chosen regressors
             regr_pool = 2:num_linear_regressors+1;
+            if test_nonlinear_terms
+                % Add non-linear terms to pool
+                regr_pool = [regr_pool num_linear_regressors+2:total_num_regressors];
+            end
             for chosen_regr_i = regr_curr
                regr_pool(regr_pool == chosen_regr_i) = [];
             end
@@ -209,9 +213,9 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
             perform_another_step = false;
         end
         if ~perform_another_step
-            if ~tested_nonlinear_terms
+            if ~test_nonlinear_terms
                 disp("No more to do with linear terms, test non-linear terms")
-                tested_nonlinear_terms = true;
+                test_nonlinear_terms = true;
                 perform_another_step = true;
                 
                 % Reset regressor pool and remove chosen regressors

@@ -1,4 +1,10 @@
 clc; clear all; close all;
+
+%%%
+% This script calculates the best model for lateral coeffs using
+% stepwise-regression. This is only based on the data. If this method gives
+% a simpler model, this model is preferred!
+
 %%%
 % Load training data
 %%%
@@ -10,12 +16,11 @@ load_data;
 [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
 
 % Basis regressors
-delta_r = (-delta_vl + delta_vr) / 2; % Actually use control surface deflections, not commanded rudder input
 regr = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
 regr_names = ["p" "r" "beta" "delta_a" "delta_r"];
 
-nonlin_regr = [beta.^2];
-nonlin_regr_names = ["beta_sq"];
+nonlin_regr = [beta.^2]; %sign(p_hat).*p_hat.^2 sign(r_hat).*r_hat.^2 sign(delta_a).*delta_a.^2 sign(delta_r).*delta_r.^2];
+nonlin_regr_names = ["beta_sq"]; % "p_sq" "r_sq" "delta_a_sq" "delta_r_sq"];
 
 % Dependent variables
 zs = [c_Y c_l c_n];
@@ -31,6 +36,7 @@ load_data;
 delta_r = (-delta_vl + delta_vr) / 2;
 regr_val = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
 nonlin_regr_val = [beta.^2];
+
 % Dependent variables
 zs_val = [c_Y c_l c_n];
 t_plot_val = 0:dt:length(t)*dt-dt;
@@ -41,7 +47,6 @@ t_plot_val = 0:dt:length(t)*dt-dt;
 %%%%%%%%%%%%%%%%%%%%%%%
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
-
 
 min_r_sq_change = 0.5; % Demand at least 2% improvement to add a regressor
 

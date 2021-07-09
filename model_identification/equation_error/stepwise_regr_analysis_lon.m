@@ -6,12 +6,13 @@ load_data;
 
 % Create explanatory variables
 [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-t_plot = 0:dt:length(t)*dt-dt;
 
 % Basis regressors
-delta_e = (delta_vl + delta_vr) / 2;
-regr = [alpha q_hat delta_e];
+regr = [aoa_alpha q_hat delta_e];
 regr_names = ["alpha" "q" "delta_e"];
+
+nonlin_regr = [aoa_alpha.^2 sign(q_hat).*q_hat.^2 sign(delta_e).*delta_e.^2];
+nonlin_regr_names = ["alpha_sq" "q_sq" "delta_e_sq"];
 
 % Dependent variables
 zs = [c_D c_L c_m];
@@ -21,44 +22,45 @@ data_type = "val";
 load_data;
 
 [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-delta_e = (delta_vl + delta_vr) / 2;
-regr_val = [alpha q_hat delta_e];
+regr_val = [aoa_alpha q_hat delta_e];
+nonlin_regr_val = [aoa_alpha.^2 sign(q_hat).*q_hat.^2 sign(delta_e).*delta_e.^2];
 zs_val = [c_D c_L c_m];
+t_plot_val = 0:dt:length(t)*dt-dt;
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
-min_r_sq_change = 1.5; % Demand at least 2% improvement to add a regressor
+min_r_sq_change = 0.5; % Demand at least 2% improvement to add a regressor
 
 z = zs(:,1);
 z_val = zs_val(:,1);
-[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names, min_r_sq_change);
+[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_D", th_hat, th_names);
 
 figure
-plot(t_plot, z, t_plot, y_hat); hold on
+plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_D")
+title("c_D: " + "R^2 = " + R_sq_val + "%")
 
 
 z = zs(:,2);
 z_val = zs_val(:,2);
-[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names, min_r_sq_change);
+[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_L", th_hat, th_names);
 
 figure
-plot(t_plot, z, t_plot, y_hat); hold on
+plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_L")
+title("c_L: " + "R^2 = " + R_sq_val + "%")
 
 z = zs(:,3);
 z_val = zs_val(:,3);
-[th_hat, th_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names, min_r_sq_change);
+[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_m", th_hat, th_names);
 
 figure
-plot(t_plot, z, t_plot, y_hat); hold on
+plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_m")
+title("c_m: " + "R^2 = " + R_sq_val + "%")

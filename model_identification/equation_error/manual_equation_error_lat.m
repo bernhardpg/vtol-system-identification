@@ -1,4 +1,9 @@
-clc; clear all; close all;
+clear all;
+
+%%%
+% This script tests how well a "textbook model" for the lateral dynamics
+% works on the validation data. The purpose of this is to compare with
+% Stepwise-regression method, which works purely analytically.
 
 %%%
 % Load validation data
@@ -51,7 +56,7 @@ subplot(3,1,1)
 plot(t_val_plot, z_val, t_val_plot, y_hat); hold on
 legend(name, name + " hat", 'Interpreter','latex')
 title(name + " " + "R^2 = " + R_sq + "%")
-print_eq_error_params("c_n", th_hat, th_names);
+print_eq_error_params(name, th_hat, th_names);
 
 % c_l
 z = c_l;
@@ -68,7 +73,7 @@ subplot(3,1,2)
 plot(t_val_plot, z_val, t_val_plot, y_hat); hold on
 legend(name, name + " hat", 'Interpreter','latex')
 title(name + " " + "R^2 = " + R_sq + "%")
-print_eq_error_params("c_n", th_hat, th_names);
+print_eq_error_params(name, th_hat, th_names);
 
 
 % c_n
@@ -86,4 +91,4 @@ subplot(3,1,3)
 plot(t_val_plot, z_val, t_val_plot, y_hat); hold on
 legend(name, name + " hat", 'Interpreter','latex')
 title(name + " " + "R^2 = " + R_sq + "%")
-print_eq_error_params("c_n", th_hat, th_names);
+print_eq_error_params(name, th_hat, th_names);
