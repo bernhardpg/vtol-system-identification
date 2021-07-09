@@ -2,10 +2,12 @@ function [v] = calc_residuals_lat(z, seq_data, const_params, x, dt, tspan, y0)
     all_params = [const_params;
                   x'];
               
+    t_seq = seq_data(:,1);
     % Integrate dynamics
     [t_pred, y_pred] = ode45(@(t,y) lat_dynamics_liftdrag_c(t, y, seq_data, all_params), tspan, y0);
-    y_pred = interp1(t_pred, y_pred, tspan(1):dt:tspan(2)); % change y_pred to correct time
+    y_pred = interp1(t_pred, y_pred, t_seq); % change y_pred to correct time
 
     % Squared cost
-    v = z - y_pred; % residuals
+    acc = calc_acc_lat(y_pred, seq_data, all_params);
+    v = z - [y_pred acc]; % residuals
 end

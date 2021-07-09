@@ -156,13 +156,3 @@ for maneuver_i = 1:num_maneuvers
             save_plot, show_plot, plot_output_location, R_sq_m);
     end
 end
-
-function [R_sq] = calc_R_sq(z, y_hat)
-    % Calculate total Sum of Squares
-    z_bar = mean(z);
-    SS_T = (z - z_bar)' * (z - z_bar);
-    SS_E = (z - y_hat)' * (z - y_hat); % Residual Sum of Squares
-    
-    % Coefficient of Determination
-    R_sq = (1 - SS_E/SS_T) * 100;
-end

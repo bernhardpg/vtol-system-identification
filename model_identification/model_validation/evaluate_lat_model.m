@@ -211,17 +211,15 @@ for maneuver_i = 1:num_maneuvers
     y_pred = interp1(t_pred, y_pred, t_m);
     acc = calc_acc_lat(y_pred, maneuver_seq_m, all_params);
     toc
-    
 
     R_sq_phi = calc_R_sq(phi_m, y_pred(:,1));
     R_sq_psi = calc_R_sq(psi_m, y_pred(:,2));
     R_sq_p = calc_R_sq(p_m, y_pred(:,3));
     R_sq_r = calc_R_sq(r_m, y_pred(:,4));
-    R_sq_v = calc_R_sq(v_m, y_pred(:,4));
+    R_sq_v = calc_R_sq(v_m, y_pred(:,5));
     R_sq_man = [R_sq_phi R_sq_psi R_sq_p R_sq_r R_sq_v];
     R_sq(maneuver_i,:) = R_sq_man;
     
-
     if save_plot || show_plot
         plot_maneuver_lat("traj_val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
             t_m, [y_pred acc],...
