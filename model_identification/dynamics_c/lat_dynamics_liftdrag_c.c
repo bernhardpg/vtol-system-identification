@@ -112,27 +112,25 @@ void compute_dx(
 		J_yy = p[19];
 
 
-		double c_Y_0, c_Y_beta, c_Y_p, c_Y_r, c_Y_delta_a, c_Y_delta_r, c_l_0, c_l_beta, c_l_p, c_l_r, c_l_delta_a, c_n_0, c_n_beta, c_n_p, c_n_r, c_n_delta_a, c_n_delta_r;
+		double c_Y_0, c_Y_beta, c_Y_p, c_Y_delta_a, c_Y_delta_r, c_l_0, c_l_beta, c_l_p, c_l_r, c_l_delta_a, c_n_0, c_n_beta, c_n_p, c_n_r, c_n_delta_r;
 
 		c_Y_0 = p[20];
 		c_Y_beta = p[21];
 		c_Y_p = p[22];
-		c_Y_r = p[23];
-		c_Y_delta_a = p[24];
-		c_Y_delta_r = p[25];
+		c_Y_delta_a = p[23];
+		c_Y_delta_r = p[24];
 
-		c_l_0 = p[26];
-		c_l_beta = p[27];
-		c_l_p = p[28];
-		c_l_r = p[29];
-		c_l_delta_a = p[30];
+		c_l_0 = p[25];
+		c_l_beta = p[26];
+		c_l_p = p[27];
+		c_l_r = p[28];
+		c_l_delta_a = p[29];
 
-		c_n_0 = p[31];
-		c_n_beta = p[32];
-		c_n_p = p[33];
-		c_n_r = p[34];
-		c_n_delta_a = p[35];
-		c_n_delta_r = p[36];
+		c_n_0 = p[30];
+		c_n_beta = p[31];
+		c_n_p = p[32];
+		c_n_r = p[33];
+		c_n_delta_r = p[34];
 
 		// Extract state
     double phi, psi, ang_p, ang_r, vel_v;
@@ -176,9 +174,9 @@ void compute_dx(
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p * p_hat + c_Y_r * r_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
+    double c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p * p_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
     double c_l = c_l_0 + c_l_beta * beta + c_l_p * p_hat + c_l_r * r_hat + c_l_delta_a * delta_a;
-    double c_n = c_n_0 + c_n_beta * beta + c_n_p * p_hat + c_n_r * r_hat + c_n_delta_a * delta_a + c_n_delta_r * delta_r;
+    double c_n = c_n_0 + c_n_beta * beta + c_n_p * p_hat + c_n_r * r_hat + c_n_delta_r * delta_r;
 
     double Y = c_Y * dyn_pressure * planform_sqm;
     double L = c_l * dyn_pressure * planform_sqm * wingspan_m;

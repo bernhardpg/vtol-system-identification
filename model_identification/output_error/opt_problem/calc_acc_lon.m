@@ -1,4 +1,3 @@
-
 % Calculate accelerations from kinematic relationship
 function [acc] = calc_acc_lon(y_pred, seq_data, all_params)
     t_seq = seq_data(:,1);
