@@ -2,7 +2,7 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["roll_211"];
+maneuver_types = ["yaw_211"];
 data_type = "train";
 load_data;
 load_const_params;
@@ -106,7 +106,7 @@ for maneuver_i = 1:num_maneuvers
     
     xs(maneuver_i,:) = x;
     
-    writematrix(xs, "lat_params.txt")
+    writematrix(xs, "lat_params_yaw.txt")
 end
 
 display("Finished running output-error");
