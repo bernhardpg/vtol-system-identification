@@ -77,7 +77,7 @@ function [] = plot_maneuver_lat(fig_name, t, phi, theta, psi, p, q, r, u, v, w, 
         plot(t, v, '--'); hold on
         plot(t_pred, y_pred(:,5));
         legend("$v$", "$\hat{v}$")
-        ylim([-5 5]);
+        ylim([-10 10]);
         ylabel("[m/s]")
         title("fit = " + R_sq(5) + "%");
         

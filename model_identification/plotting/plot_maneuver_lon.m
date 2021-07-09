@@ -76,7 +76,7 @@ function [] = plot_maneuver_lon(fig_name, t, phi, theta, psi, p, q, r, u, v, w, 
         subplot(num_plots,2,15)
         plot(t, v, '--'); hold on
         %plot(t_pred, y_pred(:,7));
-        ylim([-5 5]);
+        ylim([-10 10]);
         legend("$v$")
         ylabel("[m/s]")
         

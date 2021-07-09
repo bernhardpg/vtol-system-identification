@@ -13,14 +13,14 @@ function [] = plot_coeffs_lon(fig_name, x_lon, t, phi, theta, psi, p, q, r, u, v
 
     aoa_alpha = atan2(w, u);
     [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = calc_explanatory_vars(p, q, r, u, v, w);
-    [c_D, c_L, c_m] = calc_coeffs(x_lon, aoa_alpha, q_hat, delta_e);
+    [c_D, c_L, c_m] = calc_coeffs_lon(x_lon, aoa_alpha, q_hat, delta_e);
     
     q_pred = y_pred(:,2);
     u_pred = y_pred(:,3);
     w_pred = y_pred(:,4);
     [~, q_hat_pred, ~, ~, ~, ~] = calc_explanatory_vars(p, q_pred, r, u_pred, v, w_pred);
     aoa_alpha_pred = atan2(w_pred, u_pred);
-    [c_D_pred, c_L_pred, c_m_pred] = calc_coeffs(x_lon, aoa_alpha_pred, q_hat_pred, delta_e);
+    [c_D_pred, c_L_pred, c_m_pred] = calc_coeffs_lon(x_lon, aoa_alpha_pred, q_hat_pred, delta_e);
     
     subplot(3,1,1)
     plot(t, c_D_pred); hold on

@@ -3,17 +3,17 @@ clc; clear all; close all;
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
 maneuver_types = ["pitch_211"];
-data_type = "train";
+data_type = "val";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lon_model/yaw_maneuvers/";
-save_plot = false;
-show_plot = true;
+plot_output_location = "model_identification/model_validation/validation_plots/lon_model_equation_error/pitch/";
+save_plot = true;
+show_plot = false;
 plot_height = 1.0;
 
-test_initial = false;
+test_initial = true;
 
 if test_initial
     % Load initial guesses
@@ -25,7 +25,6 @@ else
     x_lon = median(xs);
     param_mads = mad(xs);
     writematrix(x_lon, "lon_params_medians.txt");
-    x_lon = [x_lon -0.3];
 end
 
 %% Plot distributions
@@ -187,9 +186,9 @@ y_lat_seq = [phi, psi, p, r, v];
 input_seq = [delta_a, delta_vr, delta_vl, n_p]; % Actuator dynamics simulated beforehand
 
 R_sq = zeros(num_maneuvers, 4);
-for maneuver_i = 2
+for maneuver_i = 1:num_maneuvers
     % Get data for desired maneuver
-[t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
+    [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
     = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p, p_dot, q_dot, r_dot);
     input_seq_m = [delta_a_m delta_vl_m delta_vr_m n_p_m];
     lat_state_seq_m = [phi_m, psi_m, p_m, r_m, v_m];
@@ -202,7 +201,7 @@ for maneuver_i = 2
     % Integrate dynamics
     disp("Simulating dynamics for maneuver " + maneuver_i);
     tic
-    [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_liftdrag_w_rudder_c(t, y, maneuver_seq_m, all_params), tspan, y0);
+    [t_pred, y_pred] = ode45(@(t,y) lon_dynamics_liftdrag_c(t, y, maneuver_seq_m, all_params), tspan, y0);
     y_pred = interp1(t_pred, y_pred, t_m);
     acc = calc_acc_lon(y_pred, maneuver_seq_m, all_params);
     toc
