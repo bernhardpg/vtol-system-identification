@@ -18,7 +18,7 @@ test_initial = true;
 if test_initial
     % Load initial guesses
     equation_error_results_lon;
-    x_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq];
+    x_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_V c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_V c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_V c_m_q c_m_delta_e];
 else
     xs = readmatrix("lon_params_ga.txt");
     %xs = rmoutliers(xs);

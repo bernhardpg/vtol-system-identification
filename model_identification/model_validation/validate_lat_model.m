@@ -8,10 +8,10 @@ load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lat_model_equation_error/roll/";
+plot_output_location = "model_identification/model_validation/validation_plots/lat_model_1/roll/";
 save_plot = true;
 show_plot = false;
-plot_height = 1.0;
+plot_height = 0.5;
 
 test_initial = false;
 
@@ -20,16 +20,15 @@ if test_initial
     equation_error_results_lat;
     x_lat = [c_Y_0 c_Y_beta c_Y_p c_Y_delta_a c_Y_delta_r c_l_0 c_l_beta c_l_p c_l_r c_l_delta_a c_n_0 c_n_beta c_n_p c_n_r c_n_delta_r];
 else
-    equation_error_results_lat;
-    x_lat = [c_Y_0 c_Y_beta c_Y_p c_Y_delta_a c_Y_delta_r c_l_0 c_l_beta c_l_p c_l_r c_l_delta_a c_n_0 c_n_beta c_n_p c_n_r c_n_delta_r];
-    param_mads = zeros(size(x_lat));
-%     xs = readmatrix("lon_params_ga.txt");
-%     %xs = rmoutliers(xs);
-%     x_lat = median(xs);
-%     param_mads = mad(xs);
-%     writematrix(x_lat, "lon_params_medians.txt");
-%     x_lat = [x_lat -0.3];
+    xs = readmatrix("lat_params.txt");
+    xs = rmoutliers(xs);
+    x_lat = median(xs);
+    param_mads = mad(xs);
+    writematrix(x_lat, "lat_params_medians.txt");
 end
+
+param_names = ["c_Y_0" "c_Y_beta" "c_Y_p" "c_Y_delta_a" "c_Y_delta_r" "c_l_0" "c_l_beta" "c_l_p" "c_l_r" "c_l_delta_a" "c_n_0" "c_n_beta" "c_n_p" "c_n_r" "c_n_delta_r"];
+
 
 %% Plot distributions
 n_bins = 40;
@@ -40,7 +39,7 @@ for i = 1:n_params
     subplot(5,round(n_params/5),i)
     histogram(xs(:,i), n_bins);
     xlim(calc_bounds(x_lat(i), plot_height));
-    %title(param_names(i));
+    title(param_names(i));
 end
 
 %% Plot error bars
@@ -62,6 +61,8 @@ errorbar(0,x_lat(param_i),param_mads(param_i),'-s','MarkerSize',10,...
 title("c_{Y\beta}");
 ylim(calc_bounds(x_lat(param_i), plot_height));
 scatter(1, avl_c_Y_beta, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 
 param_i = 3;
 subplot(3,5,param_i)
@@ -70,6 +71,8 @@ errorbar(0,x_lat(param_i),param_mads(param_i),'-s','MarkerSize',10,...
 title("c_{Yp}");
 ylim(calc_bounds(x_lat(param_i), plot_height));
 scatter(1, avl_c_Y_p, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 
 param_i = 4;
 subplot(3,5,param_i)
@@ -78,6 +81,8 @@ errorbar(0,x_lat(param_i),param_mads(param_i),'-s','MarkerSize',10,...
 title("c_{Y\delta_a}");
 ylim(calc_bounds(x_lat(param_i), plot_height));
 scatter(1, avl_c_Y_delta_a, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 
 param_i = 5;
 subplot(3,5,param_i)
@@ -86,6 +91,8 @@ errorbar(0,x_lat(param_i),param_mads(param_i),'-s','MarkerSize',10,...
 title("c_{Y\delta_r}");
 ylim(calc_bounds(x_lat(param_i), plot_height));
 scatter(1, avl_c_Y_delta_r, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 
 param_i = 6;
 subplot(3,5,param_i)
@@ -113,6 +120,8 @@ errorbar(0,x_lat(param_i),param_mads(param_i),'-s','MarkerSize',10,...
 title("c_{lp}");
 ylim(calc_bounds(x_lat(param_i), plot_height));
 scatter(1, avl_c_l_p, 'x');
+xlim([-1 2])
+set(gca,'xticklabel',{[]})
 
 param_i = 9;
 subplot(3,5,param_i)
