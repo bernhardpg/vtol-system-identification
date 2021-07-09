@@ -1,4 +1,4 @@
-function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change)
+function [th_hat, chosen_regr_names, y_hat, R_sq] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change)
     disp("##### STEPWISE REGRESSION ROUND #####")
 
     %%%% Initialize SR %%%%%%
@@ -15,10 +15,7 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
     [~, total_num_regressors] = size(X);
     regr_names = ["1" regr_names nonlin_regr_names];
     [~, num_linear_regressors] = size(regr);
-    regr_pool = 2:num_linear_regressors + 1; % Remaining regressors to choose from
-    
-    disp("Testing regressors: ")
-    fprintf(['Regressor pool: ' repmat('%s ', 1, length(regr_names(regr_pool))) '\n'], regr_names(regr_pool)) 
+    regr_pool = 2:num_linear_regressors; % Remaining regressors to choose from
     
     X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
@@ -73,7 +70,8 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
     perform_another_step = true;
     tested_nonlinear_terms = false;
     while perform_another_step
-        fprintf(['Regressor pool: ' repmat('%s ', 1, length(regr_names(regr_pool))) '\n'], regr_names(regr_pool)) 
+        %fprintf(['Regressor pool: ' repmat('%s ', 1, length(pool_names)) '\n'], pool_names)
+        
         perform_another_step = false; % Set to true if either a regressor is added or removed
         
         % Calculate current RSS and R_sq
@@ -115,17 +113,16 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
             disp("Regressor should not be included: " + regr_names(new_regr) + ". Change in R_sq (validation) would be = " + R_sq_val_change + "%")
             % Remove regressor from pool
             regr_pool(regr_pool == new_regr) = [];
+            
             perform_another_step = true;
         else
             % Include regressor!
+            prev_regr_failed = false;
             new_regressor_name = regr_names(new_regr);
             regr_curr = regr_potential;
 
-            % Reset regressor pool and remove chosen regressors
-            regr_pool = 2:num_linear_regressors+1;
-            for chosen_regr_i = regr_curr
-               regr_pool(regr_pool == chosen_regr_i) = [];
-            end
+            % Remove chosen regressor from pool
+            regr_pool(regr_pool == new_regr) = [];
 
             %%%% Print status %%%%
             disp("Regressor " + new_regressor_name + " included! F0 = " + F0 + ", change in R_sq (validation) = " + R_sq_val_change + "%");
@@ -163,9 +160,9 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
 
                 % Check if hypothesis should be rejected or kept
                 RSS_val_without_j = calc_RSS(y_hat_val_wo_j, z_val);
-%                 if RSS_val_without_j < RSS_val
-%                     disp("test")
-%                 end
+                if RSS_val_without_j < RSS_val
+                    disp("test")
+                end
                 F0 = calc_F_value(RSS_val_without_j, RSS_val, np - 1, np, N_val);
                 F0_s(regr_to_test_for_removal) = F0;
             end
@@ -214,13 +211,8 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
                 tested_nonlinear_terms = true;
                 perform_another_step = true;
                 
-                % Reset regressor pool and remove chosen regressors
-                regr_pool = 2:num_linear_regressors+1;
-                for chosen_regr_i = regr_curr
-                   regr_pool(regr_pool == chosen_regr_i) = [];
-                end
                 % Add non-linear terms to pool
-                regr_pool = [regr_pool num_linear_regressors+2:total_num_regressors];
+                regr_pool = [regr_pool num_linear_regressors+1:total_num_regressors];
             else
                 disp("Linear terms and nonlinear terms tested. Finished.")
             end
@@ -228,18 +220,12 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
         disp(" ")
     end
 
-    % Do final regression round on training data
+    % Do final regression round
     X_curr = X(:,regr_curr);
     th_hat = LSE(X_curr, z);
     y_hat = X_curr * th_hat;
     RSS = calc_RSS(y_hat, z);
     R_sq = calc_R_sq(y_hat, z);
-    
-    % Do final regression round on validation data
-    X_curr_val = X_val(:,regr_curr);
-    y_hat_val = X_curr_val * th_hat;
-    RSS_val = calc_RSS(y_hat_val, z_val);
-    R_sq_val = calc_R_sq(y_hat_val, z_val);
     
     chosen_regr_names = regr_names(regr_curr);
 end
