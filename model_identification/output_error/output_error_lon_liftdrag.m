@@ -7,7 +7,7 @@ load_const_params;
 
 % Initial guesses from equation-error
 equation_error_results_lon;
-x0_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_q c_m_delta_e c_m_delta_e_sq];
+x0_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_V c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_V c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_V c_m_q c_m_delta_e];
 % Collect recorded data
 t_seq = t;
 y_lon_seq = [theta q u w a_x a_z q_dot];
@@ -15,17 +15,17 @@ y_lat_seq = [phi, psi, p, r, v];
 input_seq = [delta_a, delta_vl, delta_vr, n_p]; % Actuator dynamics simulated beforehand
 
 
+
 %%
 % Optimization
 
 % Variable bounds
+% Constructed such that the parameters can vary more away from 0, but not
+% change sign
 allowed_param_change = 0.5;
-LB = min([x0_lon * (1 - allowed_param_change); x0_lon * (1 + allowed_param_change)]);
-UB = max([x0_lon * (1 - allowed_param_change); x0_lon * (1 + allowed_param_change)]);
+LB = min([x0_lon * (1 - allowed_param_change); x0_lon * (1 + 4 * allowed_param_change)]);
+UB = max([x0_lon * (1 - allowed_param_change); x0_lon * (1 + 4 * allowed_param_change)]);
 
-% % Only constrain sign of coefficients
-% LB = min([sign(x0_lon) * eps ; sign(x0_lon) * inf]);
-% UB = max([sign(x0_lon) * eps ; sign(x0_lon) * inf]);
 
 weight = diag([1 1 1 1 1 1 1]); % Weight all outputs equally
 
@@ -41,7 +41,7 @@ options.FunctionTolerance = 1e-02;
 
 % Run optimization problem on each maneuver separately
 xs = zeros(num_maneuvers, length(x0_lon));
-for maneuver_i = 26:num_maneuvers
+for maneuver_i = 1:26
     disp("== Solving for maneuver " + maneuver_i + " ==");
     
     % Organize data for maneuver
@@ -110,7 +110,7 @@ for maneuver_i = 26:num_maneuvers
     
     xs(maneuver_i,:) = x;
     
-    writematrix(xs, "lon_params_ga_2.txt")
+    writematrix(xs, "lon_params.txt")
 end
 
 display("Finished running output-error");

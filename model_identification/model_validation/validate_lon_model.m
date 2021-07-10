@@ -8,19 +8,23 @@ load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lon_model_equation_error/pitch/";
+plot_output_location = "model_identification/model_validation/validation_plots/lon_model/";
+traj_plot_output_location = plot_output_location + "pitch/";
 save_plot = true;
 show_plot = false;
 plot_height = 1.0;
 
-test_initial = true;
+test_initial = false;
+
+param_names = ["c_D_0" "c_D_alpha" "c_D_alpha_sq" "c_D_V" "c_D_q" "c_D_delta_e" "c_L_0" "c_L_alpha" "c_L_alpha_sq" "c_L_V" "c_L_q" "c_L_delta_e" "c_m_0" "c_m_alpha" "c_m_V" "c_m_q" "c_m_delta_e"];
 
 if test_initial
     % Load initial guesses
     equation_error_results_lon;
     x_lon = [c_D_0 c_D_alpha c_D_alpha_sq c_D_V c_D_q c_D_delta_e c_L_0 c_L_alpha c_L_alpha_sq c_L_V c_L_q c_L_delta_e c_m_0 c_m_alpha c_m_V c_m_q c_m_delta_e];
 else
-    xs = readmatrix("lon_params_ga.txt");
+    params_location = "model_identification/output_error/results/lon/";
+    xs = readmatrix(params_location + "lon_params.txt");
     %xs = rmoutliers(xs);
     x_lon = median(xs);
     param_mads = mad(xs);
@@ -30,13 +34,20 @@ end
 %% Plot distributions
 n_bins = 40;
 
+% Plot params from roll maneuvers
 [~, n_params] = size(xs);
-figure
+fig = figure;
 for i = 1:n_params
-    subplot(5,round(n_params/5),i)
+    subplot(6,round(n_params/6),i)
     histogram(xs(:,i), n_bins);
     xlim(calc_bounds(x_lon(i), plot_height));
-    %title(param_names(i));
+    title(param_names(i));
+end
+sgtitle("Parameter Distributions")
+if save_plot
+    filename = "param_dists";
+    mkdir(plot_output_location);
+    saveas(fig, plot_output_location + filename, 'epsc')
 end
 
 %% Plot error bars
@@ -45,42 +56,49 @@ avl_stability_derivatives;
 figure
 
 param_i = 1;
-subplot(3,5,param_i)
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D0}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 2;
-subplot(3,5,param_i)
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\alpha}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 3;
-subplot(3,5,param_i)
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\alpha^2}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
 param_i = 4;
-subplot(3,5,param_i)
+subplot(3,6,param_i)
+errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','red','MarkerFaceColor','red')
+title("c_{DV}");
+ylim(calc_bounds(x_lon(param_i), plot_height));
+
+param_i = 5;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{Dq}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 5;
-subplot(3,5,param_i)
+param_i = 6;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{D\delta_e}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 6;
-subplot(3,5,param_i)
+param_i = 7;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 hold on
@@ -90,8 +108,8 @@ set(gca,'xticklabel',{[]})
 title("c_{L0}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 7;
-subplot(3,5,param_i)
+param_i = 8;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red');
 hold on
@@ -101,15 +119,22 @@ set(gca,'xticklabel',{[]})
 title("c_{L\alpha}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 8;
-subplot(3,5,param_i)
+param_i = 9;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{L\alpha^2}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 9;
-subplot(3,5,param_i)
+param_i = 10;
+subplot(3,6,param_i)
+errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','red','MarkerFaceColor','red')
+title("c_{LV}");
+ylim(calc_bounds(x_lon(param_i), plot_height));
+
+param_i = 11;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
 title("c_{Lq}");
@@ -118,8 +143,8 @@ xlim([-1 2])
 set(gca,'xticklabel',{[]})
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 10;
-subplot(3,5,param_i)
+param_i = 12;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 hold on
@@ -129,15 +154,15 @@ set(gca,'xticklabel',{[]})
 title("c_{L\delta_e}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 11;
-subplot(3,5,param_i)
+param_i = 13;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 title("c_{m0}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 12;
-subplot(3,5,param_i)
+param_i = 14;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 hold on
@@ -147,8 +172,19 @@ set(gca,'xticklabel',{[]})
 title("c_{m\alpha}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 13;
-subplot(3,5,param_i)
+
+param_i = 15;
+subplot(3,6,param_i)
+errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold on
+set(gca,'xticklabel',{[]})
+title("c_{mV}");
+ylim(calc_bounds(x_lon(param_i), plot_height));
+
+
+param_i = 16;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 hold on
@@ -158,8 +194,8 @@ set(gca,'xticklabel',{[]})
 title("c_{mq}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
-param_i = 14;
-subplot(3,5,param_i)
+param_i = 17;
+subplot(3,6,param_i)
 errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red')
 hold on
@@ -167,13 +203,6 @@ scatter(1, avl_c_m_delta_e, 'x');
 xlim([-1 2])
 set(gca,'xticklabel',{[]})
 title("c_{m\delta_e}");
-ylim(calc_bounds(x_lon(param_i), plot_height));
-
-param_i = 15;
-subplot(3,5,param_i)
-errorbar(0,x_lon(param_i),param_mads(param_i),'-s','MarkerSize',10,...
-    'MarkerEdgeColor','red','MarkerFaceColor','red')
-title("c_{m\delta_e^2}");
 ylim(calc_bounds(x_lon(param_i), plot_height));
 
 %% Generate trajectory plots on validation data
@@ -237,7 +266,7 @@ param_mads = mad(xs);
 figure
 num_params = length(x0);
 for i = 1:num_params
-    subplot(3,5,i)
+    subplot(3,6,i)
     errorbar(0,x(i),param_mads(i),'-s','MarkerSize',10,...
         'MarkerEdgeColor','red','MarkerFaceColor','red')
     title(param_names(i));
