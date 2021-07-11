@@ -2,7 +2,7 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["roll_211"];
+maneuver_types = ["yaw_211"];
 data_type = "train";
 load_data;
 load_const_params;
@@ -17,17 +17,40 @@ load_const_params;
 % c_l_beta, c_l_delta_r,
 % c_n_0, c_n_beta, c_n_r, c_n_delta_r
 
-% Load initial guesses
-equation_error_results_lat;
-
 % All parameters:
 % x0_lat = [c_Y_0 c_Y_beta c_Y_p c_Y_r c_Y_delta_a c_Y_delta_r...
 %           c_l_0 c_l_beta c_l_p c_l_r c_l_delta_a c_l_delta_r...
 %           c_n_0 c_n_beta c_n_p c_n_r c_n_delta_a c_n_delta_r];
 
-x0 = [c_Y_delta_a...
-      c_l_0 c_l_p c_l_r c_l_delta_a...
-      c_n_p c_n_delta_a];
+%step_type = "1_roll";
+step_type = "2_yaw";
+
+% First fit rolling parameters from roll data
+if step_type == "1_roll"
+    
+    % Load initial values from equation-error
+    equation_error_results_lat;
+    
+    x0 = [c_Y_delta_a...
+          c_l_0 c_l_p c_l_r c_l_delta_a...
+          c_n_p c_n_delta_a];
+    collect_all_params_func = @(x) collect_all_params_roll(x);
+   
+% Loads params from previous step and fixes these, while letting the
+% rest change
+elseif step_type == "2_yaw"
+
+    params_location = "model_identification/output_error/results/lat/";
+    params_type = "lat_params_step_roll_medians";
+    x_from_roll = readmatrix(params_location + params_type + ".txt");
+    % Load initial values from equation-error
+    equation_error_results_lat;
+    x0 = [c_Y_0 c_Y_beta c_Y_p c_Y_r c_Y_delta_r...
+          c_l_beta c_l_delta_r...
+          c_n_0 c_n_beta c_n_r c_n_delta_r];
+    
+    collect_all_params_func = @(x) collect_all_params_yaw(x, x_from_roll);
+end
 
       
 % Collect recorded data
@@ -71,9 +94,9 @@ for maneuver_i = 1:num_maneuvers
     tspan = [t_seq_m(1) t_seq_m(end)];
 
     % Initial calculations for maneuver
-    residuals_0 = calc_residuals_lat(y_lat_seq_m, data_seq_maneuver, const_params, collect_all_params(x0), dt, tspan, y0);
+    residuals_0 = calc_residuals_lat(y_lat_seq_m, data_seq_maneuver, const_params, collect_all_params_func(x0), dt, tspan, y0);
     R_hat_0 = diag(diag(residuals_0' * residuals_0) / N); % Assume cross-covariances to be zero
-    fval_0 = cost_fn_lat(collect_all_params(x0), weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lat_seq_m, const_params);
+    fval_0 = cost_fn_lat(collect_all_params_func(x0), weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lat_seq_m, const_params);
     
     % Set initial values
     x = x0;
@@ -93,11 +116,11 @@ for maneuver_i = 1:num_maneuvers
 
         % Solve optimization problem with previous covariance matrix
         options.InitialPopulationMatrix = x;
-        FitnessFunction = @(x) cost_fn_lat(collect_all_params(x), weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lat_seq_m, const_params);
+        FitnessFunction = @(x) cost_fn_lat(collect_all_params_func(x), weight, residual_weight, R_hat_0, dt, data_seq_maneuver, y0, tspan, y_lat_seq_m, const_params);
         [x,fval] = ga(FitnessFunction,numberOfVariables,[],[],[],[],LB,UB,[],options);
         
         % Calc new covariance matrix
-        residuals = calc_residuals_lat(y_lat_seq_m, data_seq_maneuver, const_params, collect_all_params(x), dt, tspan, y0);
+        residuals = calc_residuals_lat(y_lat_seq_m, data_seq_maneuver, const_params, collect_all_params_func(x), dt, tspan, y0);
         N = length(data_seq_maneuver);
         R_hat = diag(diag(residuals' * residuals) / N); % Assume cross-covariances to be zero
         
@@ -125,7 +148,7 @@ for maneuver_i = 1:num_maneuvers
     
     xs(maneuver_i,:) = x;
     
-    writematrix(xs, "lat_params_yaw.txt")
+    writematrix(xs, "lat_params_step_yaw.txt")
 end
 
 display("Finished running output-error");
@@ -188,9 +211,15 @@ for maneuver_i = 1
 end
 
 
-function [all_params] = collect_all_params(x)
+function [all_params] = collect_all_params_roll(x)
     equation_error_results_lat;
     all_params = [c_Y_0 c_Y_beta c_Y_p c_Y_r x(1) c_Y_delta_r...
                   x(2) c_l_beta x(3) x(4) x(5) c_l_delta_r...
                   c_n_0 c_n_beta x(6) c_n_r x(7) c_n_delta_r];
+end
+
+function [all_params] = collect_all_params_yaw(x, x_from_roll)
+    all_params = [x(1) x(2) x(3) x(4) x_from_roll(1) x(5)...
+                  x_from_roll(2) x(6) x_from_roll(3) x_from_roll(4) x_from_roll(5) x(7)...
+                  x(8) x(9) x_from_roll(6) x(10) x_from_roll(7) x(11)];
 end
