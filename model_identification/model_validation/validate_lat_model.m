@@ -2,16 +2,16 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["roll_211"];
+maneuver_types = ["yaw_211"];
 data_type = "val";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lat_model_step/";
-traj_plot_output_location = plot_output_location + "roll1/";
+plot_output_location = "model_identification/model_validation/validation_plots/lat_model_step_1/";
+traj_plot_output_location = plot_output_location + "yaw/";
 save_plot = true;
-show_plot = true;
+show_plot = false;
 plot_height = 1;
 
 validation_type = "steps";
