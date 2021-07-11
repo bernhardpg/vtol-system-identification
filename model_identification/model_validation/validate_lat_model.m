@@ -2,24 +2,24 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["yaw_211"];
+maneuver_types = ["roll_211"];
 data_type = "val";
 load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lat_model_roll/";
-traj_plot_output_location = plot_output_location + "yaw/";
-save_plot = false;
-show_plot = true;
+plot_output_location = "model_identification/model_validation/validation_plots/lat_model_yaw/";
+traj_plot_output_location = plot_output_location + "roll/";
+save_plot = true;
+show_plot = false;
 plot_height = 1;
 
-test_initial = false;
+test_initial = true;
 
 if test_initial
     % Load initial guesses
     equation_error_results_lat;
-    x_lat_roll = [c_Y_0 c_Y_beta c_Y_p c_Y_delta_a c_Y_delta_r c_l_0 c_l_beta c_l_p c_l_r c_l_delta_a c_n_0 c_n_beta c_n_p c_n_r c_n_delta_r];
+    x_lat_roll = [c_Y_0 c_Y_beta c_Y_p c_Y_r c_Y_delta_a c_Y_delta_r c_l_0 c_l_beta c_l_p c_l_r c_l_delta_a c_l_delta_r c_n_0 c_n_beta c_n_p c_n_r c_n_delta_a c_n_delta_r];
 else
     % Load parameters from roll maneuvers
     params_location = "model_identification/output_error/results/lat/";
@@ -53,7 +53,7 @@ for i = 1:n_params
     xlim(calc_bounds(x_lat_roll(i), plot_height));
     title(param_names(i));
 end
-sgtitle("Parameter Distributions")
+sgtitle("Parameter Distributions from Roll maneuvers")
 if save_plot
     filename = "param_dists_roll";
     mkdir(plot_output_location);
@@ -69,7 +69,7 @@ for i = 1:n_params
     xlim(calc_bounds(x_lat_roll(i), plot_height));
     title(param_names(i));
 end
-sgtitle("Parameter Distributions")
+sgtitle("Parameter Distributions from Yaw maneuvers")
 if save_plot
     filename = "param_dists_yaw";
     mkdir(plot_output_location);
@@ -206,13 +206,13 @@ ylim(calc_bounds(x_lat_roll(param_i), plot_height));
 param_i = 11;
 subplot(3,5,param_i)
 errorbar(0,x_lat_roll(param_i),roll_param_mads(param_i),'-s','MarkerSize',10,...
-    'MarkerEdgeColor','red','MarkerFaceColor','red')
+    'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
 errorbar(1,x_lat_yaw(param_i),yaw_param_mads(param_i),'-s','MarkerSize',10,...
     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
 title("c_{n0}");
 xlim([-1 3])
 set(gca,'xticklabel',{[]})
-ylim(calc_bounds(x_lat_roll(param_i), plot_height));
+ylim(calc_bounds(x_lat_roll(param_i), plot_height) * 5);
 
 param_i = 12;
 subplot(3,5,param_i)
