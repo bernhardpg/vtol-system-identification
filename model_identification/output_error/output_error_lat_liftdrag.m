@@ -2,7 +2,7 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-maneuver_types = ["yaw_211"];
+maneuver_types = ["roll_211"];
 data_type = "train";
 load_data;
 load_const_params;
@@ -23,7 +23,8 @@ load_const_params;
 %           c_n_0 c_n_beta c_n_p c_n_r c_n_delta_a c_n_delta_r];
 
 %step_type = "1_roll";
-step_type = "2_yaw";
+%step_type = "2_yaw";
+step_type = "3_roll";
 
 % First fit rolling parameters from roll data
 if step_type == "1_roll"
@@ -34,7 +35,7 @@ if step_type == "1_roll"
     x0 = [c_Y_delta_a...
           c_l_0 c_l_p c_l_r c_l_delta_a...
           c_n_p c_n_delta_a];
-    collect_all_params_func = @(x) collect_all_params_roll(x);
+    collect_all_params_func = @(x) collect_all_params_roll_initial(x);
    
 % Loads params from previous step and fixes these, while letting the
 % rest change
@@ -50,6 +51,23 @@ elseif step_type == "2_yaw"
           c_n_0 c_n_beta c_n_r c_n_delta_r];
     
     collect_all_params_func = @(x) collect_all_params_yaw(x, x_from_roll);
+
+% Loads params from previous step and fixes these, while letting the
+% rest change
+elseif step_type == "3_roll"
+
+    params_location = "model_identification/output_error/results/lat/";
+    params_type = "lat_params_step_roll_medians";
+    x_from_roll = readmatrix(params_location + params_type + ".txt");
+    
+    params_location = "model_identification/output_error/results/lat/";
+    params_type = "lat_params_step_yaw_medians";
+    x_from_yaw = readmatrix(params_location + params_type + ".txt");
+    % Combine results so far
+    equation_error_results_lat;
+    x0 = x_from_roll;
+    
+    collect_all_params_func = @(x) collect_all_params_roll(x, x_from_yaw);
 end
 
       
@@ -148,7 +166,7 @@ for maneuver_i = 1:num_maneuvers
     
     xs(maneuver_i,:) = x;
     
-    writematrix(xs, "lat_params_step_yaw.txt")
+    writematrix(xs, "lat_params_step_2_roll.txt")
 end
 
 display("Finished running output-error");
@@ -211,11 +229,17 @@ for maneuver_i = 1
 end
 
 
-function [all_params] = collect_all_params_roll(x)
+function [all_params] = collect_all_params_roll_initial(x)
     equation_error_results_lat;
     all_params = [c_Y_0 c_Y_beta c_Y_p c_Y_r x(1) c_Y_delta_r...
                   x(2) c_l_beta x(3) x(4) x(5) c_l_delta_r...
                   c_n_0 c_n_beta x(6) c_n_r x(7) c_n_delta_r];
+end
+
+function [all_params] = collect_all_params_roll(x, x_from_yaw)
+    all_params = [x_from_yaw(1) x_from_yaw(2) x_from_yaw(3) x_from_yaw(4) x(1) x_from_yaw(5)...
+                  x(2) x_from_yaw(6) x(3) x(4) x(5) x_from_yaw(7)...
+                  x_from_yaw(8) x_from_yaw(9) x(6) x_from_yaw(10) x(7) x_from_yaw(11)];
 end
 
 function [all_params] = collect_all_params_yaw(x, x_from_roll)

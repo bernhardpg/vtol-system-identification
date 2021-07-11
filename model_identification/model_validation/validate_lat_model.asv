@@ -8,11 +8,11 @@ load_data;
 load_const_params;
 
 % Generate plot of all validation maneuvers
-plot_output_location = "model_identification/model_validation/validation_plots/lat_model_step_3/";
+plot_output_location = "model_identification/model_validation/validation_plots/lat_model_step_2/";
 traj_plot_output_location = plot_output_location + "roll/";
-save_plot = true;
-show_plot = false;
-plot_height = 1.0;
+save_plot = false;
+show_plot = true;
+plot_height = 1.5;
 
 validation_type = "step_3";
 
@@ -106,36 +106,12 @@ elseif validation_type == "step_2"
     x_1_mads = x_roll_all_mads;
     x_2 = x_yaw_all;
     x_2_mads = x_yaw_all_mads;
-elseif validation_type == "step_3"
+elseif validation_type == "step_2"
     %%%%%%%
     %%% Step 3:
     %%%%%%%
     % Load parameters from first step roll maneuvers
-    params_location = "model_identification/output_error/results/lat/";
-    params_type = "lat_params_step_roll";
-    xs_roll = readmatrix(params_location + params_type + ".txt");
-    xs_roll = rmoutliers(xs_roll);
-    x_roll = median(xs_roll);
-    x_roll_mads = mad(xs_roll);
-    
-    % Load parameters from first step yaw maneuvers
-    params_location = "model_identification/output_error/results/lat/";
-    params_type = "lat_params_step_yaw";
-    xs_yaw = readmatrix(params_location + params_type + ".txt");
-    xs_yaw = rmoutliers(xs_yaw);
-    x_yaw = median(xs_yaw);
-    x_yaw_mads = mad(xs_yaw);
-    
-    % Collect all parameters from step 1 and step 2               
-    x_all_1 = [x_yaw(1) x_yaw(2) x_yaw(3) x_yaw(4) x_roll(1) x_yaw(5)...
-                 x_roll(2) x_yaw(6) x_roll(3) x_roll(4) x_roll(5) x_yaw(7)...
-                 x_yaw(8) x_yaw(9) x_roll(6) x_yaw(10) x_roll(7) x_yaw(11)];
-    x_all_1_mads = [x_yaw_mads(1) x_yaw_mads(2) x_yaw_mads(3) x_yaw_mads(4) x_roll_mads(1) x_yaw_mads(5) ...
-                      x_roll_mads(2) x_yaw_mads(6) x_roll_mads(3) x_roll_mads(4) x_roll_mads(5) x_yaw_mads(7) ...
-                      x_yaw_mads(8) x_yaw_mads(9) x_roll_mads(6) x_yaw_mads(10) x_roll_mads(7) x_yaw_mads(11)];
-    
-	%%%%%%%
-    % Load from second roll step
+    % c_Y_delta_a c_l_0 c_l_p c_l_r c_l_delta_a c_n_p c_n_delta_a
     params_location = "model_identification/output_error/results/lat/";
     params_type = "lat_params_step_2_roll";
     xs_roll = readmatrix(params_location + params_type + ".txt");
@@ -145,27 +121,39 @@ elseif validation_type == "step_3"
     writematrix(x_roll, params_location + params_type + "_medians.txt");
     
     % Load parameters from first step yaw maneuvers
+    % c_Y_0 c_Y_beta c_Y_p c_Y_r c_Y_delta_r c_l_beta c_l_delta_r
+    % c_n_0 c_n_beta c_n_r c_n_delta_r
     params_location = "model_identification/output_error/results/lat/";
     params_type = "lat_params_step_yaw";
     xs_yaw = readmatrix(params_location + params_type + ".txt");
     xs_yaw = rmoutliers(xs_yaw);
     x_yaw = median(xs_yaw);
     x_yaw_mads = mad(xs_yaw);
+    writematrix(x_yaw, params_location + params_type + "_medians.txt");
     
     % Collect all parameters from step 1 and step 2               
-    x_all_2 = [x_yaw(1) x_yaw(2) x_yaw(3) x_yaw(4) x_roll(1) x_yaw(5)...
+    x_yaw_all = [x_yaw(1) x_yaw(2) x_yaw(3) x_yaw(4) x_roll(1) x_yaw(5)...
                  x_roll(2) x_yaw(6) x_roll(3) x_roll(4) x_roll(5) x_yaw(7)...
                  x_yaw(8) x_yaw(9) x_roll(6) x_yaw(10) x_roll(7) x_yaw(11)];
-    x_all_2_mads = [x_yaw_mads(1) x_yaw_mads(2) x_yaw_mads(3) x_yaw_mads(4) x_roll_mads(1) x_yaw_mads(5) ...
+    x_yaw_all_mads = [x_yaw_mads(1) x_yaw_mads(2) x_yaw_mads(3) x_yaw_mads(4) x_roll_mads(1) x_yaw_mads(5) ...
+                      x_roll_mads(2) x_yaw_mads(6) x_roll_mads(3) x_roll_mads(4) x_roll_mads(5) x_yaw_mads(7) ...
+                      x_yaw_mads(8) x_yaw_mads(9) x_roll_mads(6) x_yaw_mads(10) x_roll_mads(7) x_yaw_mads(11)];
+    
+                  
+                  
+                  
+    % Collect all parameters from step 1 and step 2               
+    x_yaw_all = [x_yaw(1) x_yaw(2) x_yaw(3) x_yaw(4) x_roll(1) x_yaw(5)...
+                 x_roll(2) x_yaw(6) x_roll(3) x_roll(4) x_roll(5) x_yaw(7)...
+                 x_yaw(8) x_yaw(9) x_roll(6) x_yaw(10) x_roll(7) x_yaw(11)];
+    x_yaw_all_mads = [x_yaw_mads(1) x_yaw_mads(2) x_yaw_mads(3) x_yaw_mads(4) x_roll_mads(1) x_yaw_mads(5) ...
                       x_roll_mads(2) x_yaw_mads(6) x_roll_mads(3) x_roll_mads(4) x_roll_mads(5) x_yaw_mads(7) ...
                       x_yaw_mads(8) x_yaw_mads(9) x_roll_mads(6) x_yaw_mads(10) x_roll_mads(7) x_yaw_mads(11)];
                   
-    x_1 = x_all_1;
-    x_1_mads = x_all_1_mads;
-    x_2 = x_all_2;
-    x_2_mads = x_all_2_mads;
-    
-    x_traj_plot = x_2;
+    x_1 = x_roll_all;
+    x_1_mads = x_roll_all_mads;
+    x_2 = x_yaw_all;
+    x_2_mads = x_yaw_all_mads;
 end
 
 param_names = ["c_Y_0" "c_Y_beta" "c_Y_p" "c_Y_r" "c_Y_delta_a" "c_Y_delta_r"...
@@ -443,7 +431,7 @@ end
 
 %% Generate trajectory plots on validation data
 all_params = [const_params;
-              x_traj_plot'];
+              x_yaw_all'];
 
 % Collect recorded data
 t_seq = t;
@@ -452,7 +440,7 @@ input_seq = [delta_a, delta_vr, delta_vl, n_p]; % Actuator dynamics simulated be
 
 num_variables_to_pred = 5;
 R_sq = zeros(num_maneuvers, num_variables_to_pred);
-for maneuver_i = 1:num_maneuvers
+for maneuver_i = 5
     % Get data for desired maneuver
     [t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, a_x_m, a_y_m, a_z_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, delta_a_m, delta_vl_m, delta_vr_m, n_p_m, p_dot_m, q_dot_m, r_dot_m]...
     = get_maneuver_data(maneuver_i, maneuver_start_indices, t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, delta_a_sp, delta_vl_sp, delta_vr_sp, delta_a, delta_vl, delta_vr, n_p, p_dot, q_dot, r_dot);
@@ -484,7 +472,7 @@ for maneuver_i = 1:num_maneuvers
         plot_maneuver_lat("traj_val_maneuver" + maneuver_i, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
             t_m, [y_pred acc],...
             save_plot, show_plot, traj_plot_output_location, R_sq_man);
-        plot_coeffs_lat("coeffs_val_maneuver" + maneuver_i, x_traj_plot, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
+        plot_coeffs_lat("coeffs_val_maneuver" + maneuver_i, x_yaw_all, t_m, phi_m, theta_m, psi_m, p_m, q_m, r_m, u_m, v_m, w_m, delta_a_m, delta_vl_m, delta_vr_m, delta_a_sp_m, delta_vl_sp_m, delta_vr_sp_m, n_p_m, a_x_m, a_y_m, a_z_m, p_dot_m, q_dot_m, r_dot_m,...
             t_m, [y_pred acc],...
             save_plot, show_plot, traj_plot_output_location, R_sq_man);
     end
