@@ -1,3 +1,7 @@
+% NOTE! These values are outdated.
+
+
+
 %  Vortex Lattice Output -- Total Forces
 % 
 %  Configuration: VTOL                                                        

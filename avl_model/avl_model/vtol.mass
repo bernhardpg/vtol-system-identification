@@ -26,9 +26,9 @@ rho = 1.225
 #  x,y,z system here must be exactly the same one used in the .avl input file
 #     (same orientation, same origin location, same length units)
 #
-#  mass   x     y     z       Ixx   Iyy   Izz    Ixy  Ixz  Iyz
+#  mass   x     y     z           Ixx    Iyy    Izz    Ixy  Ixz  Iyz
 #
-   12.140 0.494   0.0   -0.043    0.9244 1.0702 1.8886 0.0 -0.1279 0.0    ! Entire aircraft
+   12.140 0.494   0.0   -0.043    0.7316 1.0664 1.6917 0.0 0.1279 0.0    ! Entire aircraft
 
 # Created by Bernhard Paus Græsdal, 2021-04-29
 

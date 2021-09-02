@@ -1,7 +1,7 @@
 % Mass
 % see calc_mass.m
 mass_kg = 12.140;
-cg_position_from_front_mm = 494.31;
+cg_position_from_front_m = 0.494;
 
 % Moment of inertias
 % see calc_moment_of_inertias.m
