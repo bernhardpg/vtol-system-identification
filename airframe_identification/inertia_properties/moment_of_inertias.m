@@ -1,17 +1,17 @@
-%%% Inertia properties
-% Mass
-mass_g = 12140.00;
-mass_kg = mass_g * 1e-3;
-
-cg_position_from_front_mm = 494.31; 
-
 % Moment of Inertia around NED body frame
 % Calculated from 3D CAD file
 % units: grams * square millimeters;
-J_xx = 924440800.82;	J_xy = 4810.21;	J_xz = 127880446.25;
-J_yx = 4810.21;	J_yy = 1070196067.65;	J_yz = 31829.85;
-J_zx = 127880446.25;	J_zy = 31829.85;	J_zz = 1888642369.68;
-            
+
+J_xx = 731622502.52;
+J_xy = 303.62;
+J_xz = 127693250.72;
+J_yx = 303.62;
+J_yy = 1066367479.22;
+J_yz = 18495.48;
+J_zx = 127693250.72;
+J_zy = 18495.48;
+J_zz = 1691708225.72;
+
 J_grams_sqmm = [J_xx J_xy J_xz;
                 J_yx J_yy J_yz
                 J_zx J_zy J_zz];
