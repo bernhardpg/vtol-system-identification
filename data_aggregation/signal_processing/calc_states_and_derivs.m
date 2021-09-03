@@ -5,7 +5,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     t_end = t_recorded(end);
     
     % Calc u, v and w from kinematic relationships
-    [u_recorded, v_recorded, w_recorded] = calc_uvw(phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
+    [u_recorded, v_recorded, w_recorded] = calc_body_vel(phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
     
     % Smooth signals
     temp = smooth_signal([phi_recorded theta_recorded psi_recorded]);
@@ -67,16 +67,6 @@ function [p, q, r] = calc_pqr(phi, theta, psi, phi_dot, theta_dot, psi_dot)
     p = phi_dot - psi_dot .* sin(theta);
     q = theta_dot .* cos(phi) + psi_dot .* sin(phi) .* cos(theta);
     r = psi_dot .* cos(phi) .* cos(theta) - theta_dot .* sin(phi);
-end
-
-function [u, v, w] = calc_uvw(phi, theta, psi, v_N, v_E, v_D)
-    u = cos(theta) .* cos(psi) .* v_N + cos(theta) .* sin(psi) .* v_E - sin(theta) .* v_D;
-    v = (cos(psi) .* sin(theta) .* sin(phi) - cos(phi) .* sin(psi)) .* v_N ...
-        + (cos(phi) .* cos(psi) + sin(theta) .* sin(phi) .* sin(psi)) .* v_E ...
-        + cos(theta) .* sin(phi) .* v_D;
-    w = (cos(psi) .* sin(theta) .* cos(phi) + sin(phi) .* sin(psi)) .* v_N ...
-        + (sin(theta) .* cos(phi) .* sin(psi) - sin(phi) .* cos(psi)) .* v_E ...
-        + cos(theta) .* cos(phi) .* v_D;
 end
 
 function [a_x, a_y, a_z] = calc_trans_acc(g, phi, theta, psi, p, q, r, u, v, w, u_dot, v_dot, w_dot)

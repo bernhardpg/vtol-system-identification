@@ -2,6 +2,9 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     = collect_data_from_all_maneuvers(maneuvers_to_skip, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
     save_maneuver_plot, show_maneuver_plot, plot_location)
 
+    % TODO: This function is really bloated. Should definitely be split up
+    % into smaller functions.
+
     % Initialize empty variables to contain states
     t = [];
     phi = [];
@@ -28,7 +31,7 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
     n_p = [];
     maneuver_start_indices = [];
 
-    % Iterate through all maneuvers and calculate data
+    % Iterate through all maneuvers and do flight path reconstruction
     num_maneuvers = length(maneuver_start_indices_state);
     num_discarded_maneuvers = 0;
     

@@ -34,6 +34,12 @@ def set_maneuver_times(exp_dict, maneuver_indices, maneuver_times, maneuver_type
 # Experiment 1
 ##############
 
+# Experiment from no-wind day with Pero as pilot
+# This experiment contains:
+#   Sweeps
+#   Some cruise flight
+# NB: Not used in the end
+
 exp1 = {}
 exp1["LogName"] = "06_31_21"
 exp1["Number"] = 1
@@ -70,6 +76,11 @@ for key, value in exp1_cruise_times.items():
 ##############
 # Experiment 2
 ##############
+
+# Experiment from no-wind day with Pero as pilot
+# This experiment contains:
+#   Pitch 2-1-1
+#   Freehand coupled flight
 
 exp2 = {}
 exp2["LogName"] = "07_12_32"
@@ -115,6 +126,8 @@ for key, value in exp2_freehand_times.items():
 # Experiment 3
 ##############
 
+# Experiment from no-wind day with Pero as pilot
+# This experiment contains:
 # Contains:
 # 2-1-1 on pitch
 # 2-1-1 on pitch without thrust
@@ -123,6 +136,7 @@ for key, value in exp2_freehand_times.items():
 # 2-1-1 on yaw
 # 2-1-1 on yaw without thrust
 # sweeps on pitch
+# freehand
 
 exp3 = {}
 exp3["LogName"] = "07_24_19"
@@ -220,7 +234,7 @@ set_maneuver_times(
 )
 
 sweep_maneuver_times = {}
-#set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
+set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
 
 
 # Add freehand times
@@ -305,7 +319,7 @@ set_maneuver_times(exp6, yaw_maneuver_indices, {}, "yaw_211")
 
 # Create metadata object
 breakpoint()
-metadata = {"Experiments": [exp1, exp2, exp3, exp4, exp5, exp6]}
+metadata = {"Experiments": [exp2, exp3]}
 
-with open("../data/metadata.json", "w") as outfile:
+with open("../data/flight_data/metadata.json", "w") as outfile:
     json.dump(metadata, outfile, indent=4, sort_keys=True)

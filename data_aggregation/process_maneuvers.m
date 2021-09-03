@@ -1,5 +1,7 @@
 clc; clear all; close all;
 
+% The script will automoatically load all maneuvers in "data_raw/experiments/*"
+
 % This script takes in raw maneuver data from csv files and calculates all
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
@@ -17,25 +19,41 @@ metadata = read_metadata(metadata_filename);
 val_ratio = 0.25;
 
 % Plot settings
-save_maneuver_plot = true;
+save_raw_maneuver_plot = true;
+save_maneuver_plot = false;
 show_maneuver_plot = false;
 
 % Maneuver settings
 maneuver_types = [
-   %"roll_211"...
-   %"pitch_211"...
-   "yaw_211"...
+   "roll_211",...
+   "pitch_211",...
+   "yaw_211",...
+   "roll_211_no_throttle",...
+   "pitch_211_no_throttle",...
+   "yaw_211_no_throttle",...
+   "freehand",...
     ];
+
 maneuvers_to_skip = {};
-maneuvers_to_skip.("roll_211") = [12 13 14 15 16 17 40 41 42 44 45 54 58 59 60 64];
+maneuvers_to_skip.("roll_211") = [];
 maneuvers_to_skip.("roll_211_no_throttle") = [];
-maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automated test
+maneuvers_to_skip.("pitch_211") = [];
 maneuvers_to_skip.("pitch_211_no_throttle") = [];
-maneuvers_to_skip.("yaw_211") = [1 4 7];
+maneuvers_to_skip.("yaw_211") = [];
 maneuvers_to_skip.("yaw_211_no_throttle") = [];
-maneuvers_to_skip.("sweep") = [];
+maneuvers_to_skip.("freehand") = [];
+
+% maneuvers_to_skip = {};
+% maneuvers_to_skip.("roll_211") = [12 13 14 15 16 17 40 41 42 44 45 54 58 59 60 64];
+% maneuvers_to_skip.("roll_211_no_throttle") = [];
+% maneuvers_to_skip.("pitch_211") = [1]; % dropout that went unoticed by automated test
+% maneuvers_to_skip.("pitch_211_no_throttle") = [];
+% maneuvers_to_skip.("yaw_211") = [1 4 7];
+% maneuvers_to_skip.("yaw_211_no_throttle") = [];
+% maneuvers_to_skip.("sweep") = [];
 
 for maneuver_type = maneuver_types
+    maneuvers_to_skip_for_curr_type = maneuvers_to_skip.(maneuver_type);
     disp("Processing " + maneuver_type + " maneuvers.");
     
     % Plot settings
@@ -48,9 +66,28 @@ for maneuver_type = maneuver_types
     [t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw] ...
         = read_experiment_data(metadata, maneuver_type);
 
+    % Shuffle maneuvers
+    [t_recorded, eul_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded, t_u_fw_recorded, u_fw_recorded]...
+        = shuffle_maneuvers(maneuvers_to_skip_for_curr_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
+    
+    % Calculate body velocities from recorded data
+    [u_recorded, v_recorded, w_recorded] = calc_body_vel(phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
+    
+        
+    %%%%
+    % CONTINUE HERE
+    %%%%
+    % Figure out why all maneuvers are not loaded
+    % Plot unprocessed data from maneuvers
+    
+    
+    % Split up that crazy collect_data_from_all_maneuvers function!
+    
+
+    
     % Calculate states and their derivatives using splines
     [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
-        = collect_data_from_all_maneuvers(maneuvers_to_skip.(maneuver_type), dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
+        = collect_data_from_all_maneuvers(maneuvers_to_skip_for_curr_type, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
             save_maneuver_plot, show_maneuver_plot, plot_location);
 
     [c_X, c_Y, c_Z, c_L, c_D] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p); % For now, lift and drag coeff is not used for anything

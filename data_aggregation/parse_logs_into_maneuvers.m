@@ -1,5 +1,8 @@
 clc; clear all; close all;
 
+% This script parses ulogs in .csv format from "data_raw/log_files/csv/*"
+% according to metadata.json, and saves the relevant data in "data_raw/experiments/*"
+
 metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
 
@@ -9,12 +12,12 @@ show_plot = false;
 
 % Experiments
 num_experiments = length(metadata.Experiments);
-%experiments_to_parse = 1:num_experiments;
-experiments_to_parse = [1:6];
+experiments_to_parse = 1:num_experiments;
 maneuver_types_to_parse = [
-    "roll_211",... %"roll_211_no_throttle",...
-    "pitch_211",... %"pitch_211_no_throttle",...
-    "yaw_211",... %"yaw_211_no_throttle",...
+    "freehand",...
+    "roll_211","roll_211_no_throttle",...
+    "pitch_211","pitch_211_no_throttle",...
+    "yaw_211","yaw_211_no_throttle",...
     ];
 
 for i = experiments_to_parse
@@ -127,7 +130,11 @@ function [] = parse_experiment_data(experiment, save_output_data, maneuver_types
         [maneuver_length_s] = get_default_maneuver_length_s(curr_maneuver_metadata.type);
         [padding_before_s, padding_after_s] = get_default_maneuver_padding_s(curr_maneuver_metadata.type);
             
-        maneuver_start_guess_s = sysid_times_s(maneuver_i);
+        if maneuver_i > length(sysid_times_s)
+            maneuver_start_guess_s = -1; % this will not get used
+        else
+            maneuver_start_guess_s = sysid_times_s(maneuver_i);
+        end
         
         [maneuver_start_s, maneuver_end_s] = ...
             get_maneuver_start_end_time(...
