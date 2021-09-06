@@ -1,5 +1,5 @@
 clear all; close all; clc;
-
+ 
 % see avl_outputs/state_space_matrix
 
 % Longitudinal dynamics

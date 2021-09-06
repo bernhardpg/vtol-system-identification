@@ -76,11 +76,11 @@ function [t_u_mr, u_mr, t_u_fw, u_fw] = read_input(csv_log_file_location)
     fw_throttle_input = actuator_controls_fw.control_3_;
     
     % Convert from [0,1] interval to angles
-    [aileron_angle_rad, atail_left_rad, atail_right_rad] = ...
+    [aileron_angle_rad, elevator_angle_rad, rudder_angle_rad] = ...
         calculate_control_surface_angles_rad(fw_aileron_input, fw_elevator_input, fw_rudder_input);
     [fw_throttle_rev_per_s] = calculate_rev_per_s_pusher_motor(fw_throttle_input);
     
-    u_fw = [aileron_angle_rad atail_left_rad atail_right_rad fw_throttle_rev_per_s];
+    u_fw = [aileron_angle_rad elevator_angle_rad rudder_angle_rad fw_throttle_rev_per_s];
 end
 
 function [] = parse_experiment_data(experiment, save_output_data, maneuver_types_to_parse)

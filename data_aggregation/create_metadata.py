@@ -172,14 +172,14 @@ pitch_211_nt_maneuver_times = {
 set_maneuver_times(
     exp3,
     pitch_211_maneuver_indices,
-    pitch_211_maneuver_times,
+    {},
     "pitch_211",
 )
 
 set_maneuver_times(
     exp3,
     pitch_211_nt_maneuver_indices,
-    pitch_211_nt_maneuver_times,
+    {},
     "pitch_211_no_throttle",
 )
 
@@ -196,7 +196,7 @@ roll_211_maneuver_times = {
     45: [1393, 1397.4],
 }
 
-set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
+set_maneuver_times(exp3, roll_211_maneuver_indices, {}, "roll_211")
 
 roll_211_nt_maneuver_times = {
     57: [-1, 1551],  # 57 and 58
@@ -208,7 +208,7 @@ roll_211_nt_maneuver_times = {
 set_maneuver_times(
     exp3,
     roll_211_nt_maneuver_indices,
-    roll_211_nt_maneuver_times,
+    {},
     "roll_211_no_throttle",
 )
 
@@ -222,19 +222,19 @@ yaw_211_maneuver_times = {
 }
 yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 
-set_maneuver_times(exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211")
+set_maneuver_times(exp3, yaw_211_maneuver_indices, {}, "yaw_211")
 
 yaw_211_nt_maneuver_times = {}
 
 set_maneuver_times(
     exp3,
     yaw_211_nt_maneuver_indices,
-    yaw_211_nt_maneuver_times,
+    {},
     "yaw_211_no_throttle",
 )
 
 sweep_maneuver_times = {}
-set_maneuver_times(exp3, sweep_maneuver_indices, sweep_maneuver_times, "sweep")
+set_maneuver_times(exp3, sweep_maneuver_indices, {}, "sweep")
 
 
 # Add freehand times
@@ -267,7 +267,8 @@ exp4["Number"] = 4
 exp4["Maneuvers"] = {}
 sweep_maneuver_times = {}
 
-# Correct sweep times
+# Contains sweeps with throttle
+
 # Do not use these, as they are with throttle
 # sweep_maneuver_indices = np.arange(1, 32)
 # set_maneuver_times(exp4, sweep_maneuver_indices, sweep_maneuver_times, [], "sweep")
@@ -276,6 +277,8 @@ sweep_maneuver_times = {}
 ##############
 # Experiment 5
 ##############
+
+# Contains sweeps and 211 rolls
 
 exp5 = {}
 exp5["LogName"] = "2021_04_18_flight_2_static_curves_no_thrust_211_roll"
