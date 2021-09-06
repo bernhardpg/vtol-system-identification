@@ -1,7 +1,7 @@
 classdef ManeuverRawData
     properties
         Id
-        Type
+        ManeuverType
         Time
         QuatNedToBody
         EulPhi
@@ -22,7 +22,7 @@ classdef ManeuverRawData
     methods
         function obj = ManeuverRawData(id, type)
             obj.Id = id;
-            obj.Type = type;
+            obj.ManeuverType = type;
         end
         function dt_s = calc_time_intervals(obj)
            dt_s = obj.Time(2:end) - obj.Time(1:end-1); 
@@ -111,14 +111,15 @@ classdef ManeuverRawData
             ylabel("[rev/s]")
             ylim([0 130])
 
-            sgtitle("Raw Maneuver Data: " + obj.Type);
+            sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
             
             if save_plot
-                saveas(fig, plot_location + obj.Type + "_" + filename, 'epsc')
+                saveas(fig, plot_location + filename, 'epsc')
             end
         end
         
-        function save_plot(obj, filename, plot_location)
+        function save_plot(obj, plot_location)
+            filename = "rawdata_plot_" + obj.ManeuverType + "_" + obj.Id;
             obj.plot(false, true, filename, plot_location);
         end
         

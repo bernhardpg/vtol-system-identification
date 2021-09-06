@@ -1,7 +1,7 @@
 clc; clear all; close all;
 
-% This script parses ulogs (already converted to .csv format) from "data_raw/log_files/csv/*"
-% according to metadata.json, and saves the relevant data in "data_raw/experiments/*"
+% This script parses ulogs (already converted to .csv format) from "raw_data/log_files/csv/*"
+% according to metadata.json, and saves the relevant data in "raw_data/experiments/*"
 % as .csv files
 
 metadata_filename = "data/flight_data/metadata.json";
@@ -89,7 +89,7 @@ function [] = parse_experiment_data(experiment, save_output_data, maneuver_types
     maneuver_metadata = experiment.Maneuvers;
     num_maneuvers = length(fieldnames(maneuver_metadata));
     
-    csv_files_location = "data/flight_data/data_raw/log_files/csv/";
+    csv_files_location = "data/flight_data/raw_data/log_files/csv/";
     csv_log_file_location = csv_files_location + log_file;
 
     % Read state and input data
@@ -246,7 +246,7 @@ function [padding_start_s, padding_end_s] = get_default_maneuver_padding_s(maneu
 end
 
 function [] = save_output(experiment_number, output_data)
-        experiment_location = "data/flight_data/data_raw/experiments/";
+        experiment_location = "data/flight_data/raw_data/experiments/";
 
         if ~isempty(output_data.sweep.t_state)
             data_output_location = experiment_location + "experiment_" + string(experiment_number) ...

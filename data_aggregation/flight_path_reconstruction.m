@@ -8,15 +8,12 @@ clc; clear all; close all;
 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
-disp("Setting random seed to default to guarantee reproducability");
-rng default % Always shuffle the maneuvers in the same way for reproducability
+%disp("Setting random seed to default to guarantee reproducability");
+%rng default % Always shuffle the maneuvers in the same way for reproducability
 
 % Load metadata
 metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
-
-% How much data to keep for validation
-val_ratio = 0.25;
 
 % Data settings
 time_resolution = 0.02; % 50 Hz
@@ -24,6 +21,8 @@ knot_points_for_spline_derivation_dt = 0.1;
 
 % Plot settings
 save_raw_plots = false;
+save_kinematic_consistency_plots = false;
+save_signal_to_noise_check = false;
 
 % Maneuver settings
 maneuver_types = [
@@ -31,14 +30,18 @@ maneuver_types = [
     "yaw_211",...
     ];
 
+% These maneuvers are skipped either because they contain dropouts or
+% because they are part of another maneuver sequence.
+% The entire data loading scheme would benefit from being reconsidered, but
+% there is not time for this.
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
-maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 27 30  33 34 35 36 38 39 40 41];
+maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 33 34 35 36 38 39 40 41];
 maneuvers_to_skip.("pitch_211") = [];
 maneuvers_to_skip.("freehand") = [];
 
 % Save raw maneuver data
-maneuver_raw_data = {};
+fpr_data = {};
 for maneuver_type = maneuver_types
     maneuvers_to_skip_for_curr_type = maneuvers_to_skip.(maneuver_type);
     disp("Processing " + maneuver_type + " maneuvers.");
@@ -61,56 +64,47 @@ for maneuver_type = maneuver_types
     for maneuver_i = 1:length(selected_maneuvers)
         % Plot raw data from maneuvers
         if save_raw_plots
-            plot_location = 'data/flight_data/plots/selected_data/';
-            selected_maneuvers(maneuver_i).save_plot("plot_" + maneuver_i, plot_location);
+            plot_location = 'data/flight_data/selected_data/lateral_directional_data/full_plots/';
+            selected_maneuvers(maneuver_i).RawData.save_plot(plot_location);
         end
     end
     
     % Flight Path Reconstruction from raw maneuver data
-    maneuver_i = 2;
-    selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_fpr_from_rawdata(time_resolution, knot_points_for_spline_derivation_dt);
-    selected_maneuvers(2).check_kinematic_consistency()
-end
-     
-    %%%%
-    % CONTINUE HERE
-    %%%%
+    for maneuver_i = 1:length(selected_maneuvers)
+        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_fpr_from_rawdata(time_resolution, knot_points_for_spline_derivation_dt);
+    end
     
-%     
-%     % Split up that crazy collect_data_from_all_maneuvers function!
-%     
-% 
-%     
-%     % Calculate states and their derivatives using splines
-%     [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_dot, delta_a_sp, delta_e_sp, delta_r_sp, delta_a, delta_e, delta_r, n_p, maneuver_start_indices]...
-%         = collect_data_from_all_maneuvers(maneuvers_to_skip_for_curr_type, dt, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw,...
-%             save_maneuver_plot, show_maneuver_plot, plot_location);
-% 
-%     [c_X, c_Y, c_Z, c_L, c_D] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p); % For now, lift and drag coeff is not used for anything
-%     [c_l, c_m, c_n] = calc_moment_coeffs(p, q, r, u, v, w, p_dot, q_dot, r_dot, n_p);
-% 
-%     % Collect data
-%     data = [t phi theta psi p q r u v w a_x a_y a_z p_dot q_dot r_dot delta_a_sp delta_e_sp delta_r_sp delta_a delta_e delta_r n_p c_X c_Y c_Z c_l c_m c_n c_L c_D];
-% 
-%     % Divide in training and validation data
-%     total_num_maneuvers = length(maneuver_start_indices);
-%     num_val_maneuvers = floor(total_num_maneuvers * val_ratio);
-%     num_train_maneuvers = total_num_maneuvers - num_val_maneuvers;
-% 
-%     maneuver_start_indices_train = maneuver_start_indices(1:num_train_maneuvers);
-%     maneuver_start_indices_val = maneuver_start_indices(num_train_maneuvers + 1:end);
-%     data_train = data(1:maneuver_start_indices_val(1) - 1,:);
-%     data_val = data(maneuver_start_indices_val(1):end,:);
-%     maneuver_start_indices_val = maneuver_start_indices_val - maneuver_start_indices_val(1) + 1; % Make this start at 1 for logged data
-% 
-%     % Save all data
-%     output_data_path = "data/flight_data/aggregated_data/" + maneuver_type + "/";
-%     mkdir(output_data_path)
-%     writematrix(data_train, output_data_path + "data_train.csv");
-%     writematrix(data_val, output_data_path + "data_val.csv");
-%     writematrix(maneuver_start_indices_train, output_data_path + "maneuver_start_indices_train.csv");
-%     writematrix(maneuver_start_indices_val, output_data_path + "maneuver_start_indices_val.csv");
-% 
-%     disp("Saved " + num_train_maneuvers + " maneuvers for training");
-%     disp("Saved " + num_val_maneuvers + " maneuvers for validation");end
+    % Kinematic Consistency Checks
+    if save_kinematic_consistency_plots
+        for maneuver_i = 1:length(selected_maneuvers)
+            plot_location = "data/flight_data/selected_data/lateral_directional_data/kinematic_consistency_checks/";
+            selected_maneuvers(maneuver_i).check_kinematic_consistency(false, true, plot_location);
+        end
+    end
+    
+    % Save plot for signal-to-noise checks
+    if save_signal_to_noise_check
+        for maneuver_i = 1:length(selected_maneuvers)
+            plot_location = "data/flight_data/selected_data/lateral_directional_data/signal_to_noise_check/";
+            selected_maneuvers(maneuver_i).save_plot_lateral(plot_location);
+        end
+    end
+    
+    % Calcululate coefficients
+    for maneuver_i = 1:length(selected_maneuvers)
+        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_force_coeffs();
+        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_moment_coeffs();
+    end
+    
+    fpr_data.(maneuver_type) = selected_maneuvers;
+end
 
+% Manually pick sequenced maneuvers as validation data
+fpr_data_lat = {};
+fpr_data_lat.validation.roll_211 = fpr_data.roll_211(3);
+fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 4 5 6]);
+fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 12]);
+fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7:11]);
+
+% Save FPR data to file
+save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");

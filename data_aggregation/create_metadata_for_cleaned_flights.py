@@ -148,7 +148,7 @@ roll_211_maneuver_times = {
     37: [1347, 1363],  # Take 1,2,3,4 in one go
     41: [-1, 1379.2],  # Take 5 by itself
     43: [1385.5, 1397],  # Take 7, 8, 9 in one go
-    46: [-1, 1430.5],  # Clip away dropout on 10
+    46: [-1, 1429.5],  # Clip away dropout on 10
     49: [-1, 1480.5],  # 13, 14, 15, 16, 17 in one go
     54: [-1, 1502.5],  # 18, 19 in one go
 }
@@ -179,7 +179,8 @@ yaw_211_maneuver_times = {
     161: [-1, 3256],  # 26
     166: [-1, 3333],  # 31
     167: [3343, 3364],  # 32, 33, 34
-    172: [-1, 3420],  # 37, 38, 39, 40, 41
+    172: [3392, 3404],  # 37, 38
+    # 40 41 can be included if I need more data
 }
 
 set_maneuver_times(exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211")

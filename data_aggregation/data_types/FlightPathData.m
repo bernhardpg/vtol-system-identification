@@ -25,6 +25,12 @@ classdef FlightPathData
         DeltaASp
         DeltaESp
         DeltaRSp
+        C_X
+        C_Y
+        C_Z
+        C_l
+        C_m
+        C_n
         RawData = ManeuverRawData.empty
     end
     methods
@@ -176,11 +182,12 @@ classdef FlightPathData
             sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
             
             if save_plot
-                saveas(fig, plot_location + obj.ManeuverType + "_" + filename, 'epsc')
+                saveas(fig, plot_location + filename, 'epsc')
             end
         end
         
-        function save_plot(obj, filename, plot_location)
+        function save_plot(obj, plot_location)
+            filename = "plot_" + obj.ManeuverType + "_" + obj.Id;
             obj.plot(false, true, filename, plot_location);
         end
         
@@ -192,7 +199,101 @@ classdef FlightPathData
             V = sqrt(obj.VelU .^ 2 + obj.VelV .^ 2 + obj.VelW .^ 2); 
         end
         
-        function check_kinematic_consistency(obj)
+        function plot_lateral(obj, show_plot, save_plot, filename, plot_location)
+            fig = figure;
+            if ~show_plot
+                fig.Visible = 'off';
+            end
+            fig.Position = [100 100 1500 1000];
+            num_plots_rows = 6;
+
+            subplot(num_plots_rows,2,1)
+            plot(obj.Time, rad2deg(obj.EulPhi)); 
+            legend("$\phi$");
+            ylabel("[deg]")
+            ylim([-60 60])
+            
+            subplot(num_plots_rows,2,3)
+            plot(obj.Time, rad2deg(obj.AngP))
+            legend("$p$");
+            ylim([-3.5*180/pi 3.5*180/pi]);
+            ylabel("[deg/s]")
+            
+            subplot(num_plots_rows,2,5)
+            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), ':'); 
+            legend("$\delta_a$", "$\delta_a^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            
+            subplot(num_plots_rows,2,7)
+            plot(obj.Time, rad2deg(obj.EulPsi)); 
+            legend("$\psi$");
+            ylabel("[deg]")
+            psi_mean_deg = mean(rad2deg(obj.EulPsi));
+            ylim([psi_mean_deg - 50 psi_mean_deg + 50])
+            
+            subplot(num_plots_rows,2,9)
+            plot(obj.Time, rad2deg(obj.AngR))
+            legend("$r$");
+            ylim([-2*180/pi 2*180/pi]);
+            ylabel("[deg/s]")
+            
+            subplot(num_plots_rows,2,11)
+            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), ':'); 
+            legend("$\delta_r$", "$\delta_r^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            
+            subplot(num_plots_rows,2,2)
+            plot(obj.Time, obj.VelV); 
+            legend("$v$");
+            ylabel("[m/s]")
+            ylim([-7 7])
+            
+            subplot(num_plots_rows,2,4)
+            plot(obj.Time, obj.AccY); 
+            legend("$a_y$");
+            ylabel("[m/s^2]")
+            ylim([-4 4])
+            
+            subplot(num_plots_rows,2,6)
+            plot(obj.Time, obj.PDot); 
+            legend("$\dot{p}$");
+            ylabel("[rad/s^2]")
+            ylim([-3 3])
+            
+            subplot(num_plots_rows,2,8)
+            plot(obj.Time, obj.RDot); 
+            legend("$\dot{r}$");
+            ylabel("[rad/s^2]")
+            ylim([-3 3])
+            
+            
+            sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
+            
+            if save_plot
+                saveas(fig, plot_location + filename, 'epsc')
+            end
+        end
+        
+        function save_plot_lateral(obj, plot_location)
+            filename = "plot_" + obj.ManeuverType + "_" + obj.Id;
+            obj.plot_lateral(false, true, filename, plot_location);
+        end
+        
+        function show_plot_lateral(obj)
+            obj.plot_lateral(true, false, '', '');
+        end
+        
+        function obj = calc_force_coeffs(obj)
+                [obj.C_X, obj.C_Y, obj.C_Z] = calc_force_coeffs(obj.VelU, obj.VelV, obj.VelW, obj.AccX, obj.AccY, obj.AccZ, obj.DeltaT); % For now, lift and drag coeff is not used for anything
+        end
+        
+        function obj = calc_moment_coeffs(obj)
+                [obj.C_l, obj.C_m, obj.C_n] = calc_moment_coeffs(obj.AngP, obj.AngR, obj.AngR, obj.VelU, obj.VelV, obj.VelW, obj.PDot, obj.QDot, obj.RDot); 
+        end
+        
+        function check_kinematic_consistency(obj, show_plot, save_plot, plot_location)
             [t_sim, y_sim] = simulate_kinematics(obj.Time, obj.EulPhi, obj.EulTheta, obj.EulPsi, obj.VelU, obj.VelV, obj.VelW, obj.AngP, obj.AngQ, obj.AngR, obj.AccX, obj.AccY, obj.AccZ);
             phi_sim = y_sim(:,1);
             theta_sim = y_sim(:,2);
@@ -201,7 +302,11 @@ classdef FlightPathData
             v_sim = y_sim(:,5);
             w_sim = y_sim(:,6);
            
+            fig = figure;
             fig.Position = [100 100 1500 1000];
+            if ~show_plot
+                fig.Visible = 'off';
+            end
             num_plots_rows = 3;
 
             subplot(num_plots_rows,2,1)
@@ -242,6 +347,11 @@ classdef FlightPathData
             ylim([-7 7])
 
             sgtitle("Kinematic Consistency Check: " + obj.ManeuverType + " id: " + obj.Id);
+            
+            if save_plot
+                filename = "kin_consistency_check_" + obj.Id;
+                saveas(fig, plot_location + obj.ManeuverType + "_" + filename, 'epsc');
+            end
         end
     end
 end
