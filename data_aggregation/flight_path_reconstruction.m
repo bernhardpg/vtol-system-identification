@@ -67,9 +67,9 @@ for maneuver_type = maneuver_types
     end
     
     % Flight Path Reconstruction from raw maneuver data
-    for maneuver_i = 1:length(selected_maneuvers)
-        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_fpr_from_rawdata(time_resolution, knot_points_for_spline_derivation_dt);
-    end
+    maneuver_i = 2;
+    selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_fpr_from_rawdata(time_resolution, knot_points_for_spline_derivation_dt);
+    selected_maneuvers(2).check_kinematic_consistency()
 end
      
     %%%%

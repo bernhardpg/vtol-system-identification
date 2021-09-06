@@ -191,5 +191,57 @@ classdef FlightPathData
         function V = calc_airspeed(obj)
             V = sqrt(obj.VelU .^ 2 + obj.VelV .^ 2 + obj.VelW .^ 2); 
         end
+        
+        function check_kinematic_consistency(obj)
+            [t_sim, y_sim] = simulate_kinematics(obj.Time, obj.EulPhi, obj.EulTheta, obj.EulPsi, obj.VelU, obj.VelV, obj.VelW, obj.AngP, obj.AngQ, obj.AngR, obj.AccX, obj.AccY, obj.AccZ);
+            phi_sim = y_sim(:,1);
+            theta_sim = y_sim(:,2);
+            psi_sim = y_sim(:,3);
+            u_sim = y_sim(:,4);
+            v_sim = y_sim(:,5);
+            w_sim = y_sim(:,6);
+           
+            fig.Position = [100 100 1500 1000];
+            num_plots_rows = 3;
+
+            subplot(num_plots_rows,2,1)
+            plot(obj.RawData.Time, rad2deg(obj.RawData.EulPhi), '--', t_sim, rad2deg(phi_sim)); 
+            legend("$\phi$ (measured)", "$\phi$");
+            ylabel("[deg]")
+            ylim([-60 60])
+            
+            subplot(num_plots_rows,2,3)
+            plot(obj.RawData.Time, rad2deg(obj.RawData.EulTheta), '--', t_sim, rad2deg(theta_sim)); 
+            legend("$\theta$ (measured)", "$\theta$");
+            ylabel("[deg]")
+            ylim([-30 30])
+            
+            subplot(num_plots_rows,2,5)
+            plot(obj.RawData.Time, rad2deg(obj.RawData.EulPsi), '--', t_sim, rad2deg(psi_sim)); 
+            legend("$\psi$ (measured)", "$\psi$");
+            ylabel("[deg]")
+            psi_mean_deg = mean(rad2deg(obj.EulPsi));
+            ylim([psi_mean_deg - 50 psi_mean_deg + 50])
+            
+            subplot(num_plots_rows,2,2)
+            plot(obj.RawData.Time, obj.RawData.VelBodyU, '--', t_sim, u_sim); 
+            legend("$u$ (measured)", "$u$");
+            ylabel("[m/s]")
+            ylim([15 27])
+            
+            subplot(num_plots_rows,2,4)
+            plot(obj.RawData.Time, obj.RawData.VelBodyV, '--', t_sim, v_sim); 
+            legend("$v$ (measured)", "$v$");
+            ylabel("[m/s]")
+            ylim([-7 7])
+            
+            subplot(num_plots_rows,2,6)
+            plot(obj.RawData.Time, obj.RawData.VelBodyW, '--', t_sim, w_sim); 
+            legend("$w$ (measured)", "$w$");
+            ylabel("[m/s]")
+            ylim([-7 7])
+
+            sgtitle("Kinematic Consistency Check: " + obj.ManeuverType + " id: " + obj.Id);
+        end
     end
 end
