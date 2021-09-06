@@ -1,7 +1,8 @@
 clc; clear all; close all;
 
-% This script parses ulogs in .csv format from "data_raw/log_files/csv/*"
+% This script parses ulogs (already converted to .csv format) from "data_raw/log_files/csv/*"
 % according to metadata.json, and saves the relevant data in "data_raw/experiments/*"
+% as .csv files
 
 metadata_filename = "data/flight_data/metadata.json";
 metadata = read_metadata(metadata_filename);
@@ -40,7 +41,7 @@ function [t, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location)
     % q_NB = unit quaternion describing vector rotation from NED to Body. i.e.
     % describes transformation from Body to NED frame.
     % Note: This is the same as the output_predictor quaternion. Something is
-    % wrong with documentation
+    % wrong with PX4 documentation
 
     q0 = ekf_data.states_0_;
     q1 = ekf_data.states_1_;
@@ -93,7 +94,7 @@ function [] = parse_experiment_data(experiment, save_output_data, maneuver_types
 
     % Read state and input data
     [t_state, q_NB, v_N] = read_attitude_and_vel(csv_log_file_location);
-    dt = mean(rmoutliers(t_state(2:end) - t_state(1:end-1))); % Calculate dt for conversion between index and time
+    %dt = mean(rmoutliers(t_state(2:end) - t_state(1:end-1))); % Calculate dt for conversion between index and time
     [t_u_mr, u_mr, t_u_fw, u_fw] = read_input(csv_log_file_location);
     
     % Get system identification maneuvers
@@ -167,6 +168,8 @@ function [] = parse_experiment_data(experiment, save_output_data, maneuver_types
         t_u_fw_maneuver = [maneuver_start_s;
                          t_u_fw(maneuver_start_index_u_fw:maneuver_end_index_u_fw);
                          maneuver_end_s];
+        % Interpolate start and end time, to make sure that we save values
+        % for start and end of maneuver
         u_fw_maneuver = [interp1(t_u_fw, u_fw, maneuver_start_s);
                          u_fw(maneuver_start_index_u_fw:maneuver_end_index_u_fw,:);
                          interp1(t_u_fw, u_fw, maneuver_end_s)];

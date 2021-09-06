@@ -66,16 +66,11 @@ for maneuver_type = maneuver_types
     [t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw] ...
         = read_data_from_experiments(metadata, maneuver_type);
     
-    maneuver_collection = collect_wadata_into_maneuvers(t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
+    maneuvers_raw_data = collect_raw_data_into_maneuvers(t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
     
     
 
-    % Shuffle maneuvers
-    [t_recorded, eul_recorded, phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded, t_u_fw_recorded, u_fw_recorded]...
-        = shuffle_maneuvers(maneuvers_to_skip_for_curr_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
-    
-    % Calculate body velocities from recorded data
-    [u_recorded, v_recorded, w_recorded] = calc_body_vel(phi_recorded, theta_recorded, psi_recorded, v_N_recorded, v_E_recorded, v_D_recorded);
+  
     
         
     %%%%

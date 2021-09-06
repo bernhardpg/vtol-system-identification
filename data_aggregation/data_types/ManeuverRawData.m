@@ -1,0 +1,20 @@
+classdef ManeuverRawData
+    properties
+        Time
+        QuatNedToBody
+        EulPhi
+        EulTheta
+        EulPsi
+        VelN
+        VelE
+        VelD
+        VelBodyU
+        VelBodyV
+        VelBodyW
+        TimeInput
+        DeltaASp
+        DeltaESp
+        DeltaRSp
+        DeltaT
+    end
+end

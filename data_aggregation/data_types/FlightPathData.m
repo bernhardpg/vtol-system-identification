@@ -1,0 +1,27 @@
+classdef FlightPathData
+    properties
+        EulPhi
+        EulTheta
+        EulPsi
+        VelU
+        VelV
+        VelW
+        AngP
+        AngQ
+        AngR
+        QuatNedToBody
+        PDot
+        QDot
+        RDot
+        AccX
+        AccY
+        AccZ
+        DeltaA
+        DeltaE
+        DeltaR
+        DeltaT
+        DeltaASp
+        DeltaESp
+        DeltaRSp
+    end
+end
