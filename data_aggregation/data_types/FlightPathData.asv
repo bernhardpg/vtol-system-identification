@@ -63,9 +63,9 @@ classdef FlightPathData
             [obj.AccX, obj.AccY, obj.AccZ] = calc_trans_acc(g, obj.EulPhi, obj.EulTheta, obj.AngP, obj.AngQ, obj.AngR, obj.VelU, obj.VelV, obj.VelW, u_dot, v_dot, w_dot);
             
             % Calculate angular accelerations
-            obj.PDot = calc_spline_derivative(obj.Time, obj.AngP, obj.Time, dt_knots, 0);
-            obj.QDot = calc_spline_derivative(obj.Time, obj.AngQ, obj.Time, dt_knots, 0);
-            obj.RDot = calc_spline_derivative(obj.Time, obj.AngR, obj.Time, dt_knots, 0);
+            obj.PDot = calc_spline_derivative(obj.RawData.Time, obj.AngP, obj.Time, dt_knots, 0);
+            obj.QDot = calc_spline_derivative(obj.RawData.Time, obj.AngQ, obj.Time, dt_knots, 0);
+            obj.RDot = calc_spline_derivative(obj.RawData.Time, obj.AngR, obj.Time, dt_knots, 0);
             
             % Save actuator setpoints by doing linear interpolation to
             % correct time frame
@@ -94,69 +94,51 @@ classdef FlightPathData
             ylabel("[deg]")
             ylim([-60 60])
             
-            subplot(num_plots_rows,2,3)
-            plot(obj.Time, rad2deg(obj.AngP))
-            legend("$p$");
-            ylim([-3.5*180/pi 3.5*180/pi]);
-            ylabel("[deg/s]")
-            
             subplot(num_plots_rows,2,5)
-            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), ':'); 
-            legend("$\delta_a$", "$\delta_a^{sp}$");
+            plot(obj.TimeInput, rad2deg(obj.DeltaASp), 'r--'); 
+            legend("$\delta_a$");
             ylabel("[deg]")
             ylim([-28 28])
             
-            subplot(num_plots_rows,2,7)
+            subplot(num_plots_rows,2,5)
             plot(obj.Time, rad2deg(obj.EulTheta)); 
             legend("$\theta$");
             ylabel("[deg]")
             ylim([-30 30])
             
-            subplot(num_plots_rows,2,9)
-            plot(obj.Time, rad2deg(obj.AngQ))
-            legend("$q$");
-            ylim([-2*180/pi 2*180/pi]);
-            ylabel("[deg/s]")
-            
-            subplot(num_plots_rows,2,11)
-            plot(obj.Time, rad2deg(obj.DeltaE), obj.Time, rad2deg(obj.DeltaESp), ':'); 
-            legend("$\delta_e$", "$\delta_e^{sp}$");
+            subplot(num_plots_rows,2,7)
+            plot(obj.TimeInput, rad2deg(obj.DeltaESp), 'r--'); 
+            legend("$\delta_e$");
             ylabel("[deg]")
             ylim([-28 28])
             
-            subplot(num_plots_rows,2,13)
+            subplot(num_plots_rows,2,9)
             plot(obj.Time, rad2deg(obj.EulPsi)); 
             legend("$\psi$");
             ylabel("[deg]")
             psi_mean_deg = mean(rad2deg(obj.EulPsi));
             ylim([psi_mean_deg - 50 psi_mean_deg + 50])
             
-            subplot(num_plots_rows,2,15)
-            plot(obj.Time, rad2deg(obj.AngR))
-            legend("$r$");
-            ylim([-2*180/pi 2*180/pi]);
-            ylabel("[deg/s]")
-            
-            subplot(num_plots_rows,2,17)
-            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), ':'); 
-            legend("$\delta_r$", "$\delta_r^{sp}$");
+            subplot(num_plots_rows,2,11)
+            plot(obj.TimeInput, rad2deg(obj.DeltaRSp), 'r--'); 
+            legend("$\delta_r$");
             ylabel("[deg]")
             ylim([-28 28])
             
             subplot(num_plots_rows,2,2)
-            plot(obj.Time, obj.VelU); 
+            plot(obj.Time, obj.VelBodyU); 
             legend("$u$");
             ylabel("[m/s]")
             ylim([15 27])
             
             subplot(num_plots_rows,2,4)
-            plot(obj.Time, obj.VelV); 
+            plot(obj.Time, obj.VelBodyV); 
             legend("$v$");
             ylabel("[m/s]")
             ylim([-7 7])
             
             subplot(num_plots_rows,2,6)
-            plot(obj.Time, obj.VelW); 
+            plot(obj.Time, obj.VelBodyW); 
             legend("$w$");
             ylabel("[m/s]")
             ylim([-7 7])
@@ -168,15 +150,15 @@ classdef FlightPathData
             ylim([15 27])
             
             subplot(num_plots_rows,2,10)
-            plot(obj.Time, obj.DeltaT, 'r--'); 
+            plot(obj.TimeInput, obj.DeltaT, 'r--'); 
             legend("$\delta_t$");
             ylabel("[rev/s]")
             ylim([0 130])
 
-            sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
+            sgtitle("Raw Maneuver Data: " + obj.Type);
             
             if save_plot
-                saveas(fig, plot_location + obj.ManeuverType + "_" + filename, 'epsc')
+                saveas(fig, plot_location + obj.Type + "_" + filename, 'epsc')
             end
         end
         
@@ -186,10 +168,6 @@ classdef FlightPathData
         
         function show_plot(obj)
             obj.plot(true, false, '', '');
-        end
-        
-        function V = calc_airspeed(obj)
-            V = sqrt(obj.VelU .^ 2 + obj.VelV .^ 2 + obj.VelW .^ 2); 
         end
     end
 end

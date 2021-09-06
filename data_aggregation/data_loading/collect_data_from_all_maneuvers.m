@@ -123,9 +123,9 @@ function [t, phi, theta, psi, p, q, r, u, v, w, a_x, a_y, a_z, p_dot, q_dot, r_d
         delta_vr_sp_m = interp1(t_u_fw_m, delta_vr_sp_recorded, t_m);
         n_p_m = interp1(t_u_fw_m, n_p_recorded, t_m);
         
-        delta_a_m = est_control_surf_deflection(t_m, delta_a_sp_m);
-        delta_vl_m = est_control_surf_deflection(t_m, delta_vl_sp_m);
-        delta_vr_m = est_control_surf_deflection(t_m, delta_vr_sp_m);
+        delta_a_m = simulate_control_surface_dynamics(t_m, delta_a_sp_m);
+        delta_vl_m = simulate_control_surface_dynamics(t_m, delta_vl_sp_m);
+        delta_vr_m = simulate_control_surface_dynamics(t_m, delta_vr_sp_m);
 
         % Collect data from all maneuvers
         t = [t;

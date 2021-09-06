@@ -1,5 +1,7 @@
 classdef ManeuverRawData
     properties
+        Id
+        Type
         Time
         QuatNedToBody
         EulPhi
@@ -16,11 +18,11 @@ classdef ManeuverRawData
         DeltaESp
         DeltaRSp
         DeltaT
-        Type
     end
     methods
-        function obj = ManeuverRawData(maneuver_type)
-            obj.Type = maneuver_type;
+        function obj = ManeuverRawData(id, type)
+            obj.Id = id;
+            obj.Type = type;
         end
         function dt_s = calc_time_intervals(obj)
            dt_s = obj.Time(2:end) - obj.Time(1:end-1); 
@@ -33,9 +35,12 @@ classdef ManeuverRawData
                 has_dropout = false;
             end
         end
-        function plot(obj)
+        function plot(obj, show_plot, save_plot, filename, plot_location)
             % Plot
             fig = figure;
+            if ~show_plot
+                fig.Visible = 'off';
+            end
             fig.Position = [100 100 1500 1000];
             num_plots_rows = 6;
 
@@ -107,86 +112,18 @@ classdef ManeuverRawData
             ylim([0 130])
 
             sgtitle("Raw Maneuver Data: " + obj.Type);
+            
+            if save_plot
+                saveas(fig, plot_location + obj.Type + "_" + filename, 'epsc')
+            end
         end
         
         function save_plot(obj, filename, plot_location)
-            
-            % Plot
-            fig = figure;
-            fig.Visible = 'off';
-            fig.Position = [100 100 1500 1000];
-            num_plots_rows = 6;
-
-            subplot(num_plots_rows,2,1)
-            plot(obj.Time, rad2deg(obj.EulPhi)); 
-            legend("$\phi$");
-            ylabel("[deg]")
-            ylim([-60 60])
-            
-            subplot(num_plots_rows,2,3)
-            plot(obj.TimeInput, rad2deg(obj.DeltaASp), 'r--'); 
-            legend("$\delta_a$");
-            ylabel("[deg]")
-            ylim([-28 28])
-            
-            subplot(num_plots_rows,2,5)
-            plot(obj.Time, rad2deg(obj.EulTheta)); 
-            legend("$\theta$");
-            ylabel("[deg]")
-            ylim([-30 30])
-            
-            subplot(num_plots_rows,2,7)
-            plot(obj.TimeInput, rad2deg(obj.DeltaESp), 'r--'); 
-            legend("$\delta_e$");
-            ylabel("[deg]")
-            ylim([-28 28])
-            
-            subplot(num_plots_rows,2,9)
-            plot(obj.Time, rad2deg(obj.EulPsi)); 
-            legend("$\psi$");
-            ylabel("[deg]")
-            psi_mean_deg = mean(rad2deg(obj.EulPsi));
-            ylim([psi_mean_deg - 50 psi_mean_deg + 50])
-            
-            subplot(num_plots_rows,2,11)
-            plot(obj.TimeInput, rad2deg(obj.DeltaRSp), 'r--'); 
-            legend("$\delta_r$");
-            ylabel("[deg]")
-            ylim([-28 28])
-            
-            subplot(num_plots_rows,2,2)
-            plot(obj.Time, obj.VelBodyU); 
-            legend("$u$");
-            ylabel("[m/s]")
-            ylim([15 27])
-            
-            subplot(num_plots_rows,2,4)
-            plot(obj.Time, obj.VelBodyV); 
-            legend("$v$");
-            ylabel("[m/s]")
-            ylim([-7 7])
-            
-            subplot(num_plots_rows,2,6)
-            plot(obj.Time, obj.VelBodyW); 
-            legend("$w$");
-            ylabel("[m/s]")
-            ylim([-7 7])
-
-            subplot(num_plots_rows,2,8)
-            plot(obj.Time, obj.calc_airspeed()); 
-            legend("$V$");
-            ylabel("[m/s]")
-            ylim([15 27])
-            
-            subplot(num_plots_rows,2,10)
-            plot(obj.TimeInput, obj.DeltaT, 'r--'); 
-            legend("$\delta_t$");
-            ylabel("[rev/s]")
-            ylim([0 130])
-
-            sgtitle("Raw Maneuver Data: " + obj.Type);
-            
-            saveas(fig, plot_location + obj.Type + "_" + filename, 'epsc')
+            obj.plot(false, true, filename, plot_location);
+        end
+        
+        function show_plot(obj)
+            obj.plot(true, false, '', '');
         end
         
         function V = calc_airspeed(obj)

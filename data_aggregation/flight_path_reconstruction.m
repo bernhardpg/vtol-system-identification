@@ -18,52 +18,57 @@ metadata = read_metadata(metadata_filename);
 % How much data to keep for validation
 val_ratio = 0.25;
 
+% Data settings
+time_resolution = 0.02; % 50 Hz
+knot_points_for_spline_derivation_dt = 0.1;
+
 % Plot settings
-save_raw_maneuver_plot = true;
-save_maneuver_plot = false;
-show_maneuver_plot = false;
+save_raw_plots = false;
 
 % Maneuver settings
 maneuver_types = [
-   %"roll_211",...
+    "roll_211",...
     "yaw_211",...
     ];
 
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
-maneuvers_to_skip.("roll_211_no_throttle") = [];
-maneuvers_to_skip.("pitch_211") = [];
-maneuvers_to_skip.("pitch_211_no_throttle") = [];
 maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 27 30  33 34 35 36 38 39 40 41];
-maneuvers_to_skip.("yaw_211_no_throttle") = [];
+maneuvers_to_skip.("pitch_211") = [];
 maneuvers_to_skip.("freehand") = [];
 
-
+% Save raw maneuver data
+maneuver_raw_data = {};
 for maneuver_type = maneuver_types
     maneuvers_to_skip_for_curr_type = maneuvers_to_skip.(maneuver_type);
     disp("Processing " + maneuver_type + " maneuvers.");
     
-    % Plot settings
-    plot_location = "data/flight_data/maneuver_plots/" + maneuver_type + "/";
-
     % Read raw data recorded from logs
     [t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw] ...
         = read_data_from_experiments(metadata, maneuver_type);
     
-    maneuvers_raw_data = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
+    all_maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
     
-    % Plot raw data from maneuvers
-    plot_location = 'data/flight_data/plots/selected_data/';
-    for maneuver_i = 1:length(maneuvers_raw_data)
-        % Skip maneuvers
-        if any(maneuvers_to_skip_for_curr_type(:) == maneuver_i)
-            continue
+    % Pick only selected maneuvers to move on with
+    selected_maneuvers = [];
+    for maneuver_i = 1:length(all_maneuvers)
+        if ~any(maneuvers_to_skip_for_curr_type(:) == maneuver_i)
+            selected_maneuvers = [selected_maneuvers; all_maneuvers(maneuver_i)];
         end
-        
-        if maneuvers_raw_data(maneuver_i).check_for_dropout()
-            disp("dropout in " + maneuver_i);
+    end
+    
+    % Plot selected raw maneuvers if desired
+    for maneuver_i = 1:length(selected_maneuvers)
+        % Plot raw data from maneuvers
+        if save_raw_plots
+            plot_location = 'data/flight_data/plots/selected_data/';
+            selected_maneuvers(maneuver_i).save_plot("plot_" + maneuver_i, plot_location);
         end
-        maneuvers_raw_data(maneuver_i).save_plot("plot_" + maneuver_i, plot_location);
+    end
+    
+    % Flight Path Reconstruction from raw maneuver data
+    for maneuver_i = 1:length(selected_maneuvers)
+        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_fpr_from_rawdata(time_resolution, knot_points_for_spline_derivation_dt);
     end
 end
      
