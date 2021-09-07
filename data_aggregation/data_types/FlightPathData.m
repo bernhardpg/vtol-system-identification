@@ -394,6 +394,10 @@ classdef FlightPathData
             x_lat_0 = [obj.VelV(1) obj.AngP(1) obj.AngR(1) obj.EulPhi(1)];
         end
         
+        function x_lon = get_lon_state_sequence(obj)
+            x_lon = [obj.VelU obj.VelW obj.AngQ obj.EulTheta];
+        end
+        
         function u_lat = get_lat_input_sequence(obj)
             u_lat = [obj.DeltaA obj.DeltaR];
         end
@@ -405,22 +409,22 @@ classdef FlightPathData
             end
             fig.Position = [100 100 1500 1000];
             num_plots_rows = 4;
-            [~,~,num_models] = size(simulated_responses);
+            num_models = numel(t_sim);
 
             subplot(num_plots_rows,2,1)
             plot(obj.Time, obj.VelV, plot_styles(1)); hold on;
             for i = 1:num_models
-                plot(t_sim, simulated_responses(:,1,i), plot_styles(i+1)); hold on
+                plot(t_sim{i}, simulated_responses{i}(:,1), plot_styles(i+1)); hold on
             end
             legend(model_names);
             ylabel("[m/s]")
-            ylim([-7 7])
+            ylim([-13 13])
             title("v")
 
             subplot(num_plots_rows,2,3)
             plot(obj.Time, rad2deg(obj.AngP), plot_styles(1)); hold on
             for i = 1:num_models
-                plot(t_sim, rad2deg(simulated_responses(:,2,i)), plot_styles(i+1)); hold on
+                plot(t_sim{i}, rad2deg(simulated_responses{i}(:,2)), plot_styles(i+1)); hold on
             end
             legend(model_names);
             ylim([-3.5*180/pi 3.5*180/pi]);
@@ -430,17 +434,17 @@ classdef FlightPathData
             subplot(num_plots_rows,2,5)
             plot(obj.Time, rad2deg(obj.AngR), plot_styles(1)); hold on
             for i = 1:num_models
-                plot(t_sim, rad2deg(simulated_responses(:,3,i)), plot_styles(i+1)); hold on
+                plot(t_sim{i}, rad2deg(simulated_responses{i}(:,3)), plot_styles(i+1)); hold on
             end
             legend(model_names);
-            ylim([-2*180/pi 2*180/pi]);
+            ylim([-3.5*180/pi 3.5*180/pi]);
             ylabel("[deg/s]")
             title("r")
                         
             subplot(num_plots_rows,2,7)
             plot(obj.Time, rad2deg(obj.EulPhi), plot_styles(1)); hold on
             for i = 1:num_models
-                plot(t_sim, rad2deg(simulated_responses(:,4,i)), plot_styles(i+1)); hold on
+                plot(t_sim{i}, rad2deg(simulated_responses{i}(:,4)), plot_styles(i+1)); hold on
             end
             legend(model_names);
             ylabel("[deg]")

@@ -108,8 +108,8 @@ end
 fpr_data_lat = {};
 fpr_data_lat.validation.roll_211 = fpr_data.roll_211(1);
 fpr_data_lat.training.roll_211 = fpr_data.roll_211([2:6]);
-fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 7 12]);
-fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 8:11]);
+fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([10 11]);
+fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:9 12]);
 
 % Save FPR data to file
 save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");

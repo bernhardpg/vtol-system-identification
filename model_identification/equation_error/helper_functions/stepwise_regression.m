@@ -13,7 +13,7 @@ function [th_hat, chosen_regr_names, y_hat_val, R_sq_val] = stepwise_regression(
     X_val = [ones(N_val,1) regr_val nonlin_regr_val];
     
     [~, total_num_regressors] = size(X);
-    regr_names = ["1" regr_names nonlin_regr_names];
+    regr_names = ["bias" regr_names nonlin_regr_names];
     [~, num_linear_regressors] = size(regr);
     regr_pool = 2:num_linear_regressors + 1; % Remaining regressors to choose from
     

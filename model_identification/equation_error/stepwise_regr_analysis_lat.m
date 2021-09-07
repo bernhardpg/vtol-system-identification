@@ -20,7 +20,7 @@ dt = fpr_data_lat.training.roll_211(1).Dt;
 
 dependent_variable_names = ["C_Y" "C_l" "C_n"];
 independent_variable_names = ["AngPHat" "AngRHat" "VelVHat" "DeltaA" "DeltaR"];
-regr_names = ["p" "r" "v" "delta_a" "delta_r"];
+regr_names = ["p_hat" "r_hat" "v_hat" "delta_a" "delta_r"];
 nonlin_regr_names = ["v_sq"];
 
 %%%
@@ -29,12 +29,12 @@ nonlin_regr_names = ["v_sq"];
 
 zs = {};
 for data_type = dependent_variable_names
-    zs.(data_type) = collect_data_from_maneuvers(fpr_data_lat.training, maneuver_types, data_type);
+    zs.(data_type) = collect_data_from_multiple_maneuvers(fpr_data_lat.training, maneuver_types, data_type);
 end
 
 regr = [];
 for data_type = independent_variable_names
-    regr = [regr collect_data_from_maneuvers(fpr_data_lat.training, maneuver_types, data_type)];
+    regr = [regr collect_data_from_multiple_maneuvers(fpr_data_lat.training, maneuver_types, data_type)];
 end
 
 nonlin_regr = [regr(:,3) .^ 2];
@@ -44,12 +44,12 @@ nonlin_regr = [regr(:,3) .^ 2];
 %%%
 zs_val = {};
 for data_type = dependent_variable_names
-    zs_val.(data_type) = collect_data_from_maneuvers(fpr_data_lat.validation, maneuver_types, data_type);
+    zs_val.(data_type) = collect_data_from_multiple_maneuvers(fpr_data_lat.validation, maneuver_types, data_type);
 end
 
 regr_val = [];
 for data_type = independent_variable_names
-    regr_val = [regr_val collect_data_from_maneuvers(fpr_data_lat.validation, maneuver_types, data_type)];
+    regr_val = [regr_val collect_data_from_multiple_maneuvers(fpr_data_lat.validation, maneuver_types, data_type)];
 end
 
 nonlin_regr_val = [regr_val(:,3) .^ 2];
@@ -69,6 +69,12 @@ z_val = zs_val.C_Y;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_Y", th_hat, th_names);
 
+% Store coeff values
+c_Y = {};
+for i = 1:length(th_hat)
+    c_Y.(th_names(i)) = th_hat(i);
+end
+
 fig = figure;
 subplot(3,1,1)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
@@ -80,6 +86,12 @@ z_val = zs_val.C_l;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_l", th_hat, th_names);
 
+% Store coeff values
+c_l = {};
+for i = 1:length(th_hat)
+    c_l.(th_names(i)) = th_hat(i);
+end
+
 subplot(3,1,2)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
@@ -90,6 +102,12 @@ z_val = zs_val.C_n;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_n", th_hat, th_names);
 
+% Store coeff values
+c_n = {};
+for i = 1:length(th_hat)
+    c_n.(th_names(i)) = th_hat(i);
+end
+
 subplot(3,1,3)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
@@ -99,3 +117,11 @@ plot_location = 'data/flight_data/selected_data/lateral_directional_data/equatio
 sgtitle("Stepwise-Regression Equation-Error Lateral model")
 filename = "equation_error_fit";
 saveas(fig, plot_location + filename, 'epsc')
+
+% Save coeffs to file
+equation_error_coeffs_lat = {};
+equation_error_coeffs_lat.c_Y = c_Y;
+equation_error_coeffs_lat.c_l = c_l;
+equation_error_coeffs_lat.c_n = c_n;
+
+save("model_identification/equation_error/model/coeffs_lat.mat", "equation_error_coeffs_lat");

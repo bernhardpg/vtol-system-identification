@@ -6,6 +6,10 @@ state_space_model;
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 
+% Load equation_error parameters
+load("model_identification/equation_error/model/coeffs_lat.mat");
+eq_error_lat_model = NonlinearModel({}, equation_error_coeffs_lat);
+
 % Lateral system
 % State = [v p r phi]
 % Input = [delta_a delta_r]
@@ -19,21 +23,28 @@ maneuver_types = [
 for maneuver_type = maneuver_types
     for maneuver_i = 1:length(fpr_data_lat.validation.(maneuver_type))
         maneuver = fpr_data_lat.validation.(maneuver_type)(maneuver_i);
-        u = maneuver.get_lat_input_sequence();
-        t_u = maneuver.Time;
-        x_0 = maneuver.get_lat_state_initial();
+        input_sequence = maneuver.get_lat_input_sequence();
+        t_data_seq = maneuver.Time;
+        y_0 = maneuver.get_lat_state_initial();
+        tspan = [maneuver.Time(1) maneuver.Time(end)];
+        lon_state_seq = maneuver.get_lon_state_sequence();
         
         % Simulate state space model
-        delta_u = detrend(u); % state space model assumes perturbation quantities
-        [y, t] = lsim(lat_sys, delta_u, t_u, x_0);
+        delta_u = detrend(input_sequence); % state space model assumes perturbation quantities
+        [y_ss_model, t_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
         
         % Simulate nonlinear AVL model
+        
         % Simulate equation-error model
+        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
+        
+        % Collect all simulations
+        y_all_models = {y_ss_model, y_eq_error_model};
+        t_all_models = {t_ss_model, t_eq_error_model};
         
         % Compare with real flight data
-        model_names = ["Real data" "AVL SS"];
-        plot_styles = ["-" "--"];
-        maneuver.show_plot_lateral_validation(t, y, model_names, plot_styles);
-        
+        model_names = ["Real data" "AVL SS" "Equation-Error"];
+        plot_styles = ["-" "--" "-"];
+        maneuver.show_plot_lateral_validation(t_all_models, y_all_models, model_names, plot_styles);    
     end
 end
