@@ -1,7 +1,11 @@
 clear all; close all; clc;
 
 % Import ss model from AVL
-state_space_model;
+avl_state_space_model;
+
+% Import coeffs from AVL
+load("avl_model/avl_results/avl_coeffs_lat.mat");
+avl_nonlin_lat_model = NonlinearModel({}, avl_coeffs_lat);
 
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lat.mat");
@@ -31,20 +35,21 @@ for maneuver_type = maneuver_types
         
         % Simulate state space model
         delta_u = detrend(input_sequence); % state space model assumes perturbation quantities
-        [y_ss_model, t_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
+        [y_avl_ss_model, t_avl_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
         
         % Simulate nonlinear AVL model
+        [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
         % Simulate equation-error model
         [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
         
         % Collect all simulations
-        y_all_models = {y_ss_model, y_eq_error_model};
-        t_all_models = {t_ss_model, t_eq_error_model};
+        y_all_models = {y_avl_ss_model, y_avl_nonlin_model, y_eq_error_model};
+        t_all_models = {t_avl_ss_model, t_avl_nonlin_model, t_eq_error_model};
         
         % Compare with real flight data
-        model_names = ["Real data" "AVL SS" "Equation-Error"];
-        plot_styles = ["-" "--" "-"];
+        model_names = ["Real data" "AVL SS" "AVL Nonlinear Model" "Equation-Error"];
+        plot_styles = ["-" "--" "--" "-"];
         maneuver.show_plot_lateral_validation(t_all_models, y_all_models, model_names, plot_styles);    
     end
 end
