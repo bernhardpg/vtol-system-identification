@@ -37,8 +37,16 @@ classdef NonlinearModel
             y = num2cell(y);
             [v, p, r, phi] = y{:};
            
+            % Roll index forward until we get to approx where we should get
+            % inputs from. This basically implements zeroth-order hold for
+            % the input
+            curr_index_data_seq = 1;
+            while t_data_seq(curr_index_data_seq) < t
+               curr_index_data_seq = curr_index_data_seq + 1;
+            end
+            
             % Get input at t
-            input_at_t = interp1(t_data_seq, input_seq, t);
+            input_at_t = input_seq(curr_index_data_seq,:);
             input_at_t = num2cell(input_at_t);
             [delta_a, delta_r] = input_at_t{:};
             
@@ -46,7 +54,7 @@ classdef NonlinearModel
             delta_e = 0;
             
             % Get lon states at t
-            lon_state_at_t = interp1(t_data_seq, lon_state_seq, t);
+            lon_state_at_t = lon_state_seq(curr_index_data_seq,:);
             lon_state_at_t = num2cell(lon_state_at_t);
             [u, w, q, theta] = lon_state_at_t{:};
             

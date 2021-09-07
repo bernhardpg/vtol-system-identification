@@ -20,11 +20,7 @@ maneuver_types = [
 
 % Start with one maneuver
 % 1. Simulate dynamics with current coeffs
-% 2. Calculate residuals
-% 3. Estimate noise covariance R_hat
-% 4. Calculate cost function value with residuals and noise covariance
-% matrix
-% 
+% 2. V
 
 
 

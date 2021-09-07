@@ -41,7 +41,9 @@ for maneuver_type = maneuver_types
         [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
         % Simulate equation-error model
+        tic
         [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
+        toc
         
         % Collect all simulations
         y_all_models = {y_avl_ss_model, y_avl_nonlin_model, y_eq_error_model};
