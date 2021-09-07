@@ -13,8 +13,8 @@ classdef OutputErrorProblem
             obj.ManeuverTypes = maneuver_types;
             obj.OptData.iteration_number = 0;
             obj.OptData.reached_convergence = false;
-            obj.OptData.params.CoeffsLat = zeros(6,3);
-            obj.OptData.params.CoeffsLon = zeros(5,3);
+            obj.OptData.params.CoeffsLat = dynamics_model.CoeffsLat;
+            obj.OptData.params.CoeffsLon = dynamics_model.CoeffsLon;
         end
         
         function obj = solve(obj)
@@ -59,8 +59,13 @@ classdef OutputErrorProblem
             % R_hat constant
             params_new = 0;
             
-            % Compute sensitivies
-            % For param j
+            % Compute sensitivies for lateral parameters
+            for exp_var_i = 1:6
+               for coeff_axis_i = 1:3
+                   
+               end
+            end
+            
             
             
             % Find parameter perturbation

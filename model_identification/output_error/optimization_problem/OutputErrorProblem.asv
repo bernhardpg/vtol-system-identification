@@ -13,7 +13,8 @@ classdef OutputErrorProblem
             obj.ManeuverTypes = maneuver_types;
             obj.OptData.iteration_number = 0;
             obj.OptData.reached_convergence = false;
-            obj.OptData.params = dynamics_model.get_params();
+            obj.OptData.params.CoeffsLat = dynamics_model.CoeffsLat;
+            obj.OptData.params.CoeffsLon = zeros(5,3);
         end
         
         function obj = solve(obj)
@@ -63,21 +64,14 @@ classdef OutputErrorProblem
             
             
             % Find parameter perturbation
-            delta_curr_param = obj.OptData.params.CoeffsLat.c_Y.bias * obj.ParamPerturbation;
+            %delta_curr_param = obj.OptData.params.CoeffsLat.c_Y.bias * obj.ParamPerturbation;
             % Perturb parameter
             % Simulate output with perturbation
             % Calculate sensitivies
             
             
-            y_pred = obj.sim_model(data_sequence, y_0, tspan, params);
+            y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params);
             
-        end
-        
-        function create_param_struct(obj)
-           params_struct = {};
-           params_struct.CoeffsLon = {};
-           params_struct.CoeffsLat = {};
-           params_s
         end
         
         function y_pred = sim_model(obj, data_sequence, y_0, tspan, params)
