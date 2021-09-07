@@ -1,6 +1,5 @@
 clc; close all; clear all;
 
-
 %%%
 % This script calculates the best model for lateral coeffs using
 % stepwise-regression. This is only based on the data. If this method gives

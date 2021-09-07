@@ -22,7 +22,7 @@ knot_points_for_spline_derivation_dt = 0.1;
 % Plot settings
 save_raw_plots = false;
 save_kinematic_consistency_plots = false;
-save_lateral_signal_plots = true;
+save_lateral_signal_plots = false;
 
 % Maneuver settings
 maneuver_types = [

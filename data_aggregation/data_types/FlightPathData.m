@@ -115,7 +115,7 @@ classdef FlightPathData
             ylabel("[deg/s]")
             
             subplot(num_plots_rows,2,5)
-            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), ':'); 
+            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), '--'); 
             legend("$\delta_a$", "$\delta_a^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
@@ -133,7 +133,7 @@ classdef FlightPathData
             ylabel("[deg/s]")
             
             subplot(num_plots_rows,2,11)
-            plot(obj.Time, rad2deg(obj.DeltaE), obj.Time, rad2deg(obj.DeltaESp), ':'); 
+            plot(obj.Time, rad2deg(obj.DeltaE), obj.Time, rad2deg(obj.DeltaESp), '--'); 
             legend("$\delta_e$", "$\delta_e^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
@@ -152,7 +152,7 @@ classdef FlightPathData
             ylabel("[deg/s]")
             
             subplot(num_plots_rows,2,17)
-            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), ':'); 
+            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), '--'); 
             legend("$\delta_r$", "$\delta_r^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
@@ -228,7 +228,7 @@ classdef FlightPathData
             ylabel("[deg/s]")
             
             subplot(num_plots_rows,2,5)
-            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), ':'); 
+            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), '--'); 
             legend("$\delta_a$", "$\delta_a^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
@@ -247,7 +247,7 @@ classdef FlightPathData
             ylabel("[deg/s]")
             
             subplot(num_plots_rows,2,11)
-            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), ':'); 
+            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), '--'); 
             legend("$\delta_r$", "$\delta_r^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
@@ -388,6 +388,93 @@ classdef FlightPathData
                 filename = "kin_consistency_check_" + obj.Id;
                 saveas(fig, plot_location + obj.ManeuverType + "_" + filename, 'epsc');
             end
+        end
+        
+        function x_lat_0 = get_lat_state_initial(obj)
+            x_lat_0 = [obj.VelV(1) obj.AngP(1) obj.AngR(1) obj.EulPhi(1)];
+        end
+        
+        function u_lat = get_lat_input_sequence(obj)
+            u_lat = [obj.DeltaA obj.DeltaR];
+        end
+        
+        function plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles, show_plot, save_plot, filename, plot_location)
+            fig = figure;
+            if ~show_plot
+                fig.Visible = 'off';
+            end
+            fig.Position = [100 100 1500 1000];
+            num_plots_rows = 4;
+            [~,~,num_models] = size(simulated_responses);
+
+            subplot(num_plots_rows,2,1)
+            plot(obj.Time, obj.VelV, plot_styles(1)); hold on;
+            for i = 1:num_models
+                plot(t_sim, simulated_responses(:,1,i), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylabel("[m/s]")
+            ylim([-7 7])
+            title("v")
+
+            subplot(num_plots_rows,2,3)
+            plot(obj.Time, rad2deg(obj.AngP), plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim, rad2deg(simulated_responses(:,2,i)), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylim([-3.5*180/pi 3.5*180/pi]);
+            ylabel("[deg/s]")
+            title("p")
+                        
+            subplot(num_plots_rows,2,5)
+            plot(obj.Time, rad2deg(obj.AngR), plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim, rad2deg(simulated_responses(:,3,i)), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylim([-2*180/pi 2*180/pi]);
+            ylabel("[deg/s]")
+            title("r")
+                        
+            subplot(num_plots_rows,2,7)
+            plot(obj.Time, rad2deg(obj.EulPhi), plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim, rad2deg(simulated_responses(:,4,i)), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylabel("[deg]")
+            ylim([-60 60])
+            title("\phi")
+                        
+            subplot(num_plots_rows,2,2)
+            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), '--'); 
+            legend("$\delta_a$", "$\delta_a^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            title("Aileron")
+            
+            subplot(num_plots_rows,2,4)
+            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), '--'); 
+            legend("$\delta_r$", "$\delta_r^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            title("Rudder")
+
+            sgtitle("Model validation on " + obj.ManeuverType);
+            
+            if save_plot
+                saveas(fig, plot_location + filename, 'epsc')
+            end
+        end
+        
+        function save_plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles, plot_location)
+            filename = "plot_" + obj.ManeuverType + "_" + obj.Id;
+            obj.plot_lateral_validation(t_sim, simulated_responses, model_names, plot_styles, false, true, filename, plot_location);
+        end
+        
+        function show_plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles)
+            obj.plot_lateral_validation(t_sim, simulated_responses, model_names, plot_styles, true, false, '', '');
         end
     end
 end
