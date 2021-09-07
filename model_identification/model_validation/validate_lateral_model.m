@@ -11,7 +11,7 @@ avl_nonlin_lat_model = NonlinearModel({}, avl_coeffs_lat);
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 
 % Load equation_error parameters
-load("model_identification/equation_error/model/coeffs_lat.mat");
+load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
 eq_error_lat_model = NonlinearModel({}, equation_error_coeffs_lat);
 
 % Lateral system
