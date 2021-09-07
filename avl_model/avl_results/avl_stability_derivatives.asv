@@ -81,8 +81,8 @@ c_n_p_hat = -0.094420;
 c_n_r_hat = -0.094406;
 c_n_delta_a = 0.000237 * 180 / pi;
 c_n_delta_r = -0.001972 * 180 / pi;
-c_n = [0 c_n_v_hat c_n_p_hat c_n_r_hat c_n_delta_a c_n_delta_r]';
+c_Y = [0 c_Y_v_hat c_Y_p_hat c_Y_r_hat c_Y_delta_a c_Y_delta_r]';
 
-avl_coeffs_lat = [c_Y c_l c_n];
+avl_coeffs_lat = []
 
 save("avl_model/avl_results/avl_coeffs_lat.mat", "avl_coeffs_lat");

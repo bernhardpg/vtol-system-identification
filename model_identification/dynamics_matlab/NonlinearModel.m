@@ -1,8 +1,8 @@
 classdef NonlinearModel
     properties
         Params = {}
-        CoeffsLat = {}
-        CoeffsLon = {}
+        CoeffsLat;
+        CoeffsLon;
     end
     methods
         function obj = NonlinearModel(coeffs_lon, coeffs_lat)
@@ -62,18 +62,10 @@ classdef NonlinearModel
             % Calculate forces and moments
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
-            exp_vars = {};
-            exp_vars.p_hat = p_hat;
-            exp_vars.q_hat = q_hat;
-            exp_vars.r_hat = r_hat;
-            exp_vars.u_hat = u_hat;
-            exp_vars.v_hat = v_hat;
-            exp_vars.w_hat = w_hat;
-            exp_vars.delta_a = delta_a;
-            exp_vars.delta_e = delta_e;
-            exp_vars.delta_r = delta_r;
+            explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
+            explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
             
-            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(exp_vars);
+            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
             [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure);
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
@@ -85,6 +77,11 @@ classdef NonlinearModel
             [u_dot, v_dot, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [v_dot p_dot r_dot phi_dot]';
+        end
+        
+        function obj = set_params(obj, params)
+           obj.CoeffsLat = params.CoeffsLat;
+           obj.CoeffsLon = params.CoeffsLon;
         end
 
         function [phi_dot, theta_dot, psi_dot] = eul_dynamics(~, phi, theta, p, q, r)
@@ -105,46 +102,22 @@ classdef NonlinearModel
             w_dot = q * u - p * v + (1/obj.Params.mass_kg) * (Z + obj.Params.mass_kg * obj.Params.g * cos(theta) * cos(phi)); 
         end
         
-        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, exp_vars)
+        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)
             % For now, set all lon coeffs to zero
             c_X = 0;
             c_Z = 0;
             c_m = 0;
             
             % Lat coeffs
-            c_Y = 0;
-            coeff_names = string(fieldnames(obj.CoeffsLat.c_Y));
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names(i);
-                if strcmp(coeff_name, "bias")
-                    c_Y = c_Y + obj.CoeffsLat.c_Y.bias * 1; 
-                else
-                    c_Y = c_Y + obj.CoeffsLat.c_Y.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
+            temp = explanatory_vars_lat * obj.CoeffsLat;
+            c_Y = temp(1);
+            c_l = temp(2);
+            c_n = temp(3);
             
-            c_l = 0;
-            coeff_names = string(fieldnames(obj.CoeffsLat.c_l));
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names(i);
-                if strcmp(coeff_name, "bias")
-                    c_l = c_l + obj.CoeffsLat.c_l.bias * 1; 
-                else
-                    c_l = c_l + obj.CoeffsLat.c_l.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
-            
-            c_n = 0;
-            coeff_names = string(fieldnames(obj.CoeffsLat.c_n));
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names(i);
-                if strcmp(coeff_name, "bias")
-                    c_n = c_n + obj.CoeffsLat.c_n.bias * 1; 
-                else
-                    c_n = c_n + obj.CoeffsLat.c_n.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
-            
+            temp = explanatory_vars_lon * obj.CoeffsLon;
+            c_X = temp(1);
+            c_Z = temp(2);
+            c_m = temp(3);
         end
         
         function [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure)

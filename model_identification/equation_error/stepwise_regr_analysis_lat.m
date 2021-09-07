@@ -56,6 +56,8 @@ nonlin_regr_val = [regr_val(:,3) .^ 2];
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
+% For coefficient storage
+std_regr_order_lat = ["bias" "v_hat" "p_hat" "r_hat" "delta_a" "delta_r"];
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -70,10 +72,7 @@ z_val = zs_val.C_Y;
 print_eq_error_params("c_Y", th_hat, th_names);
 
 % Store coeff values
-c_Y = {};
-for i = 1:length(th_hat)
-    c_Y.(th_names(i)) = th_hat(i);
-end
+c_Y = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
 fig = figure;
 subplot(3,1,1)
@@ -87,10 +86,7 @@ z_val = zs_val.C_l;
 print_eq_error_params("c_l", th_hat, th_names);
 
 % Store coeff values
-c_l = {};
-for i = 1:length(th_hat)
-    c_l.(th_names(i)) = th_hat(i);
-end
+c_l = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
 subplot(3,1,2)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
@@ -103,10 +99,7 @@ z_val = zs_val.C_n;
 print_eq_error_params("c_n", th_hat, th_names);
 
 % Store coeff values
-c_n = {};
-for i = 1:length(th_hat)
-    c_n.(th_names(i)) = th_hat(i);
-end
+c_n = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
 subplot(3,1,3)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
@@ -119,9 +112,22 @@ filename = "equation_error_fit";
 saveas(fig, plot_location + filename, 'epsc')
 
 % Save coeffs to file
-equation_error_coeffs_lat = {};
-equation_error_coeffs_lat.c_Y = c_Y;
-equation_error_coeffs_lat.c_l = c_l;
-equation_error_coeffs_lat.c_n = c_n;
+equation_error_coeffs_lat = [c_Y c_l c_n];
 
-save("model_identification/equation_error/model/coeffs_lat.mat", "equation_error_coeffs_lat");
+save("model_identification/equation_error/results/equation_error_coeffs_lat.mat", "equation_error_coeffs_lat");
+
+function coeff_vector = create_coeff_vector(std_regr_order, th_hat, th_names)
+    n_total_regr = length(std_regr_order);
+    coeff_vector = zeros(n_total_regr,1);
+    % Iterate through found regressors
+    for regr_i = 1:length(th_hat)
+        curr_regr_name = th_names(regr_i);
+        % Find the right place in the coeff vector
+        for coeff_i = 1:n_total_regr
+            if strcmp(curr_regr_name, std_regr_order(coeff_i)) % found right place in coeff matrix
+                coeff_vector(coeff_i) = th_hat(regr_i);
+                break
+            end
+        end
+    end
+end

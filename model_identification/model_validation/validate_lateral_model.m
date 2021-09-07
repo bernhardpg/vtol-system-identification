@@ -5,14 +5,14 @@ avl_state_space_model;
 
 % Import coeffs from AVL
 load("avl_model/avl_results/avl_coeffs_lat.mat");
-avl_nonlin_lat_model = NonlinearModel({}, avl_coeffs_lat);
+avl_nonlin_lat_model = NonlinearModel(zeros(5,3), avl_coeffs_lat);
 
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 
 % Load equation_error parameters
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
-eq_error_lat_model = NonlinearModel({}, equation_error_coeffs_lat);
+eq_error_lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 
 % Lateral system
 % State = [v p r phi]

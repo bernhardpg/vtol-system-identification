@@ -26,7 +26,7 @@ maneuver_types = [
 
 
 curr_coeffs_lat = equation_error_coeffs_lat;
-lat_model = NonlinearModel({}, equation_error_coeffs_lat);
+lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 opt_problem = OutputErrorProblem(fpr_data_lat, lat_model, maneuver_types);
 
 opt_problem.solve();
