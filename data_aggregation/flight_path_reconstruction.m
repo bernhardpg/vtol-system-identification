@@ -22,7 +22,7 @@ knot_points_for_spline_derivation_dt = 0.1;
 % Plot settings
 save_raw_plots = false;
 save_kinematic_consistency_plots = false;
-save_signal_to_noise_check = false;
+save_lateral_signal_plots = true;
 
 % Maneuver settings
 maneuver_types = [
@@ -82,18 +82,23 @@ for maneuver_type = maneuver_types
         end
     end
     
-    % Save plot for signal-to-noise checks
-    if save_signal_to_noise_check
-        for maneuver_i = 1:length(selected_maneuvers)
-            plot_location = "data/flight_data/selected_data/lateral_directional_data/signal_to_noise_check/";
-            selected_maneuvers(maneuver_i).save_plot_lateral(plot_location);
-        end
-    end
-    
     % Calcululate coefficients
     for maneuver_i = 1:length(selected_maneuvers)
         selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_force_coeffs();
         selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_moment_coeffs();
+    end
+    
+    % Calculate explanatory variables
+    for maneuver_i = 1:length(selected_maneuvers)
+        selected_maneuvers(maneuver_i) = selected_maneuvers(maneuver_i).calc_explanatory_vars();
+    end
+    
+    % Save plot for all relevant lateral data signals
+    if save_lateral_signal_plots
+        for maneuver_i = 1:length(selected_maneuvers)
+            plot_location = "data/flight_data/selected_data/lateral_directional_data/lateral_signals/";
+            selected_maneuvers(maneuver_i).save_plot_lateral(plot_location);
+        end
     end
     
     fpr_data.(maneuver_type) = selected_maneuvers;
@@ -101,10 +106,10 @@ end
 
 % Manually pick sequenced maneuvers as validation data
 fpr_data_lat = {};
-fpr_data_lat.validation.roll_211 = fpr_data.roll_211(3);
-fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 4 5 6]);
-fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 12]);
-fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7:11]);
+fpr_data_lat.validation.roll_211 = fpr_data.roll_211(1);
+fpr_data_lat.training.roll_211 = fpr_data.roll_211([2:6]);
+fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 7 12]);
+fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 8:11]);
 
 % Save FPR data to file
 save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");

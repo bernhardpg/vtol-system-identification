@@ -3,6 +3,7 @@ classdef FlightPathData
         Id
         ManeuverType
         Time
+        Dt
         EulPhi
         EulTheta
         EulPsi
@@ -31,6 +32,12 @@ classdef FlightPathData
         C_l
         C_m
         C_n
+        VelUHat
+        VelVHat
+        VelWHat
+        AngPHat
+        AngQHat
+        AngRHat
         RawData = ManeuverRawData.empty
     end
     methods
@@ -42,6 +49,7 @@ classdef FlightPathData
         end
         function obj = calc_fpr_from_rawdata(obj, dt_desired, dt_knots)
             obj.Time = (obj.RawData.Time(1):dt_desired:obj.RawData.Time(end))';
+            obj.Dt = dt_desired;
             
             % Smooth eul angles and calculate derivatives
             eul_smoothed = smooth_signal([obj.RawData.EulPhi obj.RawData.EulTheta obj.RawData.EulPsi]);
@@ -69,9 +77,9 @@ classdef FlightPathData
             [obj.AccX, obj.AccY, obj.AccZ] = calc_trans_acc(g, obj.EulPhi, obj.EulTheta, obj.AngP, obj.AngQ, obj.AngR, obj.VelU, obj.VelV, obj.VelW, u_dot, v_dot, w_dot);
             
             % Calculate angular accelerations
-            obj.PDot = calc_spline_derivative(obj.Time, obj.AngP, obj.Time, dt_knots, 0);
-            obj.QDot = calc_spline_derivative(obj.Time, obj.AngQ, obj.Time, dt_knots, 0);
-            obj.RDot = calc_spline_derivative(obj.Time, obj.AngR, obj.Time, dt_knots, 0);
+            obj.PDot = calc_spline_derivative(obj.Time, obj.AngP, obj.Time, dt_knots, 1);
+            obj.QDot = calc_spline_derivative(obj.Time, obj.AngQ, obj.Time, dt_knots, 1);
+            obj.RDot = calc_spline_derivative(obj.Time, obj.AngR, obj.Time, dt_knots, 1);
             
             % Save actuator setpoints by doing linear interpolation to
             % correct time frame
@@ -205,7 +213,7 @@ classdef FlightPathData
                 fig.Visible = 'off';
             end
             fig.Position = [100 100 1500 1000];
-            num_plots_rows = 6;
+            num_plots_rows = 7;
 
             subplot(num_plots_rows,2,1)
             plot(obj.Time, rad2deg(obj.EulPhi)); 
@@ -260,13 +268,29 @@ classdef FlightPathData
             plot(obj.Time, obj.PDot); 
             legend("$\dot{p}$");
             ylabel("[rad/s^2]")
-            ylim([-3 3])
+            ylim([-8 8])
             
             subplot(num_plots_rows,2,8)
             plot(obj.Time, obj.RDot); 
             legend("$\dot{r}$");
             ylabel("[rad/s^2]")
-            ylim([-3 3])
+            ylim([-8 8])
+            
+            subplot(num_plots_rows,2,10)
+            plot(obj.Time, obj.C_Y); 
+            legend("$c_y$");
+            ylabel("")
+            
+            subplot(num_plots_rows,2,12)
+            plot(obj.Time, obj.C_l); 
+            legend("$c_l$");
+            ylabel("")
+            
+            subplot(num_plots_rows,2,14)
+            plot(obj.Time, obj.C_n); 
+            legend("$c_n$");
+            ylabel("")
+            
             
             
             sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
@@ -290,7 +314,19 @@ classdef FlightPathData
         end
         
         function obj = calc_moment_coeffs(obj)
-                [obj.C_l, obj.C_m, obj.C_n] = calc_moment_coeffs(obj.AngP, obj.AngR, obj.AngR, obj.VelU, obj.VelV, obj.VelW, obj.PDot, obj.QDot, obj.RDot); 
+                [obj.C_l, obj.C_m, obj.C_n] = calc_moment_coeffs(obj.AngP, obj.AngQ, obj.AngR, obj.VelU, obj.VelV, obj.VelW, obj.PDot, obj.QDot, obj.RDot); 
+        end
+        
+        function obj = calc_explanatory_vars(obj)
+            airframe_static_properties; % Get V_nom, wingspan and MAC
+
+            obj.VelUHat = obj.VelU / V_nom;
+            obj.VelVHat = obj.VelV / V_nom;
+            obj.VelWHat = obj.VelW / V_nom;
+            obj.AngPHat = obj.AngP * (wingspan_m / (2 * V_nom));
+            obj.AngQHat = obj.AngQ * (mean_aerodynamic_chord_m / (2 * V_nom));
+            obj.AngRHat = obj.AngR * (wingspan_m / (2 * V_nom));
+ 
         end
         
         function check_kinematic_consistency(obj, show_plot, save_plot, plot_location)

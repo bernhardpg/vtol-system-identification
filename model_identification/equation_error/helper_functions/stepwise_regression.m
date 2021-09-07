@@ -286,11 +286,6 @@ function s_sq = calc_s_sq(y_hat, z)
     s_sq = (v' * v) / (N - np);
 end
 
-function [th_hat] = LSE(X, z)
-    D = (X' * X)^(-1);
-    th_hat = D * X' * z;
-end
-
 function [r] = calc_corr_coeff(X, z)
     X_bar = mean(X);
     z_bar = mean(z);

@@ -1,40 +1,61 @@
-clear all;
+clc; close all; clear all;
+
 
 %%%
 % This script calculates the best model for lateral coeffs using
 % stepwise-regression. This is only based on the data. If this method gives
 % a simpler model, this model is preferred!
 
+% Load FPR data which contains training data and validation data
+load("data/flight_data/selected_data/fpr_data_lat.mat");
+
+% Collect data from multiple experiments into one long dataset
+% Note: Ordering does not matter for equation error
+
+maneuver_types = [
+    "roll_211",...
+    "yaw_211",...
+    ];
+
+dt = fpr_data_lat.training.roll_211(1).Dt;
+
+dependent_variable_names = ["C_Y" "C_l" "C_n"];
+independent_variable_names = ["AngPHat" "AngRHat" "VelVHat" "DeltaA" "DeltaR"];
+regr_names = ["p" "r" "v" "delta_a" "delta_r"];
+nonlin_regr_names = ["v_sq"];
+
 %%%
 % Load training data
 %%%
-maneuver_types = ["roll_211" "yaw_211"];
-data_type = "train";
-load_data;
 
-% Basis regressors
-regr = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
-regr_names = ["p" "r" "beta" "delta_a" "delta_r"];
+zs = {};
+for data_type = dependent_variable_names
+    zs.(data_type) = collect_data_from_maneuvers(fpr_data_lat.training, maneuver_types, data_type);
+end
 
-nonlin_regr = [beta.^2]; %sign(p_hat).*p_hat.^2 sign(r_hat).*r_hat.^2 sign(delta_a).*delta_a.^2 sign(delta_r).*delta_r.^2];
-nonlin_regr_names = ["beta_sq"]; % "p_sq" "r_sq" "delta_a_sq" "delta_r_sq"];
+regr = [];
+for data_type = independent_variable_names
+    regr = [regr collect_data_from_maneuvers(fpr_data_lat.training, maneuver_types, data_type)];
+end
 
-% Dependent variables
-zs = [c_Y c_l c_n];
+nonlin_regr = [regr(:,3) .^ 2];
 
 %%%
 % Load validation data
 %%%
-data_type = "val";
-load_data;
+zs_val = {};
+for data_type = dependent_variable_names
+    zs_val.(data_type) = collect_data_from_maneuvers(fpr_data_lat.validation, maneuver_types, data_type);
+end
 
-regr_val = [p_hat r_hat beta delta_a delta_r]; % Basis regressors
-nonlin_regr_val = [beta.^2];
+regr_val = [];
+for data_type = independent_variable_names
+    regr_val = [regr_val collect_data_from_maneuvers(fpr_data_lat.validation, maneuver_types, data_type)];
+end
 
-% Dependent variables
-zs_val = [c_Y c_l c_n];
-t_plot_val = 0:dt:length(t)*dt-dt;
-
+nonlin_regr_val = [regr_val(:,3) .^ 2];
+[N_val, ~] = size(regr_val);
+t_plot_val = 0:dt:N_val * dt - dt;
 
 
 %%
@@ -42,38 +63,40 @@ t_plot_val = 0:dt:length(t)*dt-dt;
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
-min_r_sq_change = 0.5; % Demand at least 2% improvement to add a regressor
+min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
 
-z = zs(:,1);
-z_val = zs_val(:,1);
+z = zs.C_Y;
+z_val = zs_val.C_Y;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_Y", th_hat, th_names);
 
-figure
+fig = figure;
 subplot(3,1,1)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_Y: " + "R^2 = " + R_sq_val + "%")
+title("c_Y: " + "R^2 = " + R_sq_val + "%" + ", vars: " + join(th_names))
 
-
-z = zs(:,2);
-z_val = zs_val(:,2);
+z = zs.C_l;
+z_val = zs_val.C_l;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_l", th_hat, th_names);
 
 subplot(3,1,2)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_l: " + "R^2 = " + R_sq_val + "%")
+title("c_l: " + "R^2 = " + R_sq_val + "%" + ", vars: "  + join(th_names))
 
-z = zs(:,3);
-z_val = zs_val(:,3);
+z = zs.C_n;
+z_val = zs_val.C_n;
 [th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_n", th_hat, th_names);
 
 subplot(3,1,3)
 plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
 legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_n: " + "R^2 = " + R_sq_val + "%")
+title("c_n: " + "R^2 = " + R_sq_val + "%" + ", vars: "  + join(th_names))
 
+plot_location = 'data/flight_data/selected_data/lateral_directional_data/equation_error_fit/';
 sgtitle("Stepwise-Regression Equation-Error Lateral model")
+filename = "equation_error_fit";
+saveas(fig, plot_location + filename, 'epsc')
