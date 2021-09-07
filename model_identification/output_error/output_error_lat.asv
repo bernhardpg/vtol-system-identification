@@ -7,7 +7,6 @@ load("data/flight_data/selected_data/fpr_data_lat.mat");
 
 % Load equation_error parameters which will be used as initial guesses
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
-eq_error_lat_model = NonlinearModel({}, equation_error_coeffs_lat);
 
 % Lateral system
 % State = [v p r phi]
@@ -20,8 +19,32 @@ maneuver_types = [
 
 % Start with one maneuver
 % 1. Simulate dynamics with current coeffs
-% 2. V
+% 2. Calculate residuals
+% 3. Estimate noise covariance R_hat
+% 4. Calculate cost function value with residuals and noise covariance
+% matrix
 
+opt_problem = OutputErrorProblem(fpr_data_lat);
+
+% Create 
+curr_coeffs_lat = equation_error_coeffs_lat;
+lat_model = NonlinearModel({}, equation_error_coeffs_lat);
+
+
+
+for maneuver_type = maneuver_types(1)
+    for maneuver_i = 1
+        maneuver = fpr_data_lat.training.(maneuver_type)(maneuver_i);
+        input_sequence = maneuver.get_lat_input_sequence();
+        t_data_seq = maneuver.Time;
+        y_0 = maneuver.get_lat_state_initial();
+        tspan = [maneuver.Time(1) maneuver.Time(end)];
+        lon_state_seq = maneuver.get_lon_state_sequence();
+        z = maneuver.get_lat_state_sequence();
+
+
+    end
+end
 
 
 %%

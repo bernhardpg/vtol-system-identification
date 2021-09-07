@@ -394,6 +394,10 @@ classdef FlightPathData
             x_lat_0 = [obj.VelV(1) obj.AngP(1) obj.AngR(1) obj.EulPhi(1)];
         end
         
+        function x_lat = get_lat_state_sequence(obj)
+            x_lat = [obj.VelV obj.AngP obj.AngR obj.EulPhi];
+        end
+        
         function x_lon = get_lon_state_sequence(obj)
             x_lon = [obj.VelU obj.VelW obj.AngQ obj.EulTheta];
         end

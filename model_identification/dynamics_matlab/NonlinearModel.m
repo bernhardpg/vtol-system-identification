@@ -32,6 +32,7 @@ classdef NonlinearModel
         % u = [delta_a delta_r]
         % lon_states = [u w q theta]
         %   lon states are taken as measured, and not simulated
+        
         function dy_dt = dynamics(obj, t, y, t_data_seq, input_seq, lon_state_seq)
             % Extract states
             y = num2cell(y);

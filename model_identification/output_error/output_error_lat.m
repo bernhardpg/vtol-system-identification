@@ -7,7 +7,6 @@ load("data/flight_data/selected_data/fpr_data_lat.mat");
 
 % Load equation_error parameters which will be used as initial guesses
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
-eq_error_lat_model = NonlinearModel({}, equation_error_coeffs_lat);
 
 % Lateral system
 % State = [v p r phi]
@@ -24,7 +23,13 @@ maneuver_types = [
 % 3. Estimate noise covariance R_hat
 % 4. Calculate cost function value with residuals and noise covariance
 % matrix
-% 
+
+
+curr_coeffs_lat = equation_error_coeffs_lat;
+lat_model = NonlinearModel({}, equation_error_coeffs_lat);
+opt_problem = OutputErrorProblem(fpr_data_lat, lat_model, maneuver_types);
+
+opt_problem.solve();
 
 
 
