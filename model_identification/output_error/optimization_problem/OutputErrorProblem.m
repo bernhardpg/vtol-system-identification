@@ -145,7 +145,7 @@ classdef OutputErrorProblem
             end
         end
 
-        function residuals = aggregate_residuals_from_all_maneuvers(obj, maneuver_simulations)
+        function residuals = aggregate_residuals_from_all_maneuvers(~, maneuver_simulations)
             residuals = [];
             for maneuver_i = 1:numel(maneuver_simulations)
                 residuals = [residuals; maneuver_simulations{maneuver_i}.residuals];
@@ -164,7 +164,7 @@ classdef OutputErrorProblem
             convergence_reason = "Not converged";
             
             abs_noise_covar_change = abs(diag(R_hat_old - R_hat_new) ./ (diag(R_hat_old)));
-            if all((abs_noise_covar_change) < 0.1)
+            if all((abs_noise_covar_change) < 0.05)
                 has_converged = true;
                 convergence_reason = "All covariances smaller than specified treshold";
                 disp("Converged: " + convergence_reason);
@@ -191,7 +191,7 @@ classdef OutputErrorProblem
                disp("Converged: " + convergence_reason);
             end
 
-            if all(abs(cost_gradient) < 0.05)
+            if all(abs(cost_gradient) < 0.1)
                has_converged = true;
                convergence_reason = "All gradients smaller than specificed treshold";
                disp("Converged: " + convergence_reason);
@@ -247,7 +247,7 @@ classdef OutputErrorProblem
             data.z = maneuver.get_lat_state_sequence();
             data.y_0 = maneuver.get_lat_state_initial();
             data.lon_state_sequence = maneuver.get_lon_state_sequence();
-            data.input_sequence = maneuver.get_lat_input_sequence();
+            data.input_sequence = detrend(maneuver.get_lat_input_sequence(),0);
         end
         
         function [params_update, information_matrix, cost_gradient] = calc_params_update(obj, params_to_update, R_hat, residuals, params, f_calc_y)            

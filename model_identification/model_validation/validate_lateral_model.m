@@ -12,6 +12,9 @@ load("data/flight_data/selected_data/fpr_data_lat.mat");
 
 % Load equation_error parameters
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
+equation_error_coeffs_lat(1) = 0;
+equation_error_coeffs_lat(7) = 0;
+equation_error_coeffs_lat(13) = 0;
 eq_error_lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 
 % Load output-error parameters
@@ -38,17 +41,17 @@ for maneuver_type = maneuver_types
         lon_state_seq = maneuver.get_lon_state_sequence();
         
         % Simulate state space model
-        delta_u = detrend(input_sequence); % state space model assumes perturbation quantities
+        delta_u = detrend(input_sequence,0); % state space model assumes perturbation quantities
         [y_avl_ss_model, t_avl_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
         
         % Simulate nonlinear AVL model
         [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
         % Simulate equation-error model
-        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
+        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
         % Simulate output-error model
-        [t_output_error_model, y_output_error_model] = ode45(@(t,y) output_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
+        [t_output_error_model, y_output_error_model] = ode45(@(t,y) output_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
 %         % Collect all simulations
 %         y_all_models = {y_avl_ss_model, y_avl_nonlin_model, y_eq_error_model, y_output_error_model};

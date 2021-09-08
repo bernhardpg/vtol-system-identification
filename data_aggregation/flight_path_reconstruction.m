@@ -36,7 +36,7 @@ maneuver_types = [
 % there is not time for this.
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
-maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 33 34 35 36 38 39 40 41];
+maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 32 34 35 36 38 39 40 41];
 maneuvers_to_skip.("pitch_211") = [];
 maneuvers_to_skip.("freehand") = [];
 
@@ -106,10 +106,10 @@ end
 
 % Manually pick sequenced maneuvers as validation data
 fpr_data_lat = {};
-fpr_data_lat.validation.roll_211 = fpr_data.roll_211(1);
-fpr_data_lat.training.roll_211 = fpr_data.roll_211([2:6]);
-fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([10 11]);
-fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:9 12]);
+fpr_data_lat.validation.roll_211 = fpr_data.roll_211([3 4]);
+fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 5 6]);
+fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 8 9 10]);
+fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7 11 12]);
 
 % Save FPR data to file
 save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");

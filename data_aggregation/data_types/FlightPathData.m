@@ -456,14 +456,14 @@ classdef FlightPathData
             title("\phi")
                         
             subplot(num_plots_rows,2,2)
-            plot(obj.Time, rad2deg(obj.DeltaA), obj.Time, rad2deg(obj.DeltaASp), '--'); 
+            plot(obj.Time, detrend(rad2deg(obj.DeltaA),0), obj.Time, detrend(rad2deg(obj.DeltaASp),0), '--'); 
             legend("$\delta_a$", "$\delta_a^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])
             title("Aileron")
             
             subplot(num_plots_rows,2,4)
-            plot(obj.Time, rad2deg(obj.DeltaR), obj.Time, rad2deg(obj.DeltaRSp), '--'); 
+            plot(obj.Time, detrend(rad2deg(obj.DeltaR),0), obj.Time, detrend(rad2deg(obj.DeltaRSp),0), '--'); 
             legend("$\delta_r$", "$\delta_r^{sp}$");
             ylabel("[deg]")
             ylim([-28 28])

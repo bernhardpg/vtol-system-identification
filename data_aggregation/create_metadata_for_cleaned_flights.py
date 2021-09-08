@@ -145,12 +145,12 @@ roll_211_nt_maneuver_indices = np.arange(57, 100)
 
 # Correct roll maneuver times
 roll_211_maneuver_times = {
-    37: [1347, 1363],  # Take 1,2,3,4 in one go
-    41: [-1, 1379.2],  # Take 5 by itself
-    43: [1385.5, 1397],  # Take 7, 8, 9 in one go
-    46: [-1, 1429.5],  # Clip away dropout on 10
+    37: [1347.5, 1363],  # Take 1,2,3,4 in one go
+    41: [1375, 1379.2],  # Take 5 by itself
+    43: [1386, 1397],  # Take 7, 8, 9 in one go
+    46: [1425, 1429.5],  # Clip away dropout on 10
     49: [-1, 1480.5],  # 13, 14, 15, 16, 17 in one go
-    54: [-1, 1502.5],  # 18, 19 in one go
+    54: [1491, 1502.5],  # 18, 19 in one go
 }
 
 set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
@@ -174,12 +174,16 @@ yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 yaw_211_nt_maneuver_indices = np.arange(113, 149)
 
 yaw_211_maneuver_times = {
-    105: [2260, 2272],  # 6,7
+    105: [2261, 2272],  # 6,7
     111: [-1, 2342],  # 12, 13, next maneuver (14) start at index 149
+    114: [3073,-1], # 15
+    118: [3157,-1], # 15
     161: [-1, 3256],  # 26
-    166: [-1, 3333],  # 31
-    167: [3343, 3364],  # 32, 33, 34
-    172: [3392, 3404],  # 37, 38
+    163: [3273, -1],  # 28
+    164: [3282, -1],  # 29
+    166: [3324.5, 3333],  # 31
+    168: [3350, 3364],  # 33, 34
+    172: [3391.5, 3404],  # 37, 38
     # 40 41 can be included if I need more data
 }
 
