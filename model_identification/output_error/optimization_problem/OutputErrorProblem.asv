@@ -8,11 +8,10 @@ classdef OutputErrorProblem
         OptData
         ManeuverData
         ManeuverSimulations
-        ParametersToUpdate
         ParamPerturbation = 0.01
     end
     methods
-        function obj = OutputErrorProblem(fpr_data, dynamics_model, maneuver_types, params_to_update)
+        function obj = OutputErrorProblem(fpr_data, dynamics_model, maneuver_types)
             obj.TrainingData = obj.collect_all_maneuvers_into_array(fpr_data.training);
             obj.ValidationData = obj.collect_all_maneuvers_into_array(fpr_data.validation);
             obj.DynamicsModel = dynamics_model;
@@ -27,7 +26,6 @@ classdef OutputErrorProblem
             obj.OptData.parameters_converged = false;
             obj.OptData.error_covariance_converged = false;
             obj.ManeuverData = {};
-            obj.ParametersToUpdate = params_to_update;
             
             % Collect simulation data for all maneuvers
             for maneuver_i = 1:length(obj.TrainingData)
@@ -40,9 +38,9 @@ classdef OutputErrorProblem
         function maneuver_array = collect_all_maneuvers_into_array(~, dataset)
             maneuver_array = [];
             maneuver_types = fieldnames(dataset);
-            for i = 1:numel(maneuver_types)
+            for i = 1%:numel(maneuver_types)
                 maneuver_type = maneuver_types{i};
-                maneuvers = dataset.(maneuver_type);
+                maneuvers = dataset.(maneuver_type)(1);
                 maneuver_array = [maneuver_array; maneuvers];
             end
         end
@@ -70,17 +68,11 @@ classdef OutputErrorProblem
                     tic
                     disp("	Calculating gradients")
                     [params_update, information_matrix, cost_gradient]...
-                        = obj.calc_params_update(obj.ParametersToUpdate, obj.OptData.R_hat, obj.OptData.residuals, obj.OptData.params.CoeffsLat,...
+                        = obj.calc_params_update(obj.OptData.R_hat, obj.OptData.residuals, obj.OptData.params.CoeffsLat,...
                             @(params) obj.get_y_pred_for_maneuvers(params, obj.OptData.params.CoeffsLon, obj.TrainingData));
                     toc
-                    
-                    obj.OptData.CramerRaoLowerBound = diag(inv(information_matrix));
-                    
-                    % Create params update matrix
-                    params_update_matrix = zeros(size(obj.OptData.params.CoeffsLat));
-                    for i = 1:length(obj.ParametersToUpdate)
-                        params_update_matrix(obj.ParametersToUpdate(i)) = params_update(i);
-                    end
+
+                    params_update_matrix = reshape(params_update, size(obj.OptData.params.CoeffsLat));
 
                     % Perform simple line search to find step size
                     % which minimizes cost along current direction
@@ -250,22 +242,27 @@ classdef OutputErrorProblem
             data.input_sequence = maneuver.get_lat_input_sequence();
         end
         
-        function [params_update, information_matrix, cost_gradient] = calc_params_update(obj, params_to_update, R_hat, residuals, params, f_calc_y)            
+        function [params_update, information_matrix, cost_gradient] = calc_params_update(obj, R_hat, residuals, params, f_calc_y)            
             [N, n_outputs] = size(residuals);
+            params_to_update = [1:3 5:6 7:11 13:18];
             n_params = numel(params_to_update);
 
             % Compute a sensitivity matrix (dy_dtheta) for each timestep
             sensitivity_matrices = zeros(N, n_outputs, n_params);
-            for j = 1:n_params                
+            for j = 1:n_params
+                if ~any(ismember(j,params_to_update)) % Skip parameters that should be kept fixed
+                    break;
+                end
+                
                 % Compute sensitivies by using first order central differences
-                delta_theta_j = params(params_to_update(j)) * obj.ParamPerturbation;
+                delta_theta_j = params(j) * obj.ParamPerturbation;
 
                 if delta_theta_j == 0 % Handle parameters set to 0
                    delta_theta_j = obj.ParamPerturbation;
                 end
                 
                 param_perturbation_matrix = zeros(size(params));
-                param_perturbation_matrix(params_to_update(j)) = delta_theta_j;
+                param_perturbation_matrix(j) = delta_theta_j;
                     
                 y_pos = f_calc_y(params + param_perturbation_matrix);
                 y_neg = f_calc_y(params - param_perturbation_matrix);

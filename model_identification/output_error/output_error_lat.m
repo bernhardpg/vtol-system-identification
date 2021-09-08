@@ -19,6 +19,7 @@ maneuver_types = [
 
 curr_coeffs_lat = equation_error_coeffs_lat;
 lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
+params_to_update = [1:3 5:6 7:11 13:16 18];
 opt_problem = OutputErrorProblem(fpr_data_lat, lat_model, maneuver_types);
 
 tic
@@ -27,3 +28,6 @@ toc
 
 output_error_coeffs_lat = opt_problem.OptData.params.CoeffsLat;
 save("model_identification/output_error/results/output_error_coeffs_lat.mat", "output_error_coeffs_lat");
+
+output_error_variances = opt_problem.OptData.CramerRaoLowerBound;
+save("model_identification/output_error/results/output_error_variances.mat", "output_error_variances");
