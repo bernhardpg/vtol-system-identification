@@ -25,7 +25,7 @@ classdef OutputErrorProblem
                     maneuver = obj.FprData.training.(maneuver_type)(maneuver_i);
                                             
                     % Initial evaluation
-                    [obj.OptData.R_hat, obj.OptData.cost, obj.OptData.params] = evaluate_iteration_for_maneuver(obj, maneuver);
+                    [obj.OptData.R_hat, obj.OptData.cost, obj.OptData.params.CoeffsLat] = evaluate_iteration_for_maneuver(obj, maneuver);
                     
                     % Run until convergence
                     while ~obj.OptData.reached_convergence
@@ -51,17 +51,19 @@ classdef OutputErrorProblem
             input_sequence = maneuver.get_lat_input_sequence();
             data_sequence = {t_data_sequence input_sequence lon_state_sequence};
             
-            % Estimate noise covariance matrix
+            % Estimate noise covariance matrix (R_hat) for Newton-Raphson
+            % step
             y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params.CoeffsLat, obj.OptData.params.CoeffsLon);
             residuals = obj.calc_residuals_lat(z, y_pred);
-            R_hat_new = obj.est_noise_covariance(residuals, N);
-            cost_new = obj.calc_cost_lat(R_hat_new, residuals);
+            R_hat = obj.est_noise_covariance(residuals, N);
             
             % Minimize the cost by updating the parameters while keeping
             % R_hat constant
             
-            % Compute sensitivities for lateral parameters
-            sensitivity_matrices = zeros(N, obj.NOutputsLat, obj.NParamsLat);
+            % Compute S (sensitivity matrices) for lateral parameters
+            disp("Computing sensitivies")
+            tic
+            S_all_i = zeros(N, obj.NOutputsLat, obj.NParamsLat);
             for j = 1:obj.NParamsLat
                 % Compute sensitivies by using first order central differences
                 delta_theta_j = obj.OptData.params.CoeffsLat(j) * obj.ParamPerturbation;
@@ -72,21 +74,51 @@ classdef OutputErrorProblem
                 perturbed_params_lat_pos = obj.create_perturbed_params_matrix(delta_theta_j, obj.OptData.params.CoeffsLat, j, 1);
                 perturbed_params_lat_neg = obj.create_perturbed_params_matrix(delta_theta_j, obj.OptData.params.CoeffsLat, j, -1);
                     
-                tic
+                %tic
                 y_pos = obj.sim_model(data_sequence, y_0, tspan, perturbed_params_lat_pos, obj.OptData.params.CoeffsLon);
                 y_neg = obj.sim_model(data_sequence, y_0, tspan, perturbed_params_lat_neg, obj.OptData.params.CoeffsLon);
-                toc
+                %toc
                 
                 dy_dtheta_j = (y_pos - y_neg) ./ (2 * delta_theta_j);
-                sensitivity_matrices(:,:,j) = dy_dtheta_j;
+                S_all_i(:,:,j) = dy_dtheta_j;
             end
-            sensitivity_matrices = permute(sensitivity_matrices,[2 3 1]); % Get S in the correct dimensions: (n_outputs, n_params, n_timesteps)
+            S_all_i = permute(S_all_i,[2 3 1]); % Get S in the correct dimensions: (n_outputs, n_params, n_timesteps)
+            toc
             
-            y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params);
+            % Calculate M (information matrix)
+            disp("Computing information matrix")
+            tic
+            M_all_i = zeros(obj.NParamsLat, obj.NParamsLat, N);
+            for timestep_i = 1:N
+                M_all_i(:,:,timestep_i) = S_all_i(:,:,timestep_i)' * (R_hat \ S_all_i(:,:,timestep_i));    
+            end
+            M = sum(M_all_i,3);
+            toc
             
+            % Calculate g
+            disp("Computing g")
+            tic
+            g_all_i = zeros(obj.NParamsLat, 1, N);
+            for timestep_i = 1:N
+                g_all_i(:,:,timestep_i) = S_all_i(:,:,timestep_i)' * (R_hat \ residuals(timestep_i,:)');    
+            end
+            g = sum(g_all_i,3);
+            toc
+            
+            % Compute param_update
+            delta_theta = - M \ g;
+            
+            % Update parameters
+            params_new = obj.OptData.params.CoeffsLat + reshape(delta_theta, size(obj.OptData.params.CoeffsLat));
+            
+            % Estimate noise covariance matrix
+            y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params.CoeffsLat, obj.OptData.params.CoeffsLon);
+            residuals_new = obj.calc_residuals_lat(z, y_pred);
+            R_hat_new = obj.est_noise_covariance(residuals_new, N);
+            cost_new = obj.calc_cost_lat(R_hat_new, residuals_new);
         end
         
-        function perturbed_params_matrix = create_perturbed_params_matrix(obj, delta_theta_j, params, j, sign)
+        function perturbed_params_matrix = create_perturbed_params_matrix(~, delta_theta_j, params, j, sign)
             perturbed_params_matrix = params;
             perturbed_params_matrix(j) = perturbed_params_matrix(j) + sign * delta_theta_j;
         end
@@ -98,7 +130,7 @@ classdef OutputErrorProblem
             y_pred = interp1(t_pred, y_pred, t_data_seq); % change y_pred to correct time before returning
         end
         
-        function v = calc_residuals_lat(obj, z, y_pred)
+        function v = calc_residuals_lat(~, z, y_pred)
             v = z - y_pred; % residuals
         end
 
