@@ -79,9 +79,9 @@ classdef NonlinearModel
             dy_dt = [v_dot p_dot r_dot phi_dot]';
         end
         
-        function obj = set_params(obj, params)
-           obj.CoeffsLat = params.CoeffsLat;
-           obj.CoeffsLon = params.CoeffsLon;
+        function obj = set_params(obj, lat_params, lon_params)
+           obj.CoeffsLat = lat_params;
+           obj.CoeffsLon = lon_params;
         end
 
         function [phi_dot, theta_dot, psi_dot] = eul_dynamics(~, phi, theta, p, q, r)

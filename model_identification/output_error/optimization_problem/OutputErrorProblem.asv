@@ -5,6 +5,8 @@ classdef OutputErrorProblem
         ManeuverTypes
         OptData = {}
         ParamPerturbation = 0.01
+        NParamsLat = 18
+        NOutputsLat = 4
     end
     methods
         function obj = OutputErrorProblem(fpr_data, dynamics_model, maneuver_types)
@@ -14,7 +16,7 @@ classdef OutputErrorProblem
             obj.OptData.iteration_number = 0;
             obj.OptData.reached_convergence = false;
             obj.OptData.params.CoeffsLat = dynamics_model.CoeffsLat;
-            obj.OptData.params.CoeffsLon = zeros(5,3);
+            obj.OptData.params.CoeffsLon = dynamics_model.CoeffsLon;
         end
         
         function obj = solve(obj)
@@ -50,32 +52,56 @@ classdef OutputErrorProblem
             data_sequence = {t_data_sequence input_sequence lon_state_sequence};
             
             % Estimate noise covariance matrix
-            y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params);
+            y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params.CoeffsLat, obj.OptData.params.CoeffsLon);
             residuals = obj.calc_residuals_lat(z, y_pred);
             R_hat_new = obj.est_noise_covariance(residuals, N);
             cost_new = obj.calc_cost_lat(R_hat_new, residuals);
             
             % Minimize the cost by updating the parameters while keeping
             % R_hat constant
-            params_new = 0;
             
-            % Compute sensitivies
-            % For param j
+            % Compute sensitivities for lateral parameters
+            Sensiti = zeros(N, obj.NOutputsLat, obj.NParamsLat);
+            for j = 1:obj.NParamsLat
+                % Compute sensitivies by using first order central differences
+                delta_theta_j = obj.OptData.params.CoeffsLat(j) * obj.ParamPerturbation;
+                perturbed_params_lat_pos = obj.create_perturbed_params_matrix(delta_theta_j, obj.OptData.params.CoeffsLat, j, 1);
+                perturbed_params_lat_neg = obj.create_perturbed_params_matrix(delta_theta_j, obj.OptData.params.CoeffsLat, j, -1);
+                    
+                tic
+                y_pos = obj.sim_model(data_sequence, y_0, tspan, perturbed_params_lat_pos, obj.OptData.params.CoeffsLon);
+                y_neg = obj.sim_model(data_sequence, y_0, tspan, perturbed_params_lat_neg, obj.OptData.params.CoeffsLon);
+                toc
+                
+                dy_dtheta_j = (y_pos - y_neg) ./ (2 * delta_theta_j);
+                S(:,:,j) = dy_dtheta_j;
+            end
+            S = permute(S,[2 3 1]); % Get S in the correct dimensions: (n_outputs, n_params, n_timesteps)
+            disp("")
+            % S_i should be n_o x n_p
             
             
-            % Find parameter perturbation
-            %delta_curr_param = obj.OptData.params.CoeffsLat.c_Y.bias * obj.ParamPerturbation;
-            % Perturb parameter
-            % Simulate output with perturbation
-            % Calculate sensitivies
+            % for j = 1:n_p
+            %   compute delta_theta_j
+            %   compute vectors theta_0 + delta_theta_j and theta_0 - delta_theta_j
+            %   compute y(theta_0 + delta_theta_j) and y(theta_0 - delta_theta_j)
+            %   compute dy_dtheta_j
+            % create dy_dtheta from dy_dtheta_j
+            
+            
             
             
             y_pred = obj.sim_model(data_sequence, y_0, tspan, obj.OptData.params);
             
         end
         
-        function y_pred = sim_model(obj, data_sequence, y_0, tspan, params)
-            obj.DynamicsModel = obj.DynamicsModel.set_params(params);
+        function perturbed_params_matrix = create_perturbed_params_matrix(obj, delta_theta_j, params, j, sign)
+            perturbed_params_matrix = params;
+            perturbed_params_matrix(j) = perturbed_params_matrix(j) + sign * delta_theta_j;
+        end
+        
+        function y_pred = sim_model(obj, data_sequence, y_0, tspan, lat_params, lon_params)
+            obj.DynamicsModel = obj.DynamicsModel.set_params(lat_params, lon_params);
             [t_data_seq, input_sequence, lon_state_seq] = data_sequence{:};
             [t_pred, y_pred] = ode45(@(t,y) obj.DynamicsModel.dynamics(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
             y_pred = interp1(t_pred, y_pred, t_data_seq); % change y_pred to correct time before returning
