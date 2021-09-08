@@ -3,7 +3,8 @@ classdef OutputErrorProblem
         DynamicsModel
         FprData
         ManeuverTypes
-        CurrOptData = {}
+        CurrOptData
+        NomParams
         ParamPerturbation = 0.01
         NParamsLat = 18
         NOutputsLat = 4
@@ -18,49 +19,60 @@ classdef OutputErrorProblem
             obj.CurrOptData.reached_convergence = false;
             obj.CurrOptData.params.CoeffsLat = dynamics_model.CoeffsLat;
             obj.CurrOptData.params.CoeffsLon = dynamics_model.CoeffsLon;
+            obj.NomParams.CoeffsLat = dynamics_model.CoeffsLat;
+            obj.NomParams.CoeffsLon = dynamics_model.CoeffsLon;
         end
         
         function obj = solve(obj)
             for maneuver_type = obj.ManeuverTypes(1)
-                for maneuver_i = 1
+                for maneuver_i = 4
                     % Get maneuver data
                     maneuver = obj.FprData.training.(maneuver_type)(maneuver_i);
                     obj = obj.update_curr_maneuver_data(maneuver);
                     
-                    while true
-                        % Simulate current parameters
-                        obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
-                        obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
+                    % Calculate initial values
+                    % Simulate current parameters
+                    obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
+                    obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
 
-                        % Covariance matrix for Newton-Raphson step
-                        obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
+                    % Covariance matrix for Newton-Raphson step
+                    obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
 
-                        % Calculate cost
-                        obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
-                        disp("Cost: " + obj.CurrManeuverData.cost);
-
-                        % Check for convergence
-                        % TODO:
-
-                        % Optimization step
-                        while true
+                    % Calculate cost
+                    obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
+                    disp("Cost: " + obj.CurrManeuverData.cost);
+                    
+                    for i = 1:5
+                        for j = 1:5
+                            % Optimization step
                             disp("Performing Newton-Raphson step")
                             tic
                             [obj.CurrOptData.params.CoeffsLat, information_matrix] = obj.do_newton_raphson_step();
                             toc
 
-                            % Simulate current parameters
+                            % Simulate new parameters
                             y_pred_new = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
                             obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
 
-                            % Calculate cost
+                            % Update cost
                             obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
                             disp("Cost: " + obj.CurrManeuverData.cost);
-                            
-                            maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {obj.CurrManeuverData.y_pred, y_pred_new}, ...
-                                ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
                         end
+                        
+                        % Update noise covariance matrix
+                        disp("Updating R_hat")
+                        obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
+                        
+                        % Check for convergence
+                        % TODO:
+
+
+                        
                     end
+                    
+                    maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {obj.CurrManeuverData.y_pred, y_pred_new}, ...
+                        ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
+                    disp("")
                     
 
                     % Check for convergence
@@ -138,7 +150,7 @@ classdef OutputErrorProblem
             delta_theta = - M \ g;
             
             % Update parameters
-            params_new = obj.CurrOptData.params.CoeffsLat + reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
+            params_new = obj.CurrOptData.params.CoeffsLat - reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
         end
         
         function perturbed_params_matrix = create_perturbed_params_matrix(~, delta_theta_j, params, j, sign)
