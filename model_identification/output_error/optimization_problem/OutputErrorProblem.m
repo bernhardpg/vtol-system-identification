@@ -116,12 +116,6 @@ classdef OutputErrorProblem
                     = obj.check_for_noise_covar_convergence(obj.OptData.R_hat, R_hat_new);
                 obj.OptData.R_hat = R_hat_new;
             end
-
-            % Plot new model vs. initial model
-            y_initial = obj.sim_model(obj.InitialParams.CoeffsLat, obj.InitialParams.CoeffsLon);
-
-            maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {y_initial, obj.CurrManeuverData.y_pred}, ...
-               ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
         end
         
         function maneuver_simulations = simulate_maneuvers(obj, params_lat, params_lon, fpr_data)
