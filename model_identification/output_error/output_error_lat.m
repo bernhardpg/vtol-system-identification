@@ -29,7 +29,9 @@ curr_coeffs_lat = equation_error_coeffs_lat;
 lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 opt_problem = OutputErrorProblem(fpr_data_lat, lat_model, maneuver_types);
 
+tic
 opt_problem.solve();
+toc
 
 
 

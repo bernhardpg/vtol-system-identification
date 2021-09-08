@@ -1,5 +1,6 @@
 classdef NonlinearModel
     properties
+        StaticParams
         Params = {}
         CoeffsLat;
         CoeffsLon;
@@ -8,8 +9,8 @@ classdef NonlinearModel
         function obj = NonlinearModel(coeffs_lon, coeffs_lat)
             airframe_static_properties;
             obj.Params.rho = rho;
-            obj.Params.g = g;
             obj.Params.mass_kg = mass_kg;
+            obj.Params.g = g;
             obj.Params.wingspan_m = wingspan_m;
             obj.Params.mean_aerodynamic_chord_m = mean_aerodynamic_chord_m;
             obj.Params.planform_sqm = planform_sqm;
@@ -24,6 +25,10 @@ classdef NonlinearModel
             obj.Params.gam_8 = gam(8);
             obj.Params.J_yy = J_yy;
             
+            obj.StaticParams = [rho mass_kg g wingspan_m ...
+                mean_aerodynamic_chord_m planform_sqm V_nom ...
+                gam J_yy]';
+            
             obj.CoeffsLat = coeffs_lat;
             obj.CoeffsLon = coeffs_lon;
         end
@@ -33,7 +38,15 @@ classdef NonlinearModel
         % lon_states = [u w q theta]
         %   lon states are taken as measured, and not simulated
         
-        function dy_dt = dynamics(obj, t, y, t_data_seq, input_seq, lon_state_seq)
+        function dy_dt = dynamics_lat_model_c(obj, t, y, t_data_seq, input_seq, lon_state_seq)
+            input_seq = [t_data_seq input_seq lon_state_seq];
+            params = [obj.StaticParams;
+                      reshape(obj.CoeffsLat, [numel(obj.CoeffsLat),1])];
+            dy_dt = dynamics_lat_c(t, y, input_seq, params);
+            %dy_dt_test = obj.dynamics_lat_model(t, y, t_data_seq, input_seq, lon_state_seq);
+        end
+        
+        function dy_dt = dynamics_lat_model(obj, t, y, t_data_seq, input_seq, lon_state_seq)
             % Extract states
             y = num2cell(y);
             [v, p, r, phi] = y{:};

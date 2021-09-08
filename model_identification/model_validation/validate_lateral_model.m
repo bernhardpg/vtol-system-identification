@@ -38,10 +38,10 @@ for maneuver_type = maneuver_types
         [y_avl_ss_model, t_avl_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
         
         % Simulate nonlinear AVL model
-        [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
+        [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
         % Simulate equation-error model
-        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
+        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, input_sequence, lon_state_seq), tspan, y_0);
         
         % Collect all simulations
         y_all_models = {y_avl_ss_model, y_avl_nonlin_model, y_eq_error_model};

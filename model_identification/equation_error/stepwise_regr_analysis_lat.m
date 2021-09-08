@@ -116,6 +116,8 @@ equation_error_coeffs_lat = [c_Y c_l c_n];
 
 save("model_identification/equation_error/results/equation_error_coeffs_lat.mat", "equation_error_coeffs_lat");
 
+
+
 function coeff_vector = create_coeff_vector(std_regr_order, th_hat, th_names)
     n_total_regr = length(std_regr_order);
     coeff_vector = zeros(n_total_regr,1);

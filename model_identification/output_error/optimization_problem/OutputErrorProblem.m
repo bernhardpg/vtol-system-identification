@@ -4,8 +4,8 @@ classdef OutputErrorProblem
         FprData
         ManeuverTypes
         CurrOptData
-        NomParams
-        ParamPerturbation = 0.001
+        InitialParams
+        ParamPerturbation = 0.01
         NParamsLat = 18
         NOutputsLat = 4
         CurrManeuverData
@@ -19,8 +19,8 @@ classdef OutputErrorProblem
             obj.CurrOptData.reached_convergence = false;
             obj.CurrOptData.params.CoeffsLat = dynamics_model.CoeffsLat;
             obj.CurrOptData.params.CoeffsLon = dynamics_model.CoeffsLon;
-            obj.NomParams.CoeffsLat = dynamics_model.CoeffsLat;
-            obj.NomParams.CoeffsLon = dynamics_model.CoeffsLon;
+            obj.InitialParams.CoeffsLat = dynamics_model.CoeffsLat;
+            obj.InitialParams.CoeffsLon = dynamics_model.CoeffsLon;
             obj.CurrOptData.cost_history = [];
         end
         
@@ -31,59 +31,44 @@ classdef OutputErrorProblem
                     maneuver = obj.FprData.training.(maneuver_type)(maneuver_i);
                     obj = obj.update_curr_maneuver_data(maneuver);
                     
-                    % Calculate initial values
-                    % Simulate current parameters
+                    % CALCULATE INITIAL VALUES
+                    % Simulate model for current maneuver
                     obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
                     obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
 
-                    % Covariance matrix for Newton-Raphson step
+                    % Calculate noise covariance matrix from all maneuvers
                     obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
 
-                    % Calculate cost
+                    % Calculate cost from all maneuvers
                     obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
                     obj.CurrManeuverData.cost_history = obj.CurrManeuverData.cost;
-                    disp("Cost: " + obj.CurrManeuverData.cost);
                     
+                    % Parameter convergence
                     obj.CurrOptData.parameters_converged = false;
                     obj.CurrOptData.error_covariance_converged = false;
                     
+                    % Plot cost history
                     figure;
                     fig_cost_axes = axes;
                     obj.draw_cost_function_history(fig_cost_axes, obj.CurrManeuverData.cost_history);
                     
+                    % Optimization routine
                     while ~obj.CurrOptData.error_covariance_converged
                         step_i = 0;
                         while ~obj.CurrOptData.parameters_converged
                             % Optimization step
                             step_i = step_i + 1;
                             disp("Performing Newton-Raphson step: " + step_i)
-                            tic
                             [delta_theta, information_matrix, cost_gradient] = obj.do_newton_raphson_step();
-                            toc
                             
-                            % Perform simple line search to find alpha
-                            alphas = linspace(0.1,1,10);
-
-                            min_cost = inf;
-                            for potential_alpha = alphas
-                                % Update parameters
-                                params_lat_new = obj.CurrOptData.params.CoeffsLat + potential_alpha * reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
-
-                                % Simulate new parameters
-                                y_pred_new = obj.sim_model(params_lat_new, obj.CurrOptData.params.CoeffsLon);
-                                residuals_new = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
-
-                                % Update cost
-                                cost_new = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, residuals_new);
-                                disp("Cost: " + cost_new + " with alpha: " + potential_alpha);
-                                if cost_new < min_cost
-                                    min_cost = cost_new;
-                                    alpha = potential_alpha;
-                                end
-                            end
+                            params_update_matrix = reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
                             
-                            disp("chose alpha = " + alpha)
-                            params_lat_new = obj.CurrOptData.params.CoeffsLat + alpha * reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
+                            % Perform simple line search to find step size
+                            % which minimizes cost
+                            alpha = obj.do_line_search(obj.CurrOptData.params.CoeffsLat, params_update_matrix);
+                            
+                            % Update parameters
+                            params_lat_new = obj.CurrOptData.params.CoeffsLat + alpha * params_update_matrix;
                             
                             % Simulate new parameters
                             y_pred_new = obj.sim_model(params_lat_new, obj.CurrOptData.params.CoeffsLon);
@@ -92,34 +77,9 @@ classdef OutputErrorProblem
                             % Update cost
                             cost_new = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, residuals_new);
                             
-                            disp("Cost: " + cost_new);
-                            
                             % Convergence
-                            % Parameter change
-                            eucl_params_change = norm(reshape((params_lat_new - obj.CurrOptData.params.CoeffsLat),[obj.NParamsLat 1]),2);
-                            eucl_prev_params = norm(reshape((obj.CurrOptData.params.CoeffsLat),[obj.NParamsLat 1]),2);
-                            param_change_ratio = eucl_params_change / eucl_prev_params;
-                            disp("param_change_ratio: " + param_change_ratio);
-                            if param_change_ratio < 0.001
-                               disp("converged");
-                               obj.CurrOptData.parameters_converged = true;
-                               obj.CurrOptData.ConvergenceReason = "Parameter change smaller than specified threshold";
-                            end
-                            
-                            abs_cost_change = abs((cost_new - obj.CurrManeuverData.cost) / obj.CurrManeuverData.cost);
-                            disp("abs_cost_change: " + abs_cost_change);
-                            if abs_cost_change < 0.001
-                               disp("converged");
-                               obj.CurrOptData.parameters_converged = false;
-                               obj.CurrOptData.ConvergenceReason = "Cost change smaller than specified threshold";
-                            end
-                            
-                            fprintf(['cost_gradient: ' repmat('%s ', 1, length(cost_gradient)) '\n'], cost_gradient) 
-                            if all(abs(cost_gradient) < 0.05)
-                               disp("converged");
-                               obj.CurrOptData.parameters_converged = false;
-                               obj.CurrOptData.ConvergenceReason = "All gradients smaller than specificed treshold";
-                            end
+                            [obj.CurrOptData.parameters_converged, obj.CurrOptData.ConvergenceReason] = obj.check_for_param_convergence(obj.CurrOptData.params.CoeffsLat, params_lat_new, ...
+                                obj.CurrManeuverData.cost, cost_new, cost_gradient);
                             
                             % Save all data and move on to next iteration
                             obj.CurrOptData.params.CoeffsLat = params_lat_new;
@@ -129,8 +89,6 @@ classdef OutputErrorProblem
                             obj.CurrManeuverData.cost_history = [obj.CurrManeuverData.cost_history obj.CurrManeuverData.cost];
                             
                             obj.draw_cost_function_history(fig_cost_axes, obj.CurrManeuverData.cost_history);
-                            
-                            disp(" ")
                         end
                         
                         % Update noise covariance matrix
@@ -140,30 +98,75 @@ classdef OutputErrorProblem
                         % Start optimization routine over again
                         obj.CurrOptData.parameters_converged = false;
                         
-                        noise_covar_change = diag(obj.CurrManeuverData.R_hat - R_hat_new) ./ (diag(obj.CurrManeuverData.R_hat));
-                        if all(noise_covar_change) < 0.05
-                            disp("converged");
-                            obj.CurrOptData.error_covariance_converged = false;
-                            obj.CurrOptData.ConvergenceReason = "All covariances smaller than specified treshold";
-                        end
+                        % Check for convergence
+                        [obj.CurrOptData.error_covariance_converged, obj.CurrOptData.ConvergenceReason] ...
+                            = obj.check_for_noise_covar_convergence(obj.CurrManeuverData.R_hat, R_hat_new);
+                        obj.CurrManeuverData.R_hat = R_hat_new;
                     end
                     
-                    %maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {obj.CurrManeuverData.y_pred, y_pred_new}, ...
-                    %    ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
-                    disp("")
+                    % Plot new model vs. initial model
+                    y_initial = obj.sim_model(obj.InitialParams.CoeffsLat, obj.InitialParams.CoeffsLon);
                     
+                    maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {y_initial, obj.CurrManeuverData.y_pred}, ...
+                       ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
+                end
+            end
+        end
+        
+        function [has_converged, convergence_reason] = check_for_noise_covar_convergence(obj, R_hat_old, R_hat_new)
+            has_converged = false;
+            convergence_reason = "Not converged";
+            
+            abs_noise_covar_change = abs(diag(R_hat_old - R_hat_new) ./ (diag(R_hat_old)));
+            if all((abs_noise_covar_change) < 0.1)
+                has_converged = true;
+                convergence_reason = "All covariances smaller than specified treshold";
+                disp("Converged: " + convergence_reason);
+            end 
+        end
+        
+        function [has_converged, convergence_reason] = check_for_param_convergence(obj, params_old, params_new, cost_old, cost_new, cost_gradient)
+            has_converged = false;
+            convergence_reason = "Not converged";
+            
+            eucl_params_change = norm(reshape((params_new - params_old),[obj.NParamsLat 1]),2);
+            eucl_prev_params = norm(reshape((params_old),[obj.NParamsLat 1]),2);
+            param_change_ratio = eucl_params_change / eucl_prev_params;
+            if param_change_ratio < 0.01
+               has_converged = true;
+               convergence_reason = "Parameter change smaller than specified threshold";
+               disp("Converged: " + convergence_reason);
+            end
 
-                    % Check for convergence
-                    
-%                     % Run until convergence
-%                     while ~obj.CurrOptData.reached_convergence
-%                         obj.CurrOptData.iteration_number = obj.CurrOptData.iteration_number + 1;
-%                         disp("Running iteration: " + obj.CurrOptData.iteration_number);
-%                         
-%                         [R_hat_new, cost_new, params_new] = evaluate_iteration_for_maneuver(obj, maneuver);
-%                         obj.CurrOptData.reached_convergence = check_for_convergence(obj, params_new, cost_new, R_hat_new);
-%                     end
-%                     disp("Reached convergence after " + obj.CurrOptData.iteration_number + " iterations");
+            abs_cost_change = abs((cost_new - cost_old) / cost_old);
+            if abs_cost_change < 0.01
+               has_converged = true;
+               convergence_reason = "Cost change smaller than specified threshold";
+               disp("Converged: " + convergence_reason);
+            end
+
+            if all(abs(cost_gradient) < 0.05)
+               has_converged = true;
+               obj.CurrOptData.ConvergenceReason = "All gradients smaller than specificed treshold";
+               disp("Converged: " + convergence_reason);
+            end
+        end
+        
+        function alpha = do_line_search(obj, theta_0, delta_theta)
+            min_cost = inf;
+            for potential_alpha = linspace(0.05,1,20)
+                % Update parameters
+                theta_new_lat = theta_0 + potential_alpha * delta_theta;
+
+                % Simulate new parameters
+                y_pred_new = obj.sim_model(theta_new_lat, obj.CurrOptData.params.CoeffsLon);
+                residuals_new = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
+
+                % Update cost
+                cost_new = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, residuals_new);
+                if cost_new < min_cost
+                    min_cost = cost_new;
+                    alpha = potential_alpha;
                 end
             end
         end
@@ -243,7 +246,7 @@ classdef OutputErrorProblem
         function y_pred = sim_model(obj, lat_params, lon_params)
             obj.DynamicsModel = obj.DynamicsModel.set_params(lat_params, lon_params);
             [t_pred, y_pred] = ode45(@(t,y) ...
-                obj.DynamicsModel.dynamics(t, y, ...
+                obj.DynamicsModel.dynamics_lat_model_c(t, y, ...
                     obj.CurrManeuverData.t_data_sequence, obj.CurrManeuverData.input_sequence, obj.CurrManeuverData.lon_state_sequence), obj.CurrManeuverData.tspan, obj.CurrManeuverData.y_0...
                     );
             y_pred = interp1(t_pred, y_pred, obj.CurrManeuverData.t_data_sequence); % change y_pred to correct time before returning

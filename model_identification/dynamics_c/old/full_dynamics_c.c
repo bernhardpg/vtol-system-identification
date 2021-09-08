@@ -30,16 +30,6 @@
 #include "mex.h"
 #include "math.h"
 
-#define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-#define bound(x,bl,bu) (min(max(x,bl),bu))
-
 double interp(double x0, double x1, double y0, double y1, double xp)
 {
 		double yp = y0 + ((y1 - y0) / (x1 - x0)) * (xp - x0);

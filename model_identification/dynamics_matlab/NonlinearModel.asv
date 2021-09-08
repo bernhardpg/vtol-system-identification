@@ -1,5 +1,6 @@
 classdef NonlinearModel
     properties
+        StaticParams
         Params = {}
         CoeffsLat;
         CoeffsLon;
@@ -8,8 +9,8 @@ classdef NonlinearModel
         function obj = NonlinearModel(coeffs_lon, coeffs_lat)
             airframe_static_properties;
             obj.Params.rho = rho;
-            obj.Params.g = g;
             obj.Params.mass_kg = mass_kg;
+            obj.Params.g = g;
             obj.Params.wingspan_m = wingspan_m;
             obj.Params.mean_aerodynamic_chord_m = mean_aerodynamic_chord_m;
             obj.Params.planform_sqm = planform_sqm;
@@ -24,6 +25,10 @@ classdef NonlinearModel
             obj.Params.gam_8 = gam(8);
             obj.Params.J_yy = J_yy;
             
+            obj.StaticParams = [rho mass_kg g wingspan_m ...
+                mean_aerodynamic_chord_m planform_sqm V_nom ...
+                gam J_yy]';
+            
             obj.CoeffsLat = coeffs_lat;
             obj.CoeffsLon = coeffs_lon;
         end
@@ -33,7 +38,14 @@ classdef NonlinearModel
         % lon_states = [u w q theta]
         %   lon states are taken as measured, and not simulated
         
-        function dy_dt = dynamics(obj, t, y, t_data_seq, input_seq, lon_state_seq)
+        function dy_dt = dynamics_lat_model_c(obj, t, y, t_data_seq, input_seq, lon_state_seq)
+            input_seq = [t_data_seq input_seq lon_state_seq];
+            params = [obj.StaticParams;
+                      reshape(obj.CoeffsLat];
+            dy_dt = dynamics_lat_c(t, y, input_seq, params);
+        end
+        
+        function dy_dt = dynamics_lat_model(obj, t, y, t_data_seq, input_seq, lon_state_seq)
             % Extract states
             y = num2cell(y);
             [v, p, r, phi] = y{:};
@@ -62,10 +74,10 @@ classdef NonlinearModel
             % Calculate forces and moments
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
-            exp_vars_lat = [ones(length(p_hat),1) vp_hat q_hat r_hat u_hat v_hat w_hat];
-            exp_vars_lon = [ones(length(p_hat),1) p_hat q_hat r_hat u_hat v_hat w_hat];
+            explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
+            explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
             
-            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(exp_vars);
+            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
             [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure);
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
@@ -79,15 +91,9 @@ classdef NonlinearModel
             dy_dt = [v_dot p_dot r_dot phi_dot]';
         end
         
-        function params = get_params(obj)
-            params = {};
-            params.CoeffsLat = obj.CoeffsLat;
-            params.CoeffsLon = obj.CoeffsLon;
-        end
-        
-        function obj = set_params(obj, params)
-           obj.CoeffsLat = params.CoeffsLat;
-           obj.CoeffsLon = params.CoeffsLon;
+        function obj = set_params(obj, lat_params, lon_params)
+           obj.CoeffsLat = lat_params;
+           obj.CoeffsLon = lon_params;
         end
 
         function [phi_dot, theta_dot, psi_dot] = eul_dynamics(~, phi, theta, p, q, r)
@@ -108,46 +114,22 @@ classdef NonlinearModel
             w_dot = q * u - p * v + (1/obj.Params.mass_kg) * (Z + obj.Params.mass_kg * obj.Params.g * cos(theta) * cos(phi)); 
         end
         
-        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, exp_vars)
+        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)
             % For now, set all lon coeffs to zero
             c_X = 0;
             c_Z = 0;
             c_m = 0;
             
             % Lat coeffs
-            c_Y = 0;
-            coeff_names = fieldnames(obj.CoeffsLat.c_Y);
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names{i};
-                if strcmp(coeff_name, "bias")
-                    c_Y = c_Y + obj.CoeffsLat.c_Y.bias * 1; 
-                else
-                    c_Y = c_Y + obj.CoeffsLat.c_Y.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
+            temp = explanatory_vars_lat * obj.CoeffsLat;
+            c_Y = temp(1);
+            c_l = temp(2);
+            c_n = temp(3);
             
-            c_l = 0;
-            coeff_names = fieldnames(obj.CoeffsLat.c_l);
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names{i};
-                if strcmp(coeff_name, "bias")
-                    c_l = c_l + obj.CoeffsLat.c_l.bias * 1; 
-                else
-                    c_l = c_l + obj.CoeffsLat.c_l.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
-            
-            c_n = 0;
-            coeff_names = fieldnames(obj.CoeffsLat.c_n);
-            for i = 1:numel(coeff_names)
-                coeff_name = coeff_names{i};
-                if strcmp(coeff_name, "bias")
-                    c_n = c_n + obj.CoeffsLat.c_n.bias * 1; 
-                else
-                    c_n = c_n + obj.CoeffsLat.c_n.(coeff_name) * exp_vars.(coeff_name);
-                end
-            end
-            
+            temp = explanatory_vars_lon * obj.CoeffsLon;
+            c_X = temp(1);
+            c_Z = temp(2);
+            c_m = temp(3);
         end
         
         function [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure)
