@@ -5,7 +5,7 @@ classdef OutputErrorProblem
         ManeuverTypes
         CurrOptData
         NomParams
-        ParamPerturbation = 0.01
+        ParamPerturbation = 0.001
         NParamsLat = 18
         NOutputsLat = 4
         CurrManeuverData
@@ -58,15 +58,40 @@ classdef OutputErrorProblem
                             step_i = step_i + 1;
                             disp("Performing Newton-Raphson step: " + step_i)
                             tic
-                            [params_lat_new, information_matrix, cost_gradient] = obj.do_newton_raphson_step();
+                            [delta_theta, information_matrix, cost_gradient] = obj.do_newton_raphson_step();
                             toc
+                            
+                            % Perform simple line search to find alpha
+                            alphas = linspace(0.1,1,10);
 
+                            min_cost = inf;
+                            for potential_alpha = alphas
+                                % Update parameters
+                                params_lat_new = obj.CurrOptData.params.CoeffsLat + potential_alpha * reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
+
+                                % Simulate new parameters
+                                y_pred_new = obj.sim_model(params_lat_new, obj.CurrOptData.params.CoeffsLon);
+                                residuals_new = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
+
+                                % Update cost
+                                cost_new = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, residuals_new);
+                                disp("Cost: " + cost_new + " with alpha: " + potential_alpha);
+                                if cost_new < min_cost
+                                    min_cost = cost_new;
+                                    alpha = potential_alpha;
+                                end
+                            end
+                            
+                            disp("chose alpha = " + alpha)
+                            params_lat_new = obj.CurrOptData.params.CoeffsLat + alpha * reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
+                            
                             % Simulate new parameters
                             y_pred_new = obj.sim_model(params_lat_new, obj.CurrOptData.params.CoeffsLon);
                             residuals_new = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
 
                             % Update cost
                             cost_new = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, residuals_new);
+                            
                             disp("Cost: " + cost_new);
                             
                             % Convergence
@@ -111,6 +136,9 @@ classdef OutputErrorProblem
                         % Update noise covariance matrix
                         disp("Updating R_hat")
                         R_hat_new = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
+                        
+                        % Start optimization routine over again
+                        obj.CurrOptData.parameters_converged = false;
                         
                         noise_covar_change = diag(obj.CurrManeuverData.R_hat - R_hat_new) ./ (diag(obj.CurrManeuverData.R_hat));
                         if all(noise_covar_change) < 0.05
@@ -157,7 +185,7 @@ classdef OutputErrorProblem
             obj.CurrManeuverData.input_sequence = maneuver.get_lat_input_sequence();
         end
         
-        function [params_new, M, dJ_dtheta] = do_newton_raphson_step(obj)            
+        function [delta_theta, M, dJ_dtheta] = do_newton_raphson_step(obj)            
             % Compute S (sensitivity matrices) for lateral parameters
 %             disp("Computing sensitivies")
 %             tic
@@ -204,10 +232,7 @@ classdef OutputErrorProblem
             %toc
             
             % Compute param_update
-            delta_theta = M \ dJ_dtheta;
-            
-            % Update parameters
-            params_new = obj.CurrOptData.params.CoeffsLat - reshape(delta_theta, size(obj.CurrOptData.params.CoeffsLat));
+            delta_theta = - M \ dJ_dtheta;
         end
         
         function perturbed_params_matrix = create_perturbed_params_matrix(~, delta_theta_j, params, j, sign)
