@@ -26,7 +26,7 @@ maneuver_types = [
 % Simulate maneuvers with different models
 for maneuver_type = maneuver_types
     for maneuver_i = 1:length(fpr_data_lat.validation.(maneuver_type))
-        maneuver = fpr_data_lat.validation.(maneuver_type)(maneuver_i);
+        maneuver = fpr_data_lat.training.(maneuver_type)(maneuver_i);
         input_sequence = maneuver.get_lat_input_sequence();
         t_data_seq = maneuver.Time;
         y_0 = maneuver.get_lat_state_initial();

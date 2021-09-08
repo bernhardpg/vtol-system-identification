@@ -27,29 +27,52 @@ classdef OutputErrorProblem
                     maneuver = obj.FprData.training.(maneuver_type)(maneuver_i);
                     obj = obj.update_curr_maneuver_data(maneuver);
                     
-                    % Simulate current parameters
-                    obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
-                    obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
-                    
-                    % Covariance matrix for Newton-Raphson step
-                    obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N); 
-                    
-                    % Optimization step
-                    
-                    disp("Performing Newton-Raphson step")
-                    tic
-                    [params_new, M] = obj.do_newton_raphson_step();
-                    toc
-                    
-                    % Run until convergence
-                    while ~obj.CurrOptData.reached_convergence
-                        obj.CurrOptData.iteration_number = obj.CurrOptData.iteration_number + 1;
-                        disp("Running iteration: " + obj.CurrOptData.iteration_number);
-                        
-                        [R_hat_new, cost_new, params_new] = evaluate_iteration_for_maneuver(obj, maneuver);
-                        obj.CurrOptData.reached_convergence = check_for_convergence(obj, params_new, cost_new, R_hat_new);
+                    while true
+                        % Simulate current parameters
+                        obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
+                        obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
+
+                        % Covariance matrix for Newton-Raphson step
+                        obj.CurrManeuverData.R_hat = obj.est_noise_covariance(obj.CurrManeuverData.residuals, obj.CurrManeuverData.N);
+
+                        % Calculate cost
+                        obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
+                        disp("Cost: " + obj.CurrManeuverData.cost);
+
+                        % Check for convergence
+                        % TODO:
+
+                        % Optimization step
+                        while true
+                            disp("Performing Newton-Raphson step")
+                            tic
+                            [obj.CurrOptData.params.CoeffsLat, information_matrix] = obj.do_newton_raphson_step();
+                            toc
+
+                            % Simulate current parameters
+                            obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
+                            obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
+
+                            % Calculate cost
+                            obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
+                            disp("Cost: " + obj.CurrManeuverData.cost);
+                            
+                            plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles, show_plot, save_plot, filename, plot_location)
+                        end
                     end
-                    disp("Reached convergence after " + obj.CurrOptData.iteration_number + " iterations");
+                    
+
+                    % Check for convergence
+                    
+%                     % Run until convergence
+%                     while ~obj.CurrOptData.reached_convergence
+%                         obj.CurrOptData.iteration_number = obj.CurrOptData.iteration_number + 1;
+%                         disp("Running iteration: " + obj.CurrOptData.iteration_number);
+%                         
+%                         [R_hat_new, cost_new, params_new] = evaluate_iteration_for_maneuver(obj, maneuver);
+%                         obj.CurrOptData.reached_convergence = check_for_convergence(obj, params_new, cost_new, R_hat_new);
+%                     end
+%                     disp("Reached convergence after " + obj.CurrOptData.iteration_number + " iterations");
                 end
             end
         end
@@ -66,8 +89,8 @@ classdef OutputErrorProblem
         
         function [params_new, M] = do_newton_raphson_step(obj)            
             % Compute S (sensitivity matrices) for lateral parameters
-            disp("Computing sensitivies")
-            tic
+%             disp("Computing sensitivies")
+%             tic
             S_all_i = zeros(obj.CurrManeuverData.N, obj.NOutputsLat, obj.NParamsLat);
             for j = 1:obj.NParamsLat
                 % Compute sensitivies by using first order central differences
@@ -79,36 +102,36 @@ classdef OutputErrorProblem
                 perturbed_params_lat_pos = obj.create_perturbed_params_matrix(delta_theta_j, obj.CurrOptData.params.CoeffsLat, j, 1);
                 perturbed_params_lat_neg = obj.create_perturbed_params_matrix(delta_theta_j, obj.CurrOptData.params.CoeffsLat, j, -1);
                     
-                %tic
+                tic
                 y_pos = obj.sim_model(perturbed_params_lat_pos, obj.CurrOptData.params.CoeffsLon);
                 y_neg = obj.sim_model(perturbed_params_lat_neg, obj.CurrOptData.params.CoeffsLon);
-                %toc
+                toc
                 
                 dy_dtheta_j = (y_pos - y_neg) ./ (2 * delta_theta_j);
                 S_all_i(:,:,j) = dy_dtheta_j;
             end
             S_all_i = permute(S_all_i,[2 3 1]); % Get S in the correct dimensions: (n_outputs, n_params, n_timesteps)
-            toc
+            %toc
             
             % Calculate M (information matrix)
-            disp("Computing information matrix")
-            tic
+            %disp("Computing information matrix")
+            %tic
             M_all_i = zeros(obj.NParamsLat, obj.NParamsLat, obj.CurrManeuverData.N);
             for timestep_i = 1:obj.CurrManeuverData.N
                 M_all_i(:,:,timestep_i) = S_all_i(:,:,timestep_i)' * (obj.CurrManeuverData.R_hat \ S_all_i(:,:,timestep_i));    
             end
             M = sum(M_all_i,3);
-            toc
+            %toc
             
             % Calculate g
-            disp("Computing g")
-            tic
+            %disp("Computing g")
+            %tic
             g_all_i = zeros(obj.NParamsLat, 1, obj.CurrManeuverData.N);
             for timestep_i = 1:obj.CurrManeuverData.N
                 g_all_i(:,:,timestep_i) = S_all_i(:,:,timestep_i)' * (obj.CurrManeuverData.R_hat \ obj.CurrManeuverData.residuals(timestep_i,:)');    
             end
             g = sum(g_all_i,3);
-            toc
+            %toc
             
             % Compute param_update
             delta_theta = - M \ g;
@@ -124,7 +147,7 @@ classdef OutputErrorProblem
         
         function y_pred = sim_model(obj, lat_params, lon_params)
             obj.DynamicsModel = obj.DynamicsModel.set_params(lat_params, lon_params);
-            [t_pred, y_pred] = ode45(@(t,y) ...
+            [t_pred, y_pred] = ode23s(@(t,y) ...
                 obj.DynamicsModel.dynamics(t, y, ...
                     obj.CurrManeuverData.t_data_sequence, obj.CurrManeuverData.input_sequence, obj.CurrManeuverData.lon_state_sequence), obj.CurrManeuverData.tspan, obj.CurrManeuverData.y_0...
                     );

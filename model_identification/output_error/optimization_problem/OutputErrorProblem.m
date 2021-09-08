@@ -50,12 +50,15 @@ classdef OutputErrorProblem
                             toc
 
                             % Simulate current parameters
-                            obj.CurrManeuverData.y_pred = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
-                            obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, obj.CurrManeuverData.y_pred);
+                            y_pred_new = obj.sim_model(obj.CurrOptData.params.CoeffsLat, obj.CurrOptData.params.CoeffsLon);
+                            obj.CurrManeuverData.residuals = obj.calc_residuals_lat(obj.CurrManeuverData.z, y_pred_new);
 
                             % Calculate cost
                             obj.CurrManeuverData.cost = obj.calc_cost_lat(obj.CurrManeuverData.R_hat, obj.CurrManeuverData.residuals);
                             disp("Cost: " + obj.CurrManeuverData.cost);
+                            
+                            maneuver.plot_lateral_validation({maneuver.Time, maneuver.Time}, {obj.CurrManeuverData.y_pred, y_pred_new}, ...
+                                ["Real data", "Initial", "New"], ["-", "--", "-"], true, false, "", "");
                         end
                     end
                     
@@ -100,10 +103,10 @@ classdef OutputErrorProblem
                 perturbed_params_lat_pos = obj.create_perturbed_params_matrix(delta_theta_j, obj.CurrOptData.params.CoeffsLat, j, 1);
                 perturbed_params_lat_neg = obj.create_perturbed_params_matrix(delta_theta_j, obj.CurrOptData.params.CoeffsLat, j, -1);
                     
-                %tic
+                tic
                 y_pos = obj.sim_model(perturbed_params_lat_pos, obj.CurrOptData.params.CoeffsLon);
                 y_neg = obj.sim_model(perturbed_params_lat_neg, obj.CurrOptData.params.CoeffsLon);
-                %toc
+                toc
                 
                 dy_dtheta_j = (y_pos - y_neg) ./ (2 * delta_theta_j);
                 S_all_i(:,:,j) = dy_dtheta_j;
