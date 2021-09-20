@@ -5,7 +5,7 @@ clc; clear all; close all;
 % This script takes in raw maneuver data from csv files and calculates all
 % the required signals and their derivatives. This includes states, their
 % derivatives, coefficients, and inputs.
-
+ 
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
 %disp("Setting random seed to default to guarantee reproducability");
@@ -24,10 +24,14 @@ save_raw_plots = false;
 save_kinematic_consistency_plots = false;
 save_lateral_signal_plots = false;
 
+%model_type = "lateral_directional";
+model_type = "longitudinal";
+
 % Maneuver settings
 maneuver_types = [
-    "roll_211",...
-    "yaw_211",...
+    %"roll_211",...
+    %"yaw_211",...
+    "pitch_211",...
     ];
 
 % These maneuvers are skipped either because they contain dropouts or
@@ -37,7 +41,7 @@ maneuver_types = [
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
 maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 32 34 35 36 38 39 40 41];
-maneuvers_to_skip.("pitch_211") = [];
+maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 24 25 32 35];
 maneuvers_to_skip.("freehand") = [];
 
 % Save raw maneuver data
@@ -64,7 +68,7 @@ for maneuver_type = maneuver_types
     for maneuver_i = 1:length(selected_maneuvers)
         % Plot raw data from maneuvers
         if save_raw_plots
-            plot_location = 'data/flight_data/selected_data/lateral_directional_data/full_plots/';
+            plot_location = "data/flight_data/selected_data/" + model_type + "_data/full_plots/";
             selected_maneuvers(maneuver_i).RawData.save_plot(plot_location);
         end
     end
@@ -77,7 +81,7 @@ for maneuver_type = maneuver_types
     % Kinematic Consistency Checks
     if save_kinematic_consistency_plots
         for maneuver_i = 1:length(selected_maneuvers)
-            plot_location = "data/flight_data/selected_data/lateral_directional_data/kinematic_consistency_checks/";
+            plot_location = "data/flight_data/selected_data/" + model_type + "_data/kinematic_consistency_checks/";
             selected_maneuvers(maneuver_i).check_kinematic_consistency(false, true, plot_location);
         end
     end
@@ -96,7 +100,7 @@ for maneuver_type = maneuver_types
     % Save plot for all relevant lateral data signals
     if save_lateral_signal_plots
         for maneuver_i = 1:length(selected_maneuvers)
-            plot_location = "data/flight_data/selected_data/lateral_directional_data/lateral_signals/";
+            plot_location = "data/flight_data/selected_data/" + model_type + "_data/model_signals/";
             selected_maneuvers(maneuver_i).save_plot_lateral(plot_location);
         end
     end
@@ -105,11 +109,25 @@ for maneuver_type = maneuver_types
 end
 
 % Manually pick sequenced maneuvers as validation data
-fpr_data_lat = {};
-fpr_data_lat.validation.roll_211 = fpr_data.roll_211([3 4]);
-fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 5 6]);
-fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 8 9 10]);
-fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7 11 12]);
 
-% Save FPR data to file
-save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");
+if strcmp(model_type, "lateral_directional")
+    fpr_data_lat = {};
+    fpr_data_lat.validation.roll_211 = fpr_data.roll_211([3 4]);
+    fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 5 6]);
+    fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 8 9 10]);
+    fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7 11 12]);
+
+    % Save FPR data to file
+    save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");
+elseif strcmp(model_type, "longitudinal")
+    num_maneuvers = length(fpr_data.pitch_211);
+    random_indices = randperm(num_maneuvers);
+    num_training_maneuvers = floor(0.8 * num_maneuvers);
+    
+    fpr_data_lon = {};
+    fpr_data_lon.training.pitch_211 = fpr_data.pitch_211(random_indices(1:num_training_maneuvers));
+    fpr_data_lon.validation.pitch_211 = fpr_data.pitch_211(random_indices(num_training_maneuvers + 1:end));
+    
+    % Save FPR data to file
+    save("data/flight_data/selected_data/fpr_data_lon.mat", "fpr_data_lon");
+end

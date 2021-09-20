@@ -31,49 +31,6 @@ def set_maneuver_times(exp_dict, maneuver_indices, maneuver_times, maneuver_type
 
 
 ##############
-# Experiment 1
-##############
-
-# Experiment from no-wind day with Pero as pilot
-# This experiment contains:
-#   Sweeps
-#   Some cruise flight
-# NB: Not used in the end
-
-exp1 = {}
-exp1["LogName"] = "06_31_21"
-exp1["Number"] = 1
-exp1["Maneuvers"] = {}
-
-sweep_maneuver_indices = np.arange(1, 32)
-maneuvers_w_dropout = [1, 8, 17, 21]
-skip = [2]  # too close to other maneuvers
-set_maneuver_times(exp1, sweep_maneuver_indices, {}, "sweep")
-
-# Pick some random cruise flight times
-exp1_cruise_times = {
-    31: [640, 650],
-    32: [650, 670],
-    33: [720, 740],
-    34: [770, 790],
-    35: [900, 920],
-    36: [1160, 1180],
-    37: [1970, 1990],
-    38: [1990, 1997],
-    39: [2015, 2035],
-    40: [2060, 2080],
-    41: [2080, 2100],
-    42: [2115, 2130],
-    43: [2140, 2155],
-    44: [2175, 2190],
-    45: [2230, 2245],
-    46: [2250, 2270],
-}
-for key, value in exp1_cruise_times.items():
-    exp1["Maneuvers"][str(key)] = create_maneuver_dict("cruise", value[0], value[1])
-
-
-##############
 # Experiment 2
 ##############
 
@@ -90,6 +47,25 @@ exp2["Maneuvers"] = {}
 pitch_211_maneuver_indices = np.arange(1, 18)
 set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, "pitch_211")
 
+# Correct pitch maneuver times
+pitch_211_maneuver_times = {
+    1: [534, 540.5],  # split maneuvers
+    2: [-1, -1],  # skip, disturbance
+    3: [-1, -1],  # skip, disturbance
+    7: [-1, -1],  # skip, dropout
+    8: [-1, -1],  # skip, lateral movement
+    9: [-1, -1],  # skip, disturbance
+    11: [-1, -1],  # skip, dropout
+    14: [-1, -1],  # skip, disturbance
+    17: [-1, -1],  # skip, dropout
+}
+
+set_maneuver_times(
+    exp2, pitch_211_maneuver_indices, pitch_211_maneuver_times, "pitch_211"
+)
+
+
+# Todo: Outdated and should be removed
 # Pretend freehand times are the last maneuvers, just for simplicity
 # Does not make a difference for anything
 exp2_freehand_times = {
@@ -146,23 +122,31 @@ exp3["Maneuvers"] = {}
 # Indices for the different 2-1-1 maneuvers
 pitch_211_maneuver_indices = np.arange(1, 22)
 pitch_211_nt_maneuver_indices = np.arange(22, 37)
-roll_211_maneuver_indices = np.arange(37, 57)
-roll_211_nt_maneuver_indices = np.arange(57, 100)
-yaw_211_nt_maneuver_indices = np.arange(113, 149)
 sweep_maneuver_indices = np.arange(177, 192)
 
+
+# index 3 is maneuver 20. Maneuver start at maneuver no 19
 # Correct pitch maneuver times
 pitch_211_maneuver_times = {
-    9: [-1, 981],  # split maneuvers
-    10: [-1, 985.5],  # split maneuvers
-    11: [-1, 990.5],  # split maneuvers
-    13: [-1, 1011],  # split maneuvers
-    14: [-1, 1016],  # split maneuvers
-    15: [-1, 1020.5],  # split maneuvers
-    16: [-1, 1025],  # split maneuvers
-    17: [-1, 1029.5],  # split maneuvers
-    19: [-1, 1051],  # split maneuvers
-    20: [-1, 1055],  # use two maneuvers in one
+    1: [-1, -1],  # skip, dropout
+    3: [906, -1],  # clean maneuver
+    4: [913, -1],  # clean maneuver
+    5: [920.3, -1],  # clean maneuver
+    6: [938.3, -1],  # clean maneuver
+    7: [-1, -1],  # dropout
+    8: [-1, -1],  # dropout
+    9: [-1, 981],  # clean maneuver
+    10: [980, 985.5],  # clean maneuver
+    11: [-1, 990],  # clean maneuver
+    12: [990, 995],  # clean maneuver
+    13: [1006, 1011],  # clean maneuver
+    14: [1010.5, 1015],  # clean maneuver
+    15: [-1, -1],  # disturbance
+    16: [1019, 1025],  # disturbance
+    17: [1024, 1029.5],  # disturbance
+    18: [-1, -1],  # dropout
+    19: [-1, 1051],  # dropout
+    20: [-1, 1055],  # dropout
 }
 
 pitch_211_nt_maneuver_times = {
@@ -172,7 +156,7 @@ pitch_211_nt_maneuver_times = {
 set_maneuver_times(
     exp3,
     pitch_211_maneuver_indices,
-    {},
+    pitch_211_maneuver_times,
     "pitch_211",
 )
 
@@ -184,19 +168,22 @@ set_maneuver_times(
 )
 
 
+# ROLL MANEUVERS
+
+roll_211_maneuver_indices = np.arange(37, 57)
+roll_211_nt_maneuver_indices = np.arange(57, 100)
+
 # Correct roll maneuver times
 roll_211_maneuver_times = {
-    37: [1347, 1351],
-    38: [-1, 1356],
-    39: [1355.5, 1360],
-    40: [1359, 1363],
-    41: [-1, 1379],  # Remove 42
-    43: [1385.5, 1390],  # remove other exp and dropout
-    44: [1389, 1394],
-    45: [1393, 1397.4],
+    37: [1347.5, 1363],  # Take 1,2,3,4 in one go
+    41: [1375, 1379.2],  # Take 5 by itself
+    43: [1386, 1397],  # Take 7, 8, 9 in one go
+    46: [1425, 1429.5],  # Clip away dropout on 10
+    49: [-1, 1480.5],  # 13, 14, 15, 16, 17 in one go
+    54: [1491, 1502.5],  # 18, 19 in one go
 }
 
-set_maneuver_times(exp3, roll_211_maneuver_indices, {}, "roll_211")
+set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
 
 roll_211_nt_maneuver_times = {
     57: [-1, 1551],  # 57 and 58
@@ -213,16 +200,24 @@ set_maneuver_times(
 )
 
 
-# Correct yaw maneuver times
-yaw_211_maneuver_times = {
-    102: [-1, 2225], # maneuver 3
-    104: [-1, 2249.5], # maneuver 5
-    104: [-1, 2249.5],
-    123: [-1, 3071],
-}
 yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
+yaw_211_nt_maneuver_indices = np.arange(113, 149)
 
-set_maneuver_times(exp3, yaw_211_maneuver_indices, {}, "yaw_211")
+yaw_211_maneuver_times = {
+    105: [2261, 2272],  # 6,7
+    111: [-1, 2342],  # 12, 13, next maneuver (14) start at index 149
+    114: [3073,-1], # 15
+    118: [3157,-1], # 15
+    161: [-1, 3256],  # 26
+    163: [3273, -1],  # 28
+    164: [3282, -1],  # 29
+    166: [3324.5, 3333],  # 31
+    168: [3350, 3364],  # 33, 34
+    172: [3391.5, 3404],  # 37, 38
+    # 40 41 can be included if I need more data
+}
+
+set_maneuver_times(exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211")
 
 yaw_211_nt_maneuver_times = {}
 
@@ -258,67 +253,6 @@ for key, value in exp3_freehand_times.items():
 
 
 ##############
-# Experiment 4
-##############
-
-exp4 = {}
-exp4["LogName"] = "2021_04_18_flight_1_static_curves"
-exp4["Number"] = 4
-exp4["Maneuvers"] = {}
-sweep_maneuver_times = {}
-
-# Contains sweeps with throttle
-
-# Do not use these, as they are with throttle
-# sweep_maneuver_indices = np.arange(1, 32)
-# set_maneuver_times(exp4, sweep_maneuver_indices, sweep_maneuver_times, [], "sweep")
-
-
-##############
-# Experiment 5
-##############
-
-# Contains sweeps and 211 rolls
-
-exp5 = {}
-exp5["LogName"] = "2021_04_18_flight_2_static_curves_no_thrust_211_roll"
-exp5["Number"] = 5
-exp5["Maneuvers"] = {}
-
-sweep_maneuver_indices = np.arange(1, 32)
-set_maneuver_times(exp5, sweep_maneuver_indices, {}, "sweep")
-
-roll_211_maneuver_indices = np.arange(32, 76)
-roll_maneuver_times = {
-    41: [-1, 927],  # maneuver 29
-    43: [940.5, -1],
-    51: [-1, 1011],
-    52: [-1, 1028.5],
-    53: [1028, -1],
-    55: [-1, 1068.5],
-    58: [-1, 1098.5],
-    59: [-1, 1102],
-    60: [1101, -1],
-}
-set_maneuver_times(exp5, roll_211_maneuver_indices, roll_maneuver_times, "roll_211")
-
-##############
-# Experiment 6
-##############
-
-exp6 = {}
-exp6["LogName"] = "2021_3_25_freehand_2_1_1_maneuvers"
-exp6["Number"] = 6
-exp6["Maneuvers"] = {}
-roll_maneuver_indices = np.arange(1, 25)
-pitch_maneuver_indices = np.arange(25, 53)
-yaw_maneuver_indices = np.arange(53, 66)
-set_maneuver_times(exp6, roll_maneuver_indices, {}, "roll_211")
-set_maneuver_times(exp6, pitch_maneuver_indices, {}, "pitch_211")
-set_maneuver_times(exp6, yaw_maneuver_indices, {}, "yaw_211")
-
-
-##################
 
 # Create metadata object
 breakpoint()

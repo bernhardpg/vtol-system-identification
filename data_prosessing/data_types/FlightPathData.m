@@ -393,6 +393,10 @@ classdef FlightPathData
         function x_lat_0 = get_lat_state_initial(obj)
             x_lat_0 = [obj.VelV(1) obj.AngP(1) obj.AngR(1) obj.EulPhi(1)];
         end
+                
+        function x_lon_0 = get_lon_state_initial(obj)
+            x_lon_0 = [obj.VelU(1) obj.VelW(1) obj.AngQ(1) obj.EulTheta(1)];
+        end
         
         function x_lat = get_lat_state_sequence(obj)
             x_lat = [obj.VelV obj.AngP obj.AngR obj.EulPhi];
@@ -405,6 +409,11 @@ classdef FlightPathData
         function u_lat = get_lat_input_sequence(obj)
             u_lat = [obj.DeltaA obj.DeltaR];
         end
+        
+        function u_lon = get_lon_input_sequence(obj)
+            u_lon = [obj.DeltaE obj.DeltaT];
+        end
+        
         
         function plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles, show_plot, save_plot, filename, plot_location)
             fig = figure;
@@ -484,5 +493,86 @@ classdef FlightPathData
         function show_plot_lateral_validation(obj, t_sim, simulated_responses, model_names, plot_styles)
             obj.plot_lateral_validation(t_sim, simulated_responses, model_names, plot_styles, true, false, '', '');
         end
+        
+        
+        function plot_longitudinal_validation(obj, t_sim, simulated_responses, model_names, plot_styles, show_plot, save_plot, filename, plot_location)
+            fig = figure;
+            if ~show_plot
+                fig.Visible = 'off';
+            end
+            fig.Position = [100 100 1500 1000];
+            num_plots_rows = 4;
+            num_models = numel(t_sim);
+
+            subplot(num_plots_rows,2,1)
+            plot(obj.Time, obj.VelU, plot_styles(1)); hold on;
+            for i = 1:num_models
+                plot(t_sim{i}, simulated_responses{i}(:,1), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylabel("[m/s]")
+            %ylim([0 30])
+            title("u")
+
+            subplot(num_plots_rows,2,3)
+            plot(obj.Time, obj.VelW, plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim{i}, simulated_responses{i}(:,2), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylabel("[m/s]")
+            ylim([-10 10])
+            title("w")
+                        
+            subplot(num_plots_rows,2,5)
+            plot(obj.Time, rad2deg(obj.AngQ), plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim{i}, rad2deg(simulated_responses{i}(:,3)), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylim([-200 200]);
+            ylabel("[deg/s]")
+            title("q")
+                        
+            subplot(num_plots_rows,2,7)
+            plot(obj.Time, rad2deg(obj.EulTheta), plot_styles(1)); hold on
+            for i = 1:num_models
+                plot(t_sim{i}, rad2deg(simulated_responses{i}(:,4)), plot_styles(i+1)); hold on
+            end
+            legend(model_names);
+            ylabel("[deg]")
+            %ylim([-50 50])
+            title("\theta")
+                        
+            subplot(num_plots_rows,2,2)
+            plot(obj.Time, rad2deg(obj.DeltaE), obj.Time, rad2deg(obj.DeltaESp), '--'); 
+            legend("$\delta_e$", "$\delta_e^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            title("Elevator")
+            
+            subplot(num_plots_rows,2,4)
+            plot(obj.Time, obj.DeltaT); 
+            legend("$\delta_t$");
+            ylabel("[rev/s]")
+            %ylim([0 150])
+            title("Throttle")
+
+            sgtitle("Model validation on " + obj.ManeuverType);
+            
+            if save_plot
+                saveas(fig, plot_location + filename, 'epsc')
+            end
+        end
+        
+        function save_plot_longitudinal_validation(obj, t_sim, simulated_responses, model_names, plot_styles, plot_location)
+            filename = "plot_" + obj.ManeuverType + "_" + obj.Id;
+            obj.plot_longitudinal_validation(t_sim, simulated_responses, model_names, plot_styles, false, true, filename, plot_location);
+        end
+        
+        function show_plot_longitudinal_validation(obj, t_sim, simulated_responses, model_names, plot_styles)
+            obj.plot_longitudinal_validation(t_sim, simulated_responses, model_names, plot_styles, true, false, '', '');
+        end
+        
     end
 end
