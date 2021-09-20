@@ -1,4 +1,4 @@
-function [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p)
+function [c_X, c_Y, c_Z, c_L, c_D] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p)
     dyn_pressure = calc_dyn_pressure(u, v, w);
     airframe_static_properties; % get mass and planform
     
@@ -12,7 +12,7 @@ function [c_X, c_Y, c_Z] = calc_force_coeffs(u, v, w, a_x, a_y, a_z, n_p)
     c_Y = Y ./ (dyn_pressure * planform_sqm);
     c_Z = Z ./ (dyn_pressure * planform_sqm);
     
-    %[c_L, c_D] = calc_lift_drag_coeff(u, w, c_X, c_Z);
+    [c_L, c_D] = calc_lift_drag_coeff(u, w, c_X, c_Z);
 end
 
 function T = calc_thrust_pusher(n_p)

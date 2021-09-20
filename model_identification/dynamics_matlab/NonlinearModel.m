@@ -15,6 +15,8 @@ classdef NonlinearModel
             obj.Params.mean_aerodynamic_chord_m = mean_aerodynamic_chord_m;
             obj.Params.planform_sqm = planform_sqm;
             obj.Params.V_nom = V_nom;
+            obj.Params.alpha_nom = alpha_nom;
+            obj.Params.delta_e_nom = delta_e_nom;
             obj.Params.gam_1 = gam(1);
             obj.Params.gam_2 = gam(2);
             obj.Params.gam_3 = gam(3);
@@ -25,8 +27,11 @@ classdef NonlinearModel
             obj.Params.gam_8 = gam(8);
             obj.Params.J_yy = J_yy;
             
+            obj.Params.u_nom = V_nom / (sqrt(1 + tan(alpha_nom)^2));
+            obj.Params.w_nom = sqrt(V_nom^2 - obj.Params.u_nom^2);
+            
             obj.StaticParams = [rho mass_kg g wingspan_m ...
-                mean_aerodynamic_chord_m planform_sqm V_nom ...
+                mean_aerodynamic_chord_m planform_sqm V_nom alpha_nom ...
                 gam J_yy]';
             
             obj.CoeffsLat = coeffs_lat;
@@ -49,6 +54,7 @@ classdef NonlinearModel
             % Extract states
             y = num2cell(y);
             [u, w, q, theta] = y{:};
+            alpha = atan2(w,u) - obj.Params.alpha_nom;
            
             % Roll index forward until we get to approx where we should get
             % inputs from. This basically implements zeroth-order hold for
@@ -78,11 +84,12 @@ classdef NonlinearModel
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
             explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
-            explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
+            explanatory_vars_lon = [1 alpha q_hat delta_e];
             
-            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
+            [c_D, c_Y, c_L, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
-            [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure);
+            [X, Y, Z] = calc_forces(obj, c_D, c_Y, c_L, dyn_pressure, alpha);
+            %Z = Z - obj.Params.mass_kg * 9.81;
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
             
             % Dynamics
@@ -162,7 +169,7 @@ classdef NonlinearModel
             w_dot = q * u - p * v + (1/obj.Params.mass_kg) * (Z + obj.Params.mass_kg * obj.Params.g * cos(theta) * cos(phi)); 
         end
         
-        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)            
+        function [c_D, c_Y, c_L, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)            
             % Lat coeffs
             temp = explanatory_vars_lat * obj.CoeffsLat;
             c_Y = temp(1);
@@ -170,15 +177,18 @@ classdef NonlinearModel
             c_n = temp(3);
             
             temp = explanatory_vars_lon * obj.CoeffsLon;
-            c_X = temp(1);
-            c_Z = temp(2);
+            c_D = temp(1);
+            c_L = temp(2);
             c_m = temp(3);
         end
         
-        function [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure)
-            X = c_X * dyn_pressure * obj.Params.planform_sqm;
+        function [X, Y, Z] = calc_forces(obj, c_D, c_Y, c_L, dyn_pressure, alpha)
+            D = c_D * dyn_pressure * obj.Params.planform_sqm;
             Y = c_Y * dyn_pressure * obj.Params.planform_sqm;
-            Z = c_Z * dyn_pressure * obj.Params.planform_sqm;
+            L = c_L * dyn_pressure * obj.Params.planform_sqm;
+            
+            X = -cos(alpha) * D + sin(alpha) * L;
+            Z = -sin(alpha) * D - cos(alpha) * L;
         end
         
         function [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure)
@@ -188,7 +198,7 @@ classdef NonlinearModel
         end
         
         function [dyn_pressure] = calc_dyn_pressure(obj, u, v, w)
-            V = sqrt(u .^ 2 + v .^ 2 + w .^ 2);
+            V = sqrt(u.^ 2 + v .^ 2 + w .^ 2);
             dyn_pressure = 0.5 * obj.Params.rho * V .^ 2;
         end
 

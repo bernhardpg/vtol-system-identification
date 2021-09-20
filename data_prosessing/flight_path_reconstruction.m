@@ -20,10 +20,10 @@ time_resolution = 0.02; % 50 Hz
 knot_points_for_spline_derivation_dt = 0.1;
 
 % Plot settings
-save_raw_plots = true;
-save_kinematic_consistency_plots = true;
+save_raw_plots = false;
+save_kinematic_consistency_plots = false;
 save_lateral_signal_plots = false;
-save_longitudinal_signal_plots = true;
+save_longitudinal_signal_plots = false;
 
 %model_type = "lateral_directional";
 model_type = "longitudinal";

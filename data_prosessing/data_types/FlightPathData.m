@@ -32,6 +32,8 @@ classdef FlightPathData
         C_X
         C_Y
         C_Z
+        C_L
+        C_D
         C_l
         C_m
         C_n
@@ -420,7 +422,7 @@ classdef FlightPathData
         end
         
         function obj = calc_force_coeffs(obj)
-                [obj.C_X, obj.C_Y, obj.C_Z] = calc_force_coeffs(obj.VelU, obj.VelV, obj.VelW, obj.AccX, obj.AccY, obj.AccZ, obj.DeltaT); % For now, lift and drag coeff is not used for anything
+                [obj.C_X, obj.C_Y, obj.C_Z, obj.C_L, obj.C_D] = calc_force_coeffs(obj.VelU, obj.VelV, obj.VelW, obj.AccX, obj.AccY, obj.AccZ, obj.DeltaT); % For now, lift and drag coeff is not used for anything
         end
         
         function obj = calc_moment_coeffs(obj)
