@@ -623,7 +623,7 @@ classdef FlightPathData
             end
             legend(model_names);
             ylabel("[m/s]")
-            %ylim([0 30])
+            ylim([0 28])
             title("u")
 
             subplot(num_plots_rows,2,3)
@@ -653,7 +653,7 @@ classdef FlightPathData
             end
             legend(model_names);
             ylabel("[deg]")
-            %ylim([-50 50])
+            ylim([-50 50])
             title("\theta")
                         
             subplot(num_plots_rows,2,2)
@@ -667,7 +667,7 @@ classdef FlightPathData
             plot(obj.Time, obj.DeltaT); 
             legend("$\delta_t$");
             ylabel("[rev/s]")
-            %ylim([0 150])
+            ylim([0 150])
             title("Throttle")
 
             sgtitle("Model validation on " + obj.ManeuverType);

@@ -9,6 +9,8 @@ classdef NonlinearModel
         function obj = NonlinearModel(coeffs_lon, coeffs_lat)
             airframe_static_properties;
             obj.Params.rho = rho;
+            obj.Params.prop_diam_pusher = prop_diam_pusher;
+            obj.Params.c_T_pusher = c_T_pusher;
             obj.Params.mass_kg = mass_kg;
             obj.Params.g = g;
             obj.Params.wingspan_m = wingspan_m;
@@ -67,13 +69,12 @@ classdef NonlinearModel
             % Get input at t
             input_at_t = input_seq(curr_index_data_seq,:);
             input_at_t = num2cell(input_at_t);
-            [delta_e, ~] = input_at_t{:};
+            [delta_e, delta_t] = input_at_t{:};
             
             % Assume lat inputs to be 0. These are not actually used
             % anywhere
             delta_a = 0;
             delta_r = 0;
-            T = 0; % TODO: for now only when using AVL model
             
             % Get lon states at t
             lat_state_at_t = lat_state_seq(curr_index_data_seq,:);
@@ -84,12 +85,12 @@ classdef NonlinearModel
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
             explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
-            explanatory_vars_lon = [1 alpha q_hat delta_e];
+            explanatory_vars_lon = [1 alpha alpha.^2 q_hat delta_e];
             
             [c_D, c_Y, c_L, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
             [X, Y, Z] = calc_forces(obj, c_D, c_Y, c_L, dyn_pressure, alpha);
-            %Z = Z - obj.Params.mass_kg * 9.81;
+            T = calc_thrust_pusher(obj, delta_t);
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
             
             % Dynamics
@@ -98,6 +99,10 @@ classdef NonlinearModel
             [u_dot, ~, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [u_dot w_dot q_dot theta_dot]';
+        end
+        
+        function T = calc_thrust_pusher(obj, delta_t)
+            T = obj.Params.rho * obj.Params.prop_diam_pusher^4 * obj.Params.c_T_pusher * delta_t.^2;
         end
         
         function dy_dt = dynamics_lat_model(obj, t, y, t_data_seq, input_seq, lon_state_seq)
