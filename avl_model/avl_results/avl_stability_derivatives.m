@@ -62,6 +62,29 @@
 %  y mom.  Cm  |   Cmd1 =   0.000000   Cmd2 =  -0.021385   Cmd3 =   0.000000
 %  z mom.  Cn  |   Cnd1 =   0.000237   Cnd2 =   0.000000   Cnd3 =  -0.001972
 
+% Longitudinal coeffs
+c_X_u_hat = -0.007928;
+c_X_w_hat = 0.697062;
+c_X_q_hat = 0.276028;
+c_X_delta_e = 0.000179 * 180 / pi;
+c_X = [0 c_X_u_hat c_X_w_hat c_X_q_hat c_X_delta_e]';
+
+c_Z_u_hat = -1.111654;
+c_Z_w_hat = -4.758683;
+c_Z_q_hat = -8.423907;
+c_Z_delta_e = -0.006286 * 180 / pi;
+c_Z = [0 c_Z_u_hat c_Z_w_hat c_Z_q_hat c_Z_delta_e]';
+
+c_m_u_hat = 0.071554;
+c_m_w_hat = -1.528646;
+c_m_q_hat = -13.289383;
+c_m_delta_e = -0.021385 * 180 / pi; 
+c_m = [0 c_m_u_hat c_m_w_hat c_m_q_hat c_m_delta_e]';
+
+avl_coeffs_lon = [c_X c_Z c_m];
+save("avl_model/avl_results/avl_coeffs_lon.mat", "avl_coeffs_lon");
+
+% Lateral coeffs
 c_Y_v_hat = -0.354667;
 c_Y_p_hat = 0.125594;
 c_Y_r_hat = 0.281316;
@@ -86,3 +109,4 @@ c_n = [0 c_n_v_hat c_n_p_hat c_n_r_hat c_n_delta_a c_n_delta_r]';
 avl_coeffs_lat = [c_Y c_l c_n];
 
 save("avl_model/avl_results/avl_coeffs_lat.mat", "avl_coeffs_lat");
+

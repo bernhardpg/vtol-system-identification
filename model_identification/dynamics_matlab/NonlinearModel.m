@@ -32,18 +32,65 @@ classdef NonlinearModel
             obj.CoeffsLat = coeffs_lat;
             obj.CoeffsLon = coeffs_lon;
         end
-            
-        % y = [v p r phi]
-        % u = [delta_a delta_r]
-        % lon_states = [u w q theta]
-        %   lon states are taken as measured, and not simulated
-        
+             
         function dy_dt = dynamics_lat_model_c(obj, t, y, t_data_seq, input_seq, lon_state_seq)
+            % y = [v p r phi]
+            % u = [delta_a delta_r]
+            % lon_states = [u w q theta]
+            %   lon states are taken as measured, and not simulated
             input_seq = [t_data_seq input_seq lon_state_seq];
             params = [obj.StaticParams;
                       reshape(obj.CoeffsLat, [numel(obj.CoeffsLat),1])];
             dy_dt = dynamics_lat_c(t, y, input_seq, params);
             %dy_dt_test = obj.dynamics_lat_model(t, y, t_data_seq, input_seq, lon_state_seq);
+        end
+        
+        function dy_dt = dynamics_lon_model(obj, t, y, t_data_seq, input_seq, lat_state_seq)
+            % Extract states
+            y = num2cell(y);
+            [u, w, q, theta] = y{:};
+           
+            % Roll index forward until we get to approx where we should get
+            % inputs from. This basically implements zeroth-order hold for
+            % the input
+            curr_index_data_seq = 1;
+            while t_data_seq(curr_index_data_seq) < t
+               curr_index_data_seq = curr_index_data_seq + 1;
+            end
+            
+            % Get input at t
+            input_at_t = input_seq(curr_index_data_seq,:);
+            input_at_t = num2cell(input_at_t);
+            [delta_e, ~] = input_at_t{:};
+            
+            % Assume lat inputs to be 0. These are not actually used
+            % anywhere
+            delta_a = 0;
+            delta_r = 0;
+            T = 0; % TODO: for now only when using AVL model
+            
+            % Get lon states at t
+            lat_state_at_t = lat_state_seq(curr_index_data_seq,:);
+            lat_state_at_t = num2cell(lat_state_at_t);
+            [v, p, r, phi] = lat_state_at_t{:};
+            
+            % Calculate forces and moments
+            [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
+            
+            explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
+            explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
+            
+            [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
+            dyn_pressure = obj.calc_dyn_pressure(u, v, w);
+            [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure);
+            [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
+            
+            % Dynamics
+            [~, theta_dot, ~] = obj.eul_dynamics(phi, theta, p, q, r);
+            [~, q_dot, ~] = obj.ang_vel_dynamics(p, q, r, l, m, n);
+            [u_dot, ~, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
+   
+            dy_dt = [u_dot w_dot q_dot theta_dot]';
         end
         
         function dy_dt = dynamics_lat_model(obj, t, y, t_data_seq, input_seq, lon_state_seq)
@@ -64,8 +111,9 @@ classdef NonlinearModel
             input_at_t = num2cell(input_at_t);
             [delta_a, delta_r] = input_at_t{:};
             
-            % TODO: temp for lat model
+            % Do not use longitudinal inputs for lateral model
             delta_e = 0;
+            T = 0;
             
             % Get lon states at t
             lon_state_at_t = lon_state_seq(curr_index_data_seq,:);
@@ -84,10 +132,9 @@ classdef NonlinearModel
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
             
             % Dynamics
-            [phi_dot, theta_dot, psi_dot] = obj.eul_dynamics(phi, theta, p, q, r);
-            [p_dot, q_dot, r_dot] = obj.ang_vel_dynamics(p, q, r, l, m, n);
-            T = 0; % TODO: for now
-            [u_dot, v_dot, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
+            [phi_dot, ~, psi_dot] = obj.eul_dynamics(phi, theta, p, q, r);
+            [p_dot, ~, r_dot] = obj.ang_vel_dynamics(p, q, r, l, m, n);
+            [~, v_dot, ~] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [v_dot p_dot r_dot phi_dot]';
         end
@@ -110,17 +157,12 @@ classdef NonlinearModel
         end
         
         function [u_dot, v_dot, w_dot] = vel_body_dynamics(obj, phi, theta, p, q, r, u, v, w, X, Y, Z, T)
-            u_dot = r * v - q * w + (1/obj.Params.mass_kg) * (X - T - obj.Params.mass_kg * obj.Params.g * sin(theta));
+            u_dot = r * v - q * w + (1/obj.Params.mass_kg) * (X + T - obj.Params.mass_kg * obj.Params.g * sin(theta));
             v_dot = p * w - r * u + (1/obj.Params.mass_kg) * (Y + obj.Params.mass_kg * obj.Params.g * cos(theta) * sin(phi));
             w_dot = q * u - p * v + (1/obj.Params.mass_kg) * (Z + obj.Params.mass_kg * obj.Params.g * cos(theta) * cos(phi)); 
         end
         
-        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)
-            % For now, set all lon coeffs to zero
-            c_X = 0;
-            c_Z = 0;
-            c_m = 0;
-            
+        function [c_X, c_Y, c_Z, c_l, c_m, c_n] = calc_coeffs(obj, explanatory_vars_lat, explanatory_vars_lon)            
             % Lat coeffs
             temp = explanatory_vars_lat * obj.CoeffsLat;
             c_Y = temp(1);

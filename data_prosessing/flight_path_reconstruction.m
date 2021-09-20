@@ -20,9 +20,10 @@ time_resolution = 0.02; % 50 Hz
 knot_points_for_spline_derivation_dt = 0.1;
 
 % Plot settings
-save_raw_plots = false;
-save_kinematic_consistency_plots = false;
+save_raw_plots = true;
+save_kinematic_consistency_plots = true;
 save_lateral_signal_plots = false;
+save_longitudinal_signal_plots = true;
 
 %model_type = "lateral_directional";
 model_type = "longitudinal";
@@ -41,7 +42,7 @@ maneuver_types = [
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
 maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 32 34 35 36 38 39 40 41];
-maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 24 25 32 35];
+maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 19 21 24 25 32 35];
 maneuvers_to_skip.("freehand") = [];
 
 % Save raw maneuver data
@@ -102,6 +103,14 @@ for maneuver_type = maneuver_types
         for maneuver_i = 1:length(selected_maneuvers)
             plot_location = "data/flight_data/selected_data/" + model_type + "_data/model_signals/";
             selected_maneuvers(maneuver_i).save_plot_lateral(plot_location);
+        end
+    end
+    
+    % Save plot for all relevant lateral data signals
+    if save_longitudinal_signal_plots
+        for maneuver_i = 1:length(selected_maneuvers)
+            plot_location = "data/flight_data/selected_data/" + model_type + "_data/model_signals/";
+            selected_maneuvers(maneuver_i).save_plot_longitudinal(plot_location);
         end
     end
     

@@ -53,21 +53,21 @@ for maneuver_type = maneuver_types
         % Simulate output-error model
         [t_output_error_model, y_output_error_model] = ode45(@(t,y) output_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
         
-%         % Collect all simulations
-%         y_all_models = {y_avl_ss_model, y_avl_nonlin_model, y_eq_error_model, y_output_error_model};
-%         t_all_models = {t_avl_ss_model, t_avl_nonlin_model, t_eq_error_model, t_output_error_model};
-%         
-%         % Compare with real flight data
-%         model_names = ["Real data" "AVL SS" "AVL Nonlinear Model" "Equation-Error" "Output-error"];
-%         plot_styles = ["-" "--" "--" "-" "-"];
-
         % Collect all simulations
-        y_all_models = {y_eq_error_model, y_output_error_model};
-        t_all_models = {t_eq_error_model, t_output_error_model};
+        y_all_models = {y_avl_ss_model, y_avl_nonlin_model};
+        t_all_models = {t_avl_ss_model, t_avl_nonlin_model};
         
         % Compare with real flight data
-        model_names = ["Real data" "Equation-Error" "Output-error"];
-        plot_styles = ["-" "-" "-"];
+        model_names = ["Real data" "AVL SS" "AVL Nonlinear Model"];
+        plot_styles = ["-" "--" "--"];
+
+%         % Collect all simulations
+%         y_all_models = {y_eq_error_model, y_output_error_model};
+%         t_all_models = {t_eq_error_model, t_output_error_model};
+%         
+%         % Compare with real flight data
+%         model_names = ["Real data" "Equation-Error" "Output-error"];
+%         plot_styles = ["-" "-" "-"];
         maneuver.show_plot_lateral_validation(t_all_models, y_all_models, model_names, plot_styles);    
     end
 end

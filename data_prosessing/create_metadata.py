@@ -49,7 +49,7 @@ set_maneuver_times(exp2, pitch_211_maneuver_indices, {}, "pitch_211")
 
 # Correct pitch maneuver times
 pitch_211_maneuver_times = {
-    1: [534, 540.5],  # split maneuvers
+    1: [535, 540.5],  # split maneuvers
     2: [-1, -1],  # skip, disturbance
     3: [-1, -1],  # skip, disturbance
     7: [-1, -1],  # skip, dropout

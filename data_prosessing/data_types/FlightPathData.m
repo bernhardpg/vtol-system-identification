@@ -4,6 +4,9 @@ classdef FlightPathData
         ManeuverType
         Time
         Dt
+        Alpha
+        Beta
+        VelTot
         EulPhi
         EulTheta
         EulPsi
@@ -92,6 +95,11 @@ classdef FlightPathData
             obj.DeltaA = simulate_control_surface_dynamics(obj.Time, obj.DeltaASp);
             obj.DeltaE = simulate_control_surface_dynamics(obj.Time, obj.DeltaESp);
             obj.DeltaR = simulate_control_surface_dynamics(obj.Time, obj.DeltaRSp);
+            
+            % Calculate aerodynamic angles
+            obj.VelTot = sqrt(obj.VelU .^ 2 + obj.VelV .^ 2 + obj.VelW .^ 2);
+            obj.Alpha = atan2(obj.VelW, obj.VelU);
+            obj.Beta = asin(obj.VelV ./ obj.VelTot);
         end
         
         function plot(obj, show_plot, save_plot, filename, plot_location)
@@ -298,6 +306,108 @@ classdef FlightPathData
             if save_plot
                 saveas(fig, plot_location + filename, 'epsc')
             end
+        end
+        
+        function plot_longitudinal(obj, show_plot, save_plot, filename, plot_location)
+            fig = figure;
+            if ~show_plot
+                fig.Visible = 'off';
+            end
+            fig.Position = [100 100 1500 1000];
+            num_plots_rows = 7;
+
+            subplot(num_plots_rows,2,1)
+            plot(obj.Time, rad2deg(obj.EulTheta)); 
+            legend("$\theta$");
+            ylabel("[deg]")
+            ylim([-50 50])
+            
+            subplot(num_plots_rows,2,3)
+            plot(obj.Time, rad2deg(obj.AngQ))
+            legend("$q$");
+            ylim([-200 200]);
+            ylabel("[deg/s]")
+            
+            subplot(num_plots_rows,2,5)
+            plot(obj.Time, rad2deg(obj.DeltaE), obj.Time, rad2deg(obj.DeltaESp), '--'); 
+            legend("$\delta_e$", "$\delta_e^{sp}$");
+            ylabel("[deg]")
+            ylim([-28 28])
+            
+            subplot(num_plots_rows,2,7)
+            plot(obj.Time, obj.VelU); 
+            legend("$u$");
+            ylabel("[m/s]")
+            ylim([0 30])
+            
+            subplot(num_plots_rows,2,9)
+            plot(obj.Time, obj.VelW)
+            legend("$w$");
+            ylabel("m/s]")
+            ylim([-7 7])
+            
+            subplot(num_plots_rows,2,11)
+            plot(obj.Time, obj.DeltaT)
+            legend("$\delta_t$");
+            ylim([0 130])
+            ylabel("[rev/s]")
+
+            
+            subplot(num_plots_rows,2,2)
+            plot(obj.Time, rad2deg(obj.Alpha)); 
+            legend("$\alpha$");
+            ylabel("[deg]")
+            ylim([-30 30])
+            
+            subplot(num_plots_rows,2,4)
+            plot(obj.Time, obj.AccX); 
+            legend("$a_x$");
+            ylabel("[m/s^2]")
+ %           ylim([-4 4])
+            
+            subplot(num_plots_rows,2,6)
+            plot(obj.Time, obj.AccZ); 
+            legend("$a_z$");
+            ylabel("[m/s^2]")
+%            ylim([-])
+            
+            subplot(num_plots_rows,2,8)
+            plot(obj.Time, obj.QDot); 
+            legend("$\dot{q}$");
+            ylabel("[rad/s^2]")
+            %ylim([-8 8])
+            
+            subplot(num_plots_rows,2,10)
+            plot(obj.Time, obj.C_X); 
+            legend("$c_X$");
+            ylabel("")
+            
+            subplot(num_plots_rows,2,12)
+            plot(obj.Time, obj.C_Z); 
+            legend("$c_Z$");
+            ylabel("")
+            
+            subplot(num_plots_rows,2,14)
+            plot(obj.Time, obj.C_m); 
+            legend("$c_m$");
+            ylabel("")
+            
+            
+            
+            sgtitle("Raw Maneuver Data: " + obj.ManeuverType);
+            
+            if save_plot
+                saveas(fig, plot_location + filename, 'epsc')
+            end
+        end
+        
+        function save_plot_longitudinal(obj, plot_location)
+            filename = "plot_" + obj.ManeuverType + "_" + obj.Id;
+            obj.plot_longitudinal(false, true, filename, plot_location);
+        end
+        
+        function show_plot_longitudinal(obj)
+            obj.plot_longitudinal(true, false, '', '');
         end
         
         function save_plot_lateral(obj, plot_location)
