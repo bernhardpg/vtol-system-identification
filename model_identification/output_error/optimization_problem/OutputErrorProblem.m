@@ -1,5 +1,7 @@
 classdef OutputErrorProblem
     properties
+        ModelType
+        ModelSpecific
         DynamicsModel
         TrainingData
         ValidationData
@@ -10,9 +12,11 @@ classdef OutputErrorProblem
         ManeuverSimulations
         ParametersToUpdate
         ParamPerturbation = 0.01
+        LineSearchRes = 20
     end
     methods
-        function obj = OutputErrorProblem(fpr_data, dynamics_model, maneuver_types, params_to_update)
+        function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update)
+            obj.ModelType = model_type;
             obj.TrainingData = obj.collect_all_maneuvers_into_array(fpr_data.training);
             obj.ValidationData = obj.collect_all_maneuvers_into_array(fpr_data.validation);
             obj.DynamicsModel = dynamics_model;
@@ -35,6 +39,21 @@ classdef OutputErrorProblem
             end
             
             obj.OptData.N_total = obj.sum_datapoints_for_all_maneuvers();
+            
+            % Create functions etc specific to current model type
+            if obj.ModelType == "longitudinal"
+                obj.ModelSpecific.curr_params = obj.OptData.params.CoeffsLon;
+                obj.ModelSpecific.sim_model = @(lat_params, lon_params, maneuver_i) obj.sim_model_lon(lat_params, lon_params, maneuver_i);
+                obj.ModelSpecific.calc_residuals = @(maneuver, y_pred) obj.calc_residuals(maneuver.lon_z, y_pred);
+                obj.ModelSpecific.f_calc_y = @(params) obj.get_y_pred_for_maneuvers(obj.OptData.params.CoeffsLat, params, obj.TrainingData);
+                obj.ModelSpecific.simulate_maneuvers = @(params, fpr_data) obj.simulate_maneuvers(obj.OptData.params.CoeffsLat, params, fpr_data);
+            elseif obj.ModelType == "lateral-directional"
+                obj.ModelSpecific.curr_params = obj.OptData.params.CoeffsLat;
+                obj.ModelSpecific.sim_model = @(lat_params, lon_params, maneuver_i) obj.sim_model_lat(lat_params, lon_params, maneuver_i);
+                obj.ModelSpecific.calc_residuals = @(maneuver, y_pred) obj.calc_residuals(maneuver.lat_z, y_pred);
+                obj.ModelSpecific.f_calc_y = @(params) obj.get_y_pred_for_maneuvers(params, obj.OptData.params.CoeffsLon, obj.TrainingData);
+                obj.ModelSpecific.simulate_maneuvers = @(params, fpr_data) obj.simulate_maneuvers(params, obj.OptData.params.CoeffsLon, fpr_data);
+            end
         end
         
         function maneuver_array = collect_all_maneuvers_into_array(~, dataset)
@@ -58,7 +77,7 @@ classdef OutputErrorProblem
             figure;
             fig_cost_axes = axes;
             obj.draw_cost_function_history(fig_cost_axes, obj.OptData.costs);
-
+            
             % Optimization routine
             while ~obj.OptData.error_covariance_converged
                 step_i = 0;
@@ -67,44 +86,39 @@ classdef OutputErrorProblem
                     step_i = step_i + 1;
                     disp("Performing Newton-Raphson step: " + step_i)
                     
-                    tic
                     disp("	Calculating gradients")
                     [params_update, information_matrix, cost_gradient]...
-                        = obj.calc_params_update(obj.ParametersToUpdate, obj.OptData.R_hat, obj.OptData.residuals, obj.OptData.params.CoeffsLat,...
-                            @(params) obj.get_y_pred_for_maneuvers(params, obj.OptData.params.CoeffsLon, obj.TrainingData));
-                    toc
+                        = obj.calc_params_update(obj.ParametersToUpdate, obj.OptData.R_hat, obj.OptData.residuals, obj.ModelSpecific.curr_params, obj.ModelSpecific.f_calc_y);
                     
                     obj.OptData.CramerRaoLowerBound = diag(inv(information_matrix));
                     
                     % Create params update matrix
-                    params_update_matrix = zeros(size(obj.OptData.params.CoeffsLat));
+                    params_update_matrix = zeros(size(obj.ModelSpecific.curr_params));
                     for i = 1:length(obj.ParametersToUpdate)
                         params_update_matrix(obj.ParametersToUpdate(i)) = params_update(i);
                     end
 
                     % Perform simple line search to find step size
                     % which minimizes cost along current direction
-                    tic
                     disp("	Performing line search")
-                    alpha = obj.do_line_search(obj.OptData.params.CoeffsLat, params_update_matrix);
-                    toc
+                    alpha = obj.do_line_search(obj.ModelSpecific.curr_params, params_update_matrix);
 
                     % Update parameters with chosen alpha
-                    params_lat_new = obj.OptData.params.CoeffsLat + alpha * params_update_matrix;
+                    params_new = obj.ModelSpecific.curr_params + alpha * params_update_matrix;
 
                     % Evaluate new model performance
-                    maneuver_simulations = obj.simulate_maneuvers(params_lat_new, obj.InitialParams.CoeffsLon, obj.TrainingData);
+                    maneuver_simulations = obj.ModelSpecific.simulate_maneuvers(params_new, obj.TrainingData);
                     [cost_new, residuals_new] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat);
                
                     % Check convergence
                     [obj.OptData.parameters_converged, obj.OptData.ConvergenceReason]...
                         = obj.check_for_param_convergence(...
-                            obj.OptData.params.CoeffsLat, params_lat_new, ...
+                            obj.ModelSpecific.curr_params, params_new, ...
                             obj.OptData.cost, cost_new, cost_gradient...
                             );
 
                     % Save all data and move on to next iteration
-                    obj.OptData.params.CoeffsLat = params_lat_new;
+                    obj.ModelSpecific.curr_params = params_new;
                     obj.OptData.residuals = residuals_new;
                     obj.OptData.cost = cost_new;
                     obj.OptData.costs = [obj.OptData.costs obj.OptData.cost];
@@ -130,14 +144,14 @@ classdef OutputErrorProblem
             maneuver_simulations = {};
             for maneuver_i = 1:length(fpr_data)
                 curr_simulation = {};
-                curr_simulation.y_pred = obj.sim_model(params_lat, params_lon, maneuver_i);
-                curr_simulation.residuals = obj.calc_residuals_lat(obj.ManeuverData{maneuver_i}.z, curr_simulation.y_pred);
+                curr_simulation.y_pred = obj.ModelSpecific.sim_model(params_lat, params_lon, maneuver_i);
+                curr_simulation.residuals = obj.ModelSpecific.calc_residuals(obj.ManeuverData{maneuver_i}, curr_simulation.y_pred);
                 maneuver_simulations{maneuver_i} = curr_simulation;
             end
         end
         
         function y_pred = get_y_pred_for_maneuvers(obj, params_lat, params_lon, fpr_data)
-            maneuver_simulations = simulate_maneuvers(obj, params_lat, params_lon, fpr_data);
+            maneuver_simulations = obj.simulate_maneuvers(params_lat, params_lon, fpr_data);
             y_pred = [];
             for maneuver_i = 1:numel(maneuver_simulations)
                 y_pred = [y_pred;
@@ -200,11 +214,11 @@ classdef OutputErrorProblem
         
         function alpha = do_line_search(obj, theta_0, delta_theta)
             min_cost = inf;
-            for potential_alpha = linspace(0.05,1,20)
+            for potential_alpha = linspace(0.05,1,obj.LineSearchRes)
                 % Update parameters
-                theta_new_lat = theta_0 + potential_alpha * delta_theta;
+                theta_new = theta_0 + potential_alpha * delta_theta;
 
-                maneuver_simulations = obj.simulate_maneuvers(theta_new_lat, obj.InitialParams.CoeffsLon, obj.TrainingData);
+                maneuver_simulations = obj.ModelSpecific.simulate_maneuvers(theta_new, obj.TrainingData);
                 [cost_new, ~] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat);
                 if cost_new < min_cost
                     min_cost = cost_new;
@@ -221,7 +235,7 @@ classdef OutputErrorProblem
             R_hat = obj.est_noise_covariance(residuals, obj.OptData.N_total);
 
             % Calculate cost from all maneuvers
-            cost = obj.calc_cost_lat(R_hat, residuals);
+            cost = obj.calc_cost(R_hat, residuals);
         end
         
         function [cost, residuals] = calc_cost_for_maneuvers_with_const_noise_covar(obj, maneuver_simulations, R_hat)            
@@ -229,7 +243,7 @@ classdef OutputErrorProblem
             residuals = obj.aggregate_residuals_from_all_maneuvers(maneuver_simulations);
 
             % Calculate cost from all maneuvers
-            cost = obj.calc_cost_lat(R_hat, residuals);
+            cost = obj.calc_cost(R_hat, residuals);
         end
         
         function draw_cost_function_history(obj, fig_axes, costs)
@@ -244,10 +258,14 @@ classdef OutputErrorProblem
             data.t_data_sequence = maneuver.Time;
             data.tspan = [maneuver.Time(1) maneuver.Time(end)];
             data.N = length(maneuver.Time);
-            data.z = maneuver.get_lat_state_sequence();
-            data.y_0 = maneuver.get_lat_state_initial();
+            data.lat_z = maneuver.get_lat_state_sequence();
+            data.lon_z = maneuver.get_lon_state_sequence();
+            data.lat_y_0 = maneuver.get_lat_state_initial();
+            data.lon_y_0 = maneuver.get_lon_state_initial();
             data.lon_state_sequence = maneuver.get_lon_state_sequence();
-            data.input_sequence = detrend(maneuver.get_lat_input_sequence(),0);
+            data.lat_state_sequence = maneuver.get_lat_state_sequence();
+            data.lon_input_sequence = maneuver.get_lon_input_sequence();
+            data.lat_input_sequence = maneuver.get_lat_input_sequence();
         end
         
         function [params_update, information_matrix, cost_gradient] = calc_params_update(obj, params_to_update, R_hat, residuals, params, f_calc_y)            
@@ -293,24 +311,39 @@ classdef OutputErrorProblem
             params_update = - information_matrix \ cost_gradient;
         end
         
-        function y_pred = sim_model(obj, lat_params, lon_params, maneuver_i)
+        function y_pred = sim_model_lat(obj, lat_params, lon_params, maneuver_i)
             obj.DynamicsModel = obj.DynamicsModel.set_params(lat_params, lon_params);
             [t_pred, y_pred] = ode45(@(t,y) ...
                 obj.DynamicsModel.dynamics_lat_model_c(t, y, ...
                     obj.ManeuverData{maneuver_i}.t_data_sequence, ...
-                    obj.ManeuverData{maneuver_i}.input_sequence, ...
+                    obj.ManeuverData{maneuver_i}.lat_input_sequence, ...
                     obj.ManeuverData{maneuver_i}.lon_state_sequence), ...
                 obj.ManeuverData{maneuver_i}.tspan, ...
-                obj.ManeuverData{maneuver_i}.y_0...
+                obj.ManeuverData{maneuver_i}.lat_y_0...
                 );
             y_pred = interp1(t_pred, y_pred, obj.ManeuverData{maneuver_i}.t_data_sequence); % change y_pred to correct time before returning
         end
         
-        function v = calc_residuals_lat(~, z, y_pred)
+        function y_pred = sim_model_lon(obj, lat_params, lon_params, maneuver_i)
+            obj.DynamicsModel = obj.DynamicsModel.set_params(lat_params, lon_params);
+            tic
+            [t_pred, y_pred] = ode45(@(t,y) ...
+                obj.DynamicsModel.dynamics_lon_model(t, y, ...
+                    obj.ManeuverData{maneuver_i}.t_data_sequence, ...
+                    obj.ManeuverData{maneuver_i}.lon_input_sequence, ...
+                    obj.ManeuverData{maneuver_i}.lat_state_sequence), ...
+                obj.ManeuverData{maneuver_i}.tspan, ...
+                obj.ManeuverData{maneuver_i}.lon_y_0...
+                );
+            toc
+            y_pred = interp1(t_pred, y_pred, obj.ManeuverData{maneuver_i}.t_data_sequence); % change y_pred to correct time before returning
+        end
+        
+        function v = calc_residuals(~, z, y_pred)
             v = z - y_pred; % residuals
         end
 
-        function cost = calc_cost_lat(~, R_hat, residuals)
+        function cost = calc_cost(~, R_hat, residuals)
             cost = 0.5 * sum(diag(residuals / R_hat * residuals'));
         end        
         

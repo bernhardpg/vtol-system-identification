@@ -9,9 +9,9 @@ load("data/flight_data/selected_data/fpr_data_lat.mat");
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
 %load("avl_model/avl_results/avl_coeffs_lat.mat");
 
-equation_error_coeffs_lat(1) = 0;
-equation_error_coeffs_lat(7) = 0;
-equation_error_coeffs_lat(13) = 0;
+% equation_error_coeffs_lat(1) = 0;
+% equation_error_coeffs_lat(7) = 0;
+% equation_error_coeffs_lat(13) = 0;
 
 % initial_coeffs = equation_error_coeffs_lat;
 % coeffs_to_keep_from_avl = [];
@@ -30,8 +30,8 @@ maneuver_types = [
 
 curr_coeffs_lat = equation_error_coeffs_lat;
 lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
-params_to_update = [1 2 3 5 6 7 8 9 10 11 12 14 15 16 18];
-opt_problem = OutputErrorProblem(fpr_data_lat, lat_model, maneuver_types, params_to_update);
+params_to_update = [1:18];
+opt_problem = OutputErrorProblem("lateral-directional", fpr_data_lat, lat_model, maneuver_types, params_to_update);
 
 tic
 opt_problem = opt_problem.solve();
