@@ -18,13 +18,16 @@ eq_error_lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 load("model_identification/output_error/results/output_error_coeffs_lon.mat");
 output_error_lon_model = NonlinearModel(output_error_coeffs_lon, zeros(6,3));
 
+load("model_identification/output_error/results/output_error_coeffs_lon_all_free.mat");
+output_error_lon_model_all_params = NonlinearModel(output_error_coeffs_lon_all_free, zeros(6,3));
+
 % Longitudinal System
 % State = [u w q theta]
 % Input = [delta_e delta_t]
 
-maneuver_types = ["pitch_211"];
-use_avl_model = false;
-use_nonlin_model = true;
+maneuver_types = "pitch_211";
+test_avl_models = false;
+test_nonlin_models = true;
 
 % Simulate maneuvers with different models
 
@@ -34,74 +37,65 @@ for maneuver_type = maneuver_types
     
     for maneuver_i = 1:length(fpr_data_lon.validation.(maneuver_type))
         maneuver = fpr_data_lon.validation.(maneuver_type)(maneuver_i);
-        input_sequence = maneuver.get_lon_input_sequence();
-        t_data_seq = maneuver.Time;
-        y_0 = maneuver.get_lon_state_initial();
-        tspan = [maneuver.Time(1) maneuver.Time(end)];
-        lat_state_seq = maneuver.get_lat_state_sequence();
-        y_recorded = maneuver.get_lon_state_sequence();
+        t_sim = maneuver.Time;
         
-         % AVL model assumes perturbation quantities and no throttle
-        delta_u = zeros(size(input_sequence));
-        delta_u(:,1) = input_sequence(:,1);
-        
-        %%%%%%%%%%
-        % AVL MODEL
-        %%%%%%%%%%
-        if use_avl_model
+        if test_avl_models
             % Simulate AVL state space model
             % First create perturbation state quantities, as this is what
-            % the model uses
-            u_nom = avl_nonlin_lon_model.Params.u_nom;
-            w_nom = avl_nonlin_lon_model.Params.w_nom;
-            y_nom = [u_nom w_nom 0 0];
-            y_0_perturbation = y_0 - y_nom;
-            
-            [y_avl_ss_model_perturbations, t_avl_ss_model] = lsim(lon_sys, delta_u(:,1), t_data_seq, y_0_perturbation);
-            y_avl_ss_model = y_avl_ss_model_perturbations + y_nom;
+            % the AVL model uses
+            [y_avl_ss, error_calculations] = evaluate_ss_model(maneuver, lon_sys);
+            error_metrics.avl_ss{maneuver_i} = error_calculations;
 
             % Simulate nonlinear AVL model
-            [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lon_model.dynamics_lon_model(t, y, t_data_seq, delta_u, lat_state_seq), tspan, y_0);
-
-%                         % Simulate nonlinear AVL model
-%             [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lon_model.dynamics_lon_model(t, y, t_data_seq, delta_u, lat_state_seq), tspan, y_0);
-%             y_avl_nonlin_model = interp1(t_avl_nonlin_model, y_avl_nonlin_model, t_data_seq); % Get to correct time vector
-%             error_metric = calc_error_metrics(y_avl_nonlin_model,y_recorded,maneuver.Id);
-%             error_metrics.avl_nonlin{maneuver_i} = error_metric;
-%             avl_nonlin_legend = "Nonlinear AVL (ANRMSE: " + num2str(error_metric.anrmse,2) + ") (ANMAE: " + num2str(error_metric.anmae,2) + ")";
+            [y_avl_nonlin, error_calculations] = evaluate_model(maneuver, avl_nonlin_lon_model);
+            error_metrics.avl_nonlin{maneuver_i} = error_calculations;
             
             % Collect all simulations
-            y_all_models = {y_avl_ss_model, y_avl_nonlin_model};
-            t_all_models = {t_avl_ss_model, t_avl_nonlin_model};
+            y_all_models = {y_avl_ss, y_avl_nonlin};
 
             % Compare with real flight data
             model_names = ["Real data" "State Space (AVL)" "Nonlinear (AVL)"];
-            plot_styles = ["-" "--" "-"];
-            maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
+            plot_styles = ["-" "-" "-"];
+            maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
         end
-        if use_nonlin_model
-            % Simulate equation-error model
-            [t_eq_error, y_eq_error] = ode45(@(t,y) eq_error_lon_model.dynamics_lon_model(t, y, t_data_seq, input_sequence, lat_state_seq), tspan, y_0);
-            y_eq_error = interp1(t_eq_error, y_eq_error, t_data_seq); % Get to correct time vector
-            error_metric = calc_error_metrics(y_eq_error,y_recorded,maneuver.Id);
-            error_metrics.eq_error{maneuver_i} = error_metric;
-            eq_error_legend = "Equation-Error (ANRMSE: " + num2str(error_metric.anrmse,2) + ") (ANMAE: " + num2str(error_metric.anmae,2) + ")";
+        if test_nonlin_models
+            [y_eq_error, error_calculations] = evaluate_model(maneuver, eq_error_lon_model);
+            error_metrics.eq_error{maneuver_i} = error_calculations;
             
-            % Simulate output-error model
-            [t_output_error, y_output_error] = ode45(@(t,y) output_error_lon_model.dynamics_lon_model(t, y, t_data_seq, input_sequence, lat_state_seq), tspan, y_0);
-            y_output_error = interp1(t_output_error, y_output_error, t_data_seq); % Get to correct time vector
-            error_metric = calc_error_metrics(y_output_error,y_recorded,maneuver.Id);
-            error_metrics.output_error{maneuver_i} = error_metric;
-            output_error_legend = "Output-Error (ANRMSE: " + num2str(error_metric.anrmse,2) + ") (ANMAE: " + num2str(error_metric.anmae,2) + ")";
+            [y_output_error, error_calculations] = evaluate_model(maneuver, output_error_lon_model);
+            error_metrics.output_error{maneuver_i} = error_calculations;
+            
+            [y_output_error_all_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_all_params);
+            error_metrics.y_output_error_all_params{maneuver_i} = error_calculations;
             
             % Collect all simulations
-            y_all_models = {y_eq_error y_output_error};
-            t_all_models = {t_data_seq t_data_seq};
+            y_all_models = {y_eq_error y_output_error y_output_error_all_params};
 
             % Compare with real flight data
-            model_names = ["Real data" eq_error_legend output_error_legend];
-            plot_styles = ["-" "--" "-"];
-            maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
+            model_names = ["Real data" "Equation-Error" "Output-Error" "Output-Error (all params)"];
+            plot_styles = ["-" "-" "-" "-"];
+            maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
         end
     end
+end
+
+if test_avl_models
+    [gof_avl_ss, tic_avl_ss, an_avl_ss] = evaluate_error_metrics(error_metrics.avl_ss);
+    [gof_avl_nonlin, tic_avl_nonlin, an_avl_nonlin] = evaluate_error_metrics(error_metrics.avl_nonlin);
+
+    model_names = ["State-Space (AVL)", "Nonlinear (AVL)"];
+    create_bar_plot([gof_avl_ss; gof_avl_nonlin], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
+    create_bar_plot([tic_avl_ss; tic_avl_nonlin], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
+    create_bar_plot([an_avl_ss; an_avl_nonlin], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
+end
+
+if test_nonlin_models
+    [gof_eq_error, tic_eq_error, an_eq_error] = evaluate_error_metrics(error_metrics.eq_error);
+    [gof_output_error, tic_output_error, an_output_error] = evaluate_error_metrics(error_metrics.output_error);
+    [gof_output_error_all_free, tic_output_error_all_free, an_output_error_all_free] = evaluate_error_metrics(error_metrics.y_output_error_all_params);
+
+    model_names = ["Equation-Error", "Output-Error", "Output-Error (all free)"];
+    create_bar_plot([gof_eq_error; gof_output_error; gof_output_error_all_free], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
+    create_bar_plot([tic_eq_error; tic_output_error; tic_output_error_all_free], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
+    create_bar_plot([an_eq_error; an_output_error; an_output_error_all_free], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
 end

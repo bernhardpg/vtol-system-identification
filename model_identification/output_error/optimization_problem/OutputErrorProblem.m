@@ -12,7 +12,7 @@ classdef OutputErrorProblem
         ManeuverSimulations
         ParametersToUpdate
         ParamPerturbation = 0.01
-        LineSearchRes = 20
+        LineSearchRes = 10
     end
     methods
         function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update)
@@ -28,6 +28,8 @@ classdef OutputErrorProblem
             obj.InitialParams.CoeffsLat = dynamics_model.CoeffsLat;
             obj.InitialParams.CoeffsLon = dynamics_model.CoeffsLon;
             obj.OptData.costs = [];
+            obj.OptData.iteration_indices = 0;
+            obj.OptData.UpdatedRIndices = 0;
             obj.OptData.parameters_converged = false;
             obj.OptData.error_covariance_converged = false;
             obj.ManeuverData = {};
@@ -76,19 +78,23 @@ classdef OutputErrorProblem
             % Plot cost history
             figure;
             fig_cost_axes = axes;
-            obj.draw_cost_function_history(fig_cost_axes, obj.OptData.costs);
+            obj.draw_cost_function_history(fig_cost_axes, obj.OptData.iteration_indices, obj.OptData.costs, obj.OptData.UpdatedRIndices);
             
             % Optimization routine
+            iteration = 0;
             while ~obj.OptData.error_covariance_converged
-                step_i = 0;
+                newton_raphson_step_i = 0;
                 while ~obj.OptData.parameters_converged
                     % Optimization step
-                    step_i = step_i + 1;
-                    disp("Performing Newton-Raphson step: " + step_i)
+                    iteration = iteration + 1;
+                    newton_raphson_step_i = newton_raphson_step_i + 1;
+                    disp("Performing Newton-Raphson step: " + newton_raphson_step_i)
                     
                     disp("	Calculating gradients")
+                    tic
                     [params_update, information_matrix, cost_gradient]...
                         = obj.calc_params_update(obj.ParametersToUpdate, obj.OptData.R_hat, obj.OptData.residuals, obj.ModelSpecific.curr_params, obj.ModelSpecific.f_calc_y);
+                    toc
                     
                     obj.OptData.CramerRaoLowerBound = diag(inv(information_matrix));
                     
@@ -101,7 +107,9 @@ classdef OutputErrorProblem
                     % Perform simple line search to find step size
                     % which minimizes cost along current direction
                     disp("	Performing line search")
+                    tic
                     alpha = obj.do_line_search(obj.ModelSpecific.curr_params, params_update_matrix);
+                    toc
 
                     % Update parameters with chosen alpha
                     params_new = obj.ModelSpecific.curr_params + alpha * params_update_matrix;
@@ -122,12 +130,16 @@ classdef OutputErrorProblem
                     obj.OptData.residuals = residuals_new;
                     obj.OptData.cost = cost_new;
                     obj.OptData.costs = [obj.OptData.costs obj.OptData.cost];
+                    obj.OptData.iteration_indices = [obj.OptData.iteration_indices iteration];
 
-                    obj.draw_cost_function_history(fig_cost_axes, obj.OptData.costs);
+                    obj.draw_cost_function_history(fig_cost_axes, obj.OptData.iteration_indices, obj.OptData.costs, obj.OptData.UpdatedRIndices);
                 end
 
                 % Update noise covariance matrix
-                disp("Updating R_hat")
+                disp("== Updating R_hat ==")
+                obj.OptData.UpdatedRIndices = [obj.OptData.UpdatedRIndices iteration];
+                iteration = iteration - 1;
+                obj.draw_cost_function_history(fig_cost_axes, obj.OptData.iteration_indices, obj.OptData.costs, obj.OptData.UpdatedRIndices);
                 R_hat_new = obj.est_noise_covariance(obj.OptData.residuals, obj.OptData.N_total);
 
                 % Start optimization routine over again
@@ -246,8 +258,12 @@ classdef OutputErrorProblem
             cost = obj.calc_cost(R_hat, residuals);
         end
         
-        function draw_cost_function_history(obj, fig_axes, costs)
-            plot(fig_axes, costs);
+        function draw_cost_function_history(obj, fig_axes, iteration_indices, costs, r_updated_indices)
+            plot(fig_axes, iteration_indices, costs); hold on
+            for i = r_updated_indices
+                xline(i, ":", "Updated $\hat{R}$",'interpreter','latex');    
+            end
+            hold off;
             title("Cost function")
             xlabel("Iteration")
             drawnow;

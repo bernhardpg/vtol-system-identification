@@ -107,7 +107,6 @@ classdef NonlinearModel
             params_vector = [obj.StaticParams;
                       reshape(obj.CoeffsLon, [numel(obj.CoeffsLon),1])];
             dy_dt = dynamics_lon_c(t, y, input_seq_for_c_file, params_vector);
-            dy_dt_test = obj.dynamics_lon_model(t, y, t_data_seq, lon_input_seq, lat_state_seq);
         end
         
         function T = calc_thrust_pusher(obj, delta_t)
