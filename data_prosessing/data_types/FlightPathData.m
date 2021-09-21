@@ -5,6 +5,7 @@ classdef FlightPathData
         Time
         Dt
         Alpha
+        AlphaAbsolute
         Beta
         VelTot
         EulPhi
@@ -28,6 +29,7 @@ classdef FlightPathData
         DeltaT
         DeltaASp
         DeltaESp
+        DeltaESpAbsolute
         DeltaRSp
         C_X
         C_Y
@@ -44,6 +46,8 @@ classdef FlightPathData
         AngQHat
         AngRHat
         RawData = ManeuverRawData.empty
+        DeltaETrim
+        AlphaTrim
     end
     methods
         % Construct a FlightPathData object from a ManeuverRawData
@@ -51,6 +55,10 @@ classdef FlightPathData
             obj.Id = id;
             obj.ManeuverType = maneuver_type;
             obj.RawData = ManeuverRawData(id, maneuver_type);
+            
+            airframe_static_properties;
+            obj.DeltaETrim = delta_e_nom;
+            obj.AlphaTrim = alpha_nom;
         end
         function obj = calc_fpr_from_rawdata(obj, dt_desired, dt_knots)
             obj.Time = (obj.RawData.Time(1):dt_desired:obj.RawData.Time(end))';
@@ -89,7 +97,8 @@ classdef FlightPathData
             % Save actuator setpoints by doing linear interpolation to
             % correct time frame
             obj.DeltaASp = interp1(obj.RawData.TimeInput, obj.RawData.DeltaASp, obj.Time);
-            obj.DeltaESp = interp1(obj.RawData.TimeInput, obj.RawData.DeltaESp, obj.Time);
+            obj.DeltaESpAbsolute = interp1(obj.RawData.TimeInput, obj.RawData.DeltaESp, obj.Time);
+            obj.DeltaESp = obj.DeltaESpAbsolute - obj.DeltaETrim;
             obj.DeltaRSp = interp1(obj.RawData.TimeInput, obj.RawData.DeltaRSp, obj.Time);
             obj.DeltaT = interp1(obj.RawData.TimeInput, obj.RawData.DeltaT, obj.Time);
             
@@ -100,7 +109,8 @@ classdef FlightPathData
             
             % Calculate aerodynamic angles
             obj.VelTot = sqrt(obj.VelU .^ 2 + obj.VelV .^ 2 + obj.VelW .^ 2);
-            obj.Alpha = atan2(obj.VelW, obj.VelU);
+            obj.AlphaAbsolute = atan2(obj.VelW, obj.VelU);
+            obj.Alpha = obj.AlphaAbsolute - obj.AlphaTrim;
             obj.Beta = asin(obj.VelV ./ obj.VelTot);
         end
         
@@ -621,7 +631,7 @@ classdef FlightPathData
             for i = 1:num_models
                 plot(t_sim{i}, simulated_responses{i}(:,1), plot_styles(i+1)); hold on
             end
-            legend(model_names);
+            %legend(model_names);
             ylabel("[m/s]")
             ylim([0 28])
             title("u")
@@ -631,7 +641,7 @@ classdef FlightPathData
             for i = 1:num_models
                 plot(t_sim{i}, simulated_responses{i}(:,2), plot_styles(i+1)); hold on
             end
-            legend(model_names);
+            %legend(model_names);
             ylabel("[m/s]")
             ylim([-10 10])
             title("w")
@@ -641,7 +651,7 @@ classdef FlightPathData
             for i = 1:num_models
                 plot(t_sim{i}, rad2deg(simulated_responses{i}(:,3)), plot_styles(i+1)); hold on
             end
-            legend(model_names);
+            %legend(model_names);
             ylim([-200 200]);
             ylabel("[deg/s]")
             title("q")

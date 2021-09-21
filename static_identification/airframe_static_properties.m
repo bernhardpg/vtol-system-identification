@@ -49,8 +49,8 @@ c_Q_top = 0;
 
 % Cruise conditions
 V_nom = 21; % Nominal airspeed, m/s
-alpha_nom = 2.68 / 180 * pi; % Found in AVL
-delta_e_nom = -0.10;
+alpha_nom = 3 / 180 * pi;
+delta_e_nom = -0.0985;
 
 % Load control surface properties
 control_surface_constants;

@@ -23,7 +23,11 @@ use_avl_model = false;
 use_nonlin_model = true;
 
 % Simulate maneuvers with different models
+
 for maneuver_type = maneuver_types
+    num_maneuvers = length(fpr_data_lon.validation.(maneuver_type));
+    error_metrics = {};
+    
     for maneuver_i = 1:length(fpr_data_lon.validation.(maneuver_type))
         maneuver = fpr_data_lon.validation.(maneuver_type)(maneuver_i);
         input_sequence = maneuver.get_lon_input_sequence();
@@ -31,10 +35,11 @@ for maneuver_type = maneuver_types
         y_0 = maneuver.get_lon_state_initial();
         tspan = [maneuver.Time(1) maneuver.Time(end)];
         lat_state_seq = maneuver.get_lat_state_sequence();
+        y_recorded = maneuver.get_lon_state_sequence();
         
          % AVL model assumes perturbation quantities and no throttle
         delta_u = zeros(size(input_sequence));
-        delta_u(:,1) = detrend(input_sequence(:,1),0);
+        delta_u(:,1) = input_sequence(:,1);
         
         %%%%%%%%%%
         % AVL MODEL
@@ -65,15 +70,26 @@ for maneuver_type = maneuver_types
         end
         if use_nonlin_model
             % Simulate nonlinear AVL model
+            [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lon_model.dynamics_lon_model(t, y, t_data_seq, delta_u, lat_state_seq), tspan, y_0);
+            y_avl_nonlin_model = interp1(t_avl_nonlin_model, y_avl_nonlin_model, t_data_seq); % Get to correct time vector
+            error_metric = calc_error_metrics(y_avl_nonlin_model,y_recorded,maneuver.Id);
+            error_metrics.avl_nonlin{maneuver_i} = error_metric;
+            avl_nonlin_legend = "Nonlinear AVL (ANRMSE: " + num2str(error_metric.anrmse,1) + ") (ANMAE: " + num2str(error_metric.anmae,1) + ")";
+            
+            % Simulate equation-error model
             [t_eq_error, y_eq_error] = ode45(@(t,y) eq_error_lon_model.dynamics_lon_model(t, y, t_data_seq, input_sequence, lat_state_seq), tspan, y_0);
+            y_eq_error = interp1(t_eq_error, y_eq_error, t_data_seq); % Get to correct time vector
+            error_metric = calc_error_metrics(y_eq_error,y_recorded,maneuver.Id);
+            error_metrics.eq_error{maneuver_i} = error_metric;
+            eq_error_legend = "Equation-Error (ANRMSE: " + num2str(error_metric.anrmse,1) + ") (ANMAE: " + num2str(error_metric.anmae,1) + ")";
             
             % Collect all simulations
-            y_all_models = {y_eq_error};
-            t_all_models = {t_eq_error};
+            y_all_models = {y_avl_nonlin_model y_eq_error};
+            t_all_models = {t_data_seq t_data_seq};
 
             % Compare with real flight data
-            model_names = ["Real data" "Equation-Error"];
-            plot_styles = ["-" "--"];
+            model_names = ["Real data" avl_nonlin_legend eq_error_legend];
+            plot_styles = ["-" "--" "-"];
             maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
         end
     end

@@ -49,13 +49,8 @@
                     "type": "pitch_211"
                 },
                 "18": {
-                    "end_s": 195,
-                    "start_s": 180,
-                    "type": "freehand"
-                },
-                "19": {
-                    "end_s": 210,
-                    "start_s": 195,
+                    "end_s": 150,
+                    "start_s": 135,
                     "type": "freehand"
                 },
                 "2": {
@@ -63,125 +58,15 @@
                     "start_s": -1,
                     "type": "pitch_211"
                 },
-                "20": {
-                    "end_s": 225,
-                    "start_s": 210,
-                    "type": "freehand"
-                },
-                "21": {
-                    "end_s": 240,
-                    "start_s": 225,
-                    "type": "freehand"
-                },
-                "22": {
-                    "end_s": 255,
-                    "start_s": 240,
-                    "type": "freehand"
-                },
-                "23": {
-                    "end_s": 270,
-                    "start_s": 255,
-                    "type": "freehand"
-                },
-                "24": {
-                    "end_s": 285,
-                    "start_s": 270,
-                    "type": "freehand"
-                },
-                "25": {
-                    "end_s": 300,
-                    "start_s": 285,
-                    "type": "freehand"
-                },
-                "26": {
-                    "end_s": 315,
-                    "start_s": 300,
-                    "type": "freehand"
-                },
-                "27": {
-                    "end_s": 330,
-                    "start_s": 315,
-                    "type": "freehand"
-                },
-                "28": {
-                    "end_s": 345,
-                    "start_s": 330,
-                    "type": "freehand"
-                },
-                "29": {
-                    "end_s": 360,
-                    "start_s": 345,
-                    "type": "freehand"
-                },
                 "3": {
                     "end_s": -1,
                     "start_s": -1,
                     "type": "pitch_211"
                 },
-                "30": {
-                    "end_s": 375,
-                    "start_s": 360,
-                    "type": "freehand"
-                },
-                "31": {
-                    "end_s": 390,
-                    "start_s": 375,
-                    "type": "freehand"
-                },
-                "32": {
-                    "end_s": 405,
-                    "start_s": 390,
-                    "type": "freehand"
-                },
-                "33": {
-                    "end_s": 420,
-                    "start_s": 405,
-                    "type": "freehand"
-                },
-                "34": {
-                    "end_s": 435,
-                    "start_s": 420,
-                    "type": "freehand"
-                },
-                "35": {
-                    "end_s": 450,
-                    "start_s": 435,
-                    "type": "freehand"
-                },
-                "36": {
-                    "end_s": 465,
-                    "start_s": 450,
-                    "type": "freehand"
-                },
-                "37": {
-                    "end_s": 480,
-                    "start_s": 465,
-                    "type": "freehand"
-                },
-                "38": {
-                    "end_s": 495,
-                    "start_s": 480,
-                    "type": "freehand"
-                },
-                "39": {
-                    "end_s": 510,
-                    "start_s": 495,
-                    "type": "freehand"
-                },
                 "4": {
                     "end_s": -1,
                     "start_s": -1,
                     "type": "pitch_211"
-                },
-                "40": {
-                    "end_s": 525,
-                    "start_s": 510,
-                    "type": "freehand"
-                },
-                "41": {
-                    "end_s": 530,
-                    "start_s": 525,
-                    "type": "freehand"
                 },
                 "5": {
                     "end_s": -1,

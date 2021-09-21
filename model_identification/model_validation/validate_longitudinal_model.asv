@@ -23,7 +23,15 @@ use_avl_model = false;
 use_nonlin_model = true;
 
 % Simulate maneuvers with different models
+
 for maneuver_type = maneuver_types
+    num_maneuvers = length(fpr_data_lon.validation.(maneuver_type));
+    error_metrics = {};
+    error_metrics.mae = zeros(num_maneuvers,4);
+    error_metrics.rmse = zeros(num_maneuvers,4);
+    error_metrics.anmae = zeros(num_maneuvers,1);
+    error_metrics.anrmse = zeros(num_maneuvers,1);
+    
     for maneuver_i = 1:length(fpr_data_lon.validation.(maneuver_type))
         maneuver = fpr_data_lon.validation.(maneuver_type)(maneuver_i);
         input_sequence = maneuver.get_lon_input_sequence();
@@ -32,7 +40,9 @@ for maneuver_type = maneuver_types
         tspan = [maneuver.Time(1) maneuver.Time(end)];
         lat_state_seq = maneuver.get_lat_state_sequence();
         
-        delta_u = detrinput_sequence; % AVL model assumes perturbation quantities
+         % AVL model assumes perturbation quantities and no throttle
+        %delta_u = zeros(size(input_sequence));
+        %delta_u(:,1) = detrend(input_sequence(:,1),0);
         
         %%%%%%%%%%
         % AVL MODEL
@@ -62,17 +72,30 @@ for maneuver_type = maneuver_types
             maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
         end
         if use_nonlin_model
-            % Simulate nonlinear AVL model
-            [t_eq_error, y_eq_error] = ode45(@(t,y) eq_error_lon_model.dynamics_lon_model(t, y, t_data_seq, delta_u, lat_state_seq), tspan, y_0);
+            % Simulate equation-error model
+            [t_eq_error, y_eq_error] = ode45(@(t,y) eq_error_lon_model.dynamics_lon_model(t, y, t_data_seq, input_sequence, lat_state_seq), tspan, y_0);
+            y_eq_error = interp1(t_eq_error, y_eq_error, t_data_seq); % Get to correct time vector
+            y_recorded = maneuver.get_lon_state_sequence();
+            error_metric = create_error_metric(y,z);
             
             % Collect all simulations
             y_all_models = {y_eq_error};
-            t_all_models = {t_eq_error};
+            t_all_models = {t_data_seq};
 
             % Compare with real flight data
             model_names = ["Real data" "Equation-Error"];
             plot_styles = ["-" "--"];
-            maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
+            %maneuver.show_plot_longitudinal_validation(t_all_models, y_all_models, model_names, plot_styles);
+            
+
         end
     end
+end
+
+function error_metric = create_error_metric(y,z)
+    error_metric = {};
+    error_metric.mae(maneuver_i,:) = mean_absolute_error(y, y_recorded);
+    error_metric.rmse(maneuver_i,:) = root_mean_square_error(y, y_recorded);
+    error_metric.anrmse(maneuver_i) = average_norm_rmse(y, y_recorded);
+    error_metric.anmae(maneuver_i) = average_norm_mae(y_eq_error, y_recorded);
 end
