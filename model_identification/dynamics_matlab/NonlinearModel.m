@@ -9,8 +9,6 @@ classdef NonlinearModel
         function obj = NonlinearModel(coeffs_lon, coeffs_lat)
             airframe_static_properties;
             obj.Params.rho = rho;
-            obj.Params.prop_diam_pusher = prop_diam_pusher;
-            obj.Params.c_T_pusher = c_T_pusher;
             obj.Params.mass_kg = mass_kg;
             obj.Params.g = g;
             obj.Params.wingspan_m = wingspan_m;
@@ -28,13 +26,17 @@ classdef NonlinearModel
             obj.Params.gam_7 = gam(7);
             obj.Params.gam_8 = gam(8);
             obj.Params.J_yy = J_yy;
+            obj.Params.prop_diam_pusher = prop_diam_pusher;
+            obj.Params.c_T_pusher = c_T_pusher;
             
             obj.Params.u_nom = V_nom / (sqrt(1 + tan(alpha_nom)^2));
             obj.Params.w_nom = sqrt(V_nom^2 - obj.Params.u_nom^2);
             
             obj.StaticParams = [rho mass_kg g wingspan_m ...
-                mean_aerodynamic_chord_m planform_sqm V_nom alpha_nom ...
-                gam J_yy]';
+                mean_aerodynamic_chord_m planform_sqm ...
+                V_nom alpha_nom delta_e_nom ...
+                gam J_yy ...
+                prop_diam_pusher c_T_pusher]';
             
             obj.CoeffsLat = coeffs_lat;
             obj.CoeffsLon = coeffs_lon;
@@ -49,7 +51,6 @@ classdef NonlinearModel
             params = [obj.StaticParams;
                       reshape(obj.CoeffsLat, [numel(obj.CoeffsLat),1])];
             dy_dt = dynamics_lat_c(t, y, input_seq, params);
-            %dy_dt_test = obj.dynamics_lat_model(t, y, t_data_seq, input_seq, lon_state_seq);
         end
         
         function dy_dt = dynamics_lon_model(obj, t, y, t_data_seq, input_seq, lat_state_seq)
@@ -99,6 +100,14 @@ classdef NonlinearModel
             [u_dot, ~, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [u_dot w_dot q_dot theta_dot]';
+        end
+        
+        function dy_dt = dynamics_lon_model_c(obj, t, y, t_data_seq, lon_input_seq, lat_state_seq)
+            input_seq_for_c_file = [t_data_seq lon_input_seq lat_state_seq];
+            params_vector = [obj.StaticParams;
+                      reshape(obj.CoeffsLon, [numel(obj.CoeffsLon),1])];
+            dy_dt = dynamics_lon_c(t, y, input_seq_for_c_file, params_vector);
+            dy_dt_test = obj.dynamics_lon_model(t, y, t_data_seq, lon_input_seq, lat_state_seq);
         end
         
         function T = calc_thrust_pusher(obj, delta_t)

@@ -30,41 +30,31 @@
 #include "mex.h"
 #include "math.h"
 
-#define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-#define bound(x,bl,bu) (min(max(x,bl),bu))
-
 double interp(double x0, double x1, double y0, double y1, double xp)
 {
-		double yp = y0 + ((y1 - y0) / (x1 - x0)) * (xp - x0);
-		return yp;
+    double yp = y0 + ((y1 - y0) / (x1 - x0)) * (xp - x0);
+    return yp;
 }
 
 void compute_u_at_t(double t, double *u, double *u_at_t, int nu_rows, int nu_cols)
 {
-		int interp_end_index = 1;
-		double curr_t = u[interp_end_index];
-		// Move index to the location where we are at the closest next time step
-		// in the input sequence
-		while ((curr_t < t) && (interp_end_index < nu_rows - 1))
-		{
-			interp_end_index++;
-			curr_t = u[interp_end_index]; // First column in u is timestamp
-		}
+    int interp_end_index = 1;
+    double curr_t = u[interp_end_index];
+    // Move index to the location where we are at the closest next time step
+    // in the input sequence
+    while ((curr_t < t) && (interp_end_index < nu_rows - 1))
+    {
+        interp_end_index++;
+        curr_t = u[interp_end_index]; // First column in u is timestamp
+    }
 
-		for (int col_i = 0; col_i < nu_cols - 1; ++col_i)
-		{
-			double y0 = u[interp_end_index - 1 + nu_rows * (col_i + 1)];
-			double y1 = u[interp_end_index + nu_rows * (col_i + 1)];
+    for (int col_i = 0; col_i < nu_cols - 1; ++col_i)
+    {
+        double y0 = u[interp_end_index - 1 + nu_rows * (col_i + 1)];
+        double y1 = u[interp_end_index + nu_rows * (col_i + 1)];
 
-			u_at_t[col_i] = interp(u[interp_end_index - 1], u[interp_end_index], y0, y1, t);
-		}
+        u_at_t[col_i] = interp(u[interp_end_index - 1], u[interp_end_index], y0, y1, t);
+    }
 }
 
 /* State equations. */
@@ -83,134 +73,103 @@ void compute_dx(
       in the body of this function.
     */
 
-		// Extract parameters
-		double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,
-			servo_time_const_s, servo_rate_lim_rad_s,
-			prop_diam_pusher_four, c_T_pusher,
-			gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy;
+    // Extract parameters
+    double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom, alpha_nom, delta_e_nom,
+        gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy, prop_diam_pusher, c_T_pusher;
 
-		rho = p[0];
-		mass_kg = p[1];
-		g = p[2];
-		wingspan_m = p[3];
-		mean_aerodynamic_chord_m = p[4];
-		planform_sqm = p[5];
-		V_nom = p[6];
-		servo_time_const_s = p[7];
-		servo_rate_lim_rad_s = p[8];
-		prop_diam_pusher_four = p[9];
-		c_T_pusher = p[10];
-		gam_1 = p[11];
-		gam_2 = p[12];
-		gam_3 = p[13];
-		gam_4 = p[14];
-		gam_5 = p[15];
-		gam_6 = p[16];
-		gam_7 = p[17];
-		gam_8 = p[18];
-		J_yy = p[19];
+    rho = p[0];
+    mass_kg = p[1];
+    g = p[2];
+    wingspan_m = p[3];
+    mean_aerodynamic_chord_m = p[4];
+    planform_sqm = p[5];
+    V_nom = p[6];
+    alpha_nom = p[7];
+    delta_e_nom = p[8];
+    gam_1 = p[9];
+    gam_2 = p[10];
+    gam_3 = p[11];
+    gam_4 = p[12];
+    gam_5 = p[13];
+    gam_6 = p[14];
+    gam_7 = p[15];
+    gam_8 = p[16];
+    J_yy = p[17];
+    prop_diam_pusher = p[18];
+    c_T_pusher = p[19];
 
-		double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_V, c_D_q, c_D_delta_e,
-			c_L_0, c_L_alpha, c_L_alpha_sq, c_L_V, c_L_q, c_L_delta_e,
-			c_m_0, c_m_alpha, c_m_V, c_m_q, c_m_delta_e;
+    double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_q_hat, c_D_delta_e,
+        c_L_0, c_L_alpha, c_L_alpha_sq, c_L_q_hat, c_L_delta_e,
+        c_m_0, c_m_alpha, c_m_alpha_sq, c_m_q_hat, c_m_delta_e;
 
-		c_D_0 = p[20];
-		c_D_alpha = p[21];
-		c_D_alpha_sq = p[22];
-		c_D_V = p[23];
-		c_D_q = p[24];
-		c_D_delta_e = p[25];
+    c_D_0 = p[20];
+    c_D_alpha = p[21];
+    c_D_alpha_sq = p[22];
+    c_D_q_hat = p[23];
+    c_D_delta_e = p[24];
+    c_L_0 = p[25];
+    c_L_alpha = p[26];
+    c_L_alpha_sq = p[27];
+    c_L_q_hat = p[28];
+    c_L_delta_e = p[29];
+    c_m_0 = p[30];
+    c_m_alpha = p[31];
+    c_m_alpha_sq = p[32];
+    c_m_q_hat = p[33];
+    c_m_delta_e = p[34];
 
-		c_L_0 = p[26];
-		c_L_alpha = p[27];
-		c_L_alpha_sq = p[28];
-		c_L_V = p[29];
-		c_L_q = p[30];
-		c_L_delta_e = p[31];
+    // Extract state
+    double vel_u, vel_w, ang_q, theta;
+    vel_u = x[0];
+    vel_w = x[1];
+    ang_q = x[2];
+    theta = x[3];
 
-		c_m_0 = p[32];
-		c_m_alpha = p[33];
-		c_m_V = p[34];
-		c_m_q = p[35];
-		c_m_delta_e = p[36];
+    // Extract inputs
+    // This model assumes the following inputs sequence
+    // u = [t delta_e delta_t vel_v ang_p ang_r phi], (Nx7)
+    double delta_e, delta_t;
+    delta_e = u[0];
+    delta_t = u[1];
 
-		// Extract state
-    double theta, ang_q, vel_u, vel_w;
-    theta = x[0];
-    ang_q = x[1];
-    vel_u = x[2];
-    vel_w = x[3];
+    // Extract longitudinal states which are taken as inputs
+    double vel_v, ang_p, ang_r, phi;
+    vel_v = u[2];
+    ang_p = u[3];
+    ang_r = u[4];
+    phi = u[5];
 
-		// Extract inputs
-    double delta_a, delta_vl, delta_vr, n_p;
-    delta_a = u[0];
-    delta_vl = u[1];
-    delta_vr = u[2];
-    n_p = u[3];
-
-		// These are computed for convenience. There is no rudder or elevator on the actual UAV
-		double delta_e = 0.5 * (delta_vl + delta_vr);
-		double delta_r = 0.5 * (-delta_vl + delta_vr);
-
-		// Extract lateral states which are taken as inputs
-		double phi, psi, ang_p, ang_r, vel_v;
-		phi = u[4];
-		psi = u[5];
-		ang_p = u[6];
-		ang_r = u[7];
-		vel_v = u[8];
-
-		// Calculate forces and moments
+    // Calculate forces and moments
+    double alpha = atan2(vel_w, vel_u) - alpha_nom;
     double V = sqrt(pow(vel_u, 2) + pow(vel_v, 2) + pow(vel_w, 2));
     double dyn_pressure = 0.5 * rho * pow(V, 2);
 
-    double alpha = atan2(vel_w, vel_u);
-
-		// TODO: Unused, remove!
-		double V_hat = V / V_nom;
-    double u_hat = vel_u / V_nom;
-    double v_hat = vel_v / V_nom;
-    double w_hat = vel_w / V_nom;
-    double p_hat = ang_p * (wingspan_m / (2 * V_nom));
+    // Compute normalized states
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
-    double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_m = c_m_0 + c_m_alpha * alpha
-			+ c_m_V * V_hat
-			+ c_m_q * q_hat
-			+ c_m_delta_e * delta_e;
-    double c_L = c_L_0 + c_L_alpha * alpha
-			+ c_L_alpha_sq * pow(alpha,2)
-			+ c_L_V * V_hat
-			+ c_L_q * q_hat
-			+ c_L_delta_e * delta_e;
-    double c_D = c_D_0 + c_D_alpha * alpha
-			+ c_D_alpha_sq * pow(alpha, 2)
-			+ c_D_V * V_hat
-			+ c_D_q * q_hat
-			+ c_D_delta_e * delta_e;
+    double c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * pow(alpha,2) + c_D_q_hat * q_hat + c_D_delta_e * delta_e;
+    double c_L = c_L_0 + c_L_alpha * alpha + c_L_alpha_sq * pow(alpha,2) + c_L_q_hat * q_hat + c_L_delta_e * delta_e;
+    double c_m = c_m_0 + c_m_alpha * alpha + c_m_alpha_sq * pow(alpha,2) + c_m_q_hat * q_hat + c_m_delta_e * delta_e;
+
     double D = c_D * dyn_pressure * planform_sqm;
     double L = c_L * dyn_pressure * planform_sqm;
+    double m = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
 
-    // Rotate from stability frame to body frame
     double X = -cos(alpha) * D + sin(alpha) * L;
     double Z = -sin(alpha) * D - cos(alpha) * L;
-    double M = c_m * dyn_pressure * planform_sqm * mean_aerodynamic_chord_m;
-
     double T = rho * pow(prop_diam_pusher, 4) * c_T_pusher * pow(delta_t, 2);
 
-		// Dynamics
+    // Dynamics
     double theta_dot = ang_q * cos(phi) - ang_r * sin(phi);
-	  double q_dot = gam_5 * ang_p * ang_r - gam_6 * (pow(ang_p,2) - pow(ang_r,2)) + (1/J_yy) * M;
+	double q_dot = gam_5 * ang_p * ang_r - gam_6 * (pow(ang_p,2) - pow(ang_r,2)) + (1/J_yy) * m;
     double u_dot = ang_r * vel_v - ang_q * vel_w + (1 / mass_kg) * (X + T - mass_kg * g * sin(theta));
     double w_dot = ang_q * vel_u - ang_p * vel_v + (1 / mass_kg) * (Z + mass_kg * g * cos(theta) * cos(phi));
 
-		// NOTE: Actuator dynamics are not included here for computational efficiency. The actuators is an isolated system, and is therefore solved a-priori.
-
-		dx[0] = theta_dot;
-		dx[1] = q_dot;
-		dx[2] = u_dot;
-		dx[3] = w_dot;
+    // NOTE: Actuator dynamics are not included here for computational efficiency. The actuators is an isolated system, and is therefore simulated a-priori.
+    dx[0] = u_dot;
+    dx[1] = w_dot;
+    dx[2] = q_dot;
+    dx[3] = theta_dot;
 }
 
 
@@ -248,9 +207,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
     u = mxGetPr(prhs[2]);  /* All inputs at all times */
     params = mxGetPr(prhs[3]);  /* Parameters */
 
-		/* Interpolate to find input at the current time */
-		double u_at_t[nu_cols];
-		compute_u_at_t(t, u, u_at_t, nu_rows, nu_cols);
+    /* Interpolate to find input at the current time */
+    double u_at_t[nu_cols - 1]; // t is at the zeroth index in nu_cols
+    compute_u_at_t(t, u, u_at_t, nu_rows, nu_cols);
 
     /* Create matrix for the return arguments. */
     plhs[0] = mxCreateDoubleMatrix(nx, 1, mxREAL);
