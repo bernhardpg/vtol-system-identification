@@ -33,6 +33,7 @@ maneuver_types = [
     %"roll_211",...
     %"yaw_211",...
     "pitch_211",...
+    "freehand"
     ];
 
 % These maneuvers are skipped either because they contain dropouts or
@@ -136,6 +137,7 @@ elseif strcmp(model_type, "longitudinal")
     fpr_data_lon = {};
     fpr_data_lon.training.pitch_211 = fpr_data.pitch_211(random_indices(1:num_training_maneuvers));
     fpr_data_lon.validation.pitch_211 = fpr_data.pitch_211(random_indices(num_training_maneuvers + 1:end));
+    fpr_data_lon.validation.freehand = fpr_data.freehand(5);
     
     % Save FPR data to file
     save("data/flight_data/selected_data/fpr_data_lon.mat", "fpr_data_lon");

@@ -15,23 +15,23 @@ load("model_identification/equation_error/results/equation_error_coeffs_lon.mat"
 eq_error_lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 
 % Load output-error coefficients
-load("model_identification/output_error/results/output_error_coeffs_lon.mat");
-output_error_lon_model = NonlinearModel(output_error_coeffs_lon, zeros(6,3));
+load("model_identification/output_error/results/output_error_lon_coeffs.mat");
+output_error_lon_model = NonlinearModel(output_error_lon_coeffs, zeros(6,3));
 
-load("model_identification/output_error/results/output_error_coeffs_lon_all_params.mat");
-output_error_lon_model_all_params = NonlinearModel(output_error_coeffs_lon_all_params, zeros(6,3));
+load("model_identification/output_error/results/output_error_lon_all_free_coeffs.mat");
+output_error_lon_model_all_free = NonlinearModel(output_error_lon_all_free_coeffs, zeros(6,3));
 
-load("model_identification/output_error/results/output_error_coeffs_lon_specific_params.mat");
-output_error_lon_model_specific_params = NonlinearModel(output_error_coeffs_lon_specific_params, zeros(6,3));
+load("model_identification/output_error/results/output_error_coeffs_lon_final_coeffs.mat");
+output_error_lon_model_final = NonlinearModel(output_error_coeffs_lon_final_coeffs, zeros(6,3));
 
 % Longitudinal System
 % State = [u w q theta]
 % Input = [delta_e delta_t]
 
-maneuver_types = "pitch_211";
+maneuver_types = ["pitch_211"];
 test_avl_models = false;
 test_nonlin_models = true;
-show_maneuver_plots = true;
+show_maneuver_plots = false;
 show_error_metric_plots = true;
 
 % Simulate maneuvers with different models
@@ -72,10 +72,10 @@ for maneuver_type = maneuver_types
             [y_output_error, error_calculations] = evaluate_model(maneuver, output_error_lon_model);
             error_metrics.output_error{maneuver_i} = error_calculations;
             
-            [y_output_error_all_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_all_params);
+            [y_output_error_all_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_all_free);
             error_metrics.y_output_error_all_params{maneuver_i} = error_calculations;
             
-            [y_output_error_specific_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_specific_params);
+            [y_output_error_specific_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_final);
             error_metrics.y_output_error_specific_params{maneuver_i} = error_calculations;
             
             % Collect all simulations
@@ -115,27 +115,23 @@ if show_error_metric_plots
     end
 end
 
-%%
-load("model_identification/output_error/results/output_error_lon_variances.mat");
-load("model_identification/output_error/results/output_error_lon_all_params_variances.mat");
-load("model_identification/output_error/results/output_error_lon_specific_params_variances.mat");
+load("model_identification/output_error/results/output_error_lon_cr_bounds.mat");
+load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
+load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
 
-%model_params = {avl_coeffs_lon equation_error_coeffs_lon output_error_coeffs_lon output_error_coeffs_lon_all_params};
-%model_variances = {zeros(15,1) zeros(15,1) output_error_lon_variances output_error_lon_all_params_variances};
+% model_params = {output_error_coeffs_lon output_error_lon_all_free_coeffs output_error_coeffs_lon_final_coeffs};
+% model_variances = {output_error_lon_cr_bounds output_error_lon_all_free_cr_bounds output_error_coeffs_lon_final_cr_bounds};
 
-model_params = {output_error_coeffs_lon output_error_coeffs_lon_all_params output_error_coeffs_lon_specific_params};
-model_variances = {output_error_lon_variances output_error_lon_all_params_variances output_error_lon_specific_params_variances};
-
-output_error_cr_bounds = abs(sqrt(output_error_lon_variances)*2./reshape(output_error_coeffs_lon,size(output_error_lon_variances))) * 100;
-output_error_all_params_cr_bounds = abs(sqrt(output_error_lon_all_params_variances)*2./reshape(output_error_coeffs_lon_all_params,size(output_error_lon_all_params_variances))) * 100;
-output_error_specific_params_cr_bounds = abs(sqrt(output_error_lon_specific_params_variances)*2./reshape(output_error_coeffs_lon_specific_params,size(output_error_lon_specific_params_variances))) * 100;
+output_error_cr_bounds = calc_percentage_cr_bound(output_error_lon_coeffs, output_error_lon_cr_bounds);
+output_error_all_free_cr_bounds = calc_percentage_cr_bound(output_error_lon_all_free_coeffs, output_error_lon_all_free_cr_bounds);
+output_error_final_cr_bounds = calc_percentage_cr_bound(output_error_coeffs_lon_final_coeffs, output_error_coeffs_lon_final_cr_bounds);
 
 param_names = ["cD0" "cDa" "cDa2" "cDq" "cDde" "cL0" "cLa" "cLa2" "cLq" "cLde" "cm0" "cma" "cma2" "cmq" "cmde"];
 param_names_latex = ["$c_{D 0}$" "$c_{D \alpha}$" "$c_{D \alpha^2}$" "$c_{D q}$" "$c_{D {\delta_e}}$"...
     "$c_{L 0}$" "$c_{L \alpha}$" "$c_{L \alpha^2}$" "$c_{L q}$" "$c_{L {\delta_e}}$"...
     "$c_{m 0}$" "$c_{m \alpha}$" "$c_{m \alpha^2}$" "$c_{m q}$" "$c_{m {\delta_e}}$"];
 
-create_bar_plot([output_error_cr_bounds output_error_all_params_cr_bounds output_error_specific_params_cr_bounds], ["Output-Error" "Output-Error (all params)" "Output-Error (specific params)"], "2CR %", param_names, param_names_latex);
+create_bar_plot([output_error_cr_bounds output_error_all_free_cr_bounds output_error_final_cr_bounds], ["Output-Error" "Output-Error (all params)" "Output-Error (specific params)"], "2CR %", param_names, param_names_latex);
 
 %%
 model_params = {avl_coeffs_lon equation_error_coeffs_lon output_error_coeffs_lon output_error_coeffs_lon_all_params output_error_coeffs_lon_specific_params};
@@ -157,15 +153,3 @@ for param_i = 1:15
     end
 end
 legend(["AVL" "Equation-Error" "Output-Error" "Output-Error (all params)" "Output-Error (specific params)"],'Location','SouthEast')
-
-
-% param_i = 1;
-% subplot(3,6,param_i)
-% errorbar(0,x_1(param_i),x_1_mads(param_i),'-s','MarkerSize',10,...
-%     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
-% errorbar(1,x_2(param_i),x_2_mads(param_i),'-s','MarkerSize',10,...
-%     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
-% title("c_{Y0}");
-% xlim([-1 3])
-% set(gca,'xticklabel',{[]})
-% ylim(calc_bounds(x_1(param_i), plot_height));

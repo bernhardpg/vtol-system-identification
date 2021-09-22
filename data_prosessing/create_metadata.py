@@ -64,36 +64,12 @@ set_maneuver_times(
     exp2, pitch_211_maneuver_indices, pitch_211_maneuver_times, "pitch_211"
 )
 
-
-# Todo: Outdated and should be removed
-# Pretend freehand times are the last maneuvers, just for simplicity
-# Does not make a difference for anything
+# Pick some freehand maneuvers for validation
 exp2_freehand_times = {
-    #"18": [180, 195],
-    "18": [135, 150],
-#    "19": [195, 210],
-#    "20": [210, 225],
-#    "21": [225, 240],
-#    "22": [240, 255],
-#    "23": [255, 270],
-#    "24": [270, 285],
-#    "25": [285, 300],
-#    "26": [300, 315],
-#    "27": [315, 330],
-#    "28": [330, 345],
-#    "29": [345, 360],
-#    "30": [360, 375],
-#    "31": [375, 390],
-#    "32": [390, 405],
-#    "33": [405, 420],
-#    "34": [420, 435],
-#    "35": [435, 450],
-#    "36": [450, 465],
-#    "37": [465, 480],
-#    "38": [480, 495],
-#    "39": [495, 510],
-#    "40": [510, 525],
-#    "41": [525, 530],
+    "18": [135, 150], # transition
+    "19": [193, 206], # some roll stuff
+    "20": [212, 229], # some mixed stuff
+    "21": [338, 349],
 }
 for key, value in exp2_freehand_times.items():
     exp2["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])
@@ -235,19 +211,20 @@ set_maneuver_times(exp3, sweep_maneuver_indices, {}, "sweep")
 
 # Add freehand times
 exp3_freehand_times = {
-    192: [4067, 4080],
-    193: [4095, 4110],
-    194: [4110, 4125],
-    195: [4180, 4195],
-    196: [4195, 4210],
-    197: [4210, 4225],
-    198: [4225, 4240],
-    199: [4240, 4255],
-    200: [4255, 4270],
-    201: [4270, 4285],
-    202: [4285, 4300],
-    203: [4300, 4315],
-    204: [4315, 4325],
+    192: [1283, 1302],
+#    192: [4067, 4080],
+#    193: [4095, 4110],
+#    194: [4110, 4125],
+#    195: [4180, 4195],
+#    196: [4195, 4210],
+#    197: [4210, 4225],
+#    198: [4225, 4240],
+#    199: [4240, 4255],
+#    200: [4255, 4270],
+#    201: [4270, 4285],
+#    202: [4285, 4300],
+#    203: [4300, 4315],
+#    204: [4315, 4325],
 }
 for key, value in exp3_freehand_times.items():
     exp3["Maneuvers"][str(key)] = create_maneuver_dict("freehand", value[0], value[1])
