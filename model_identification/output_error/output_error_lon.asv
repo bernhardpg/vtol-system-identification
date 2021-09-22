@@ -13,10 +13,11 @@ load("avl_model/avl_results/avl_coeffs_lon.mat");
 
 % Keep some coeffs from AVL
 initial_coeffs = equation_error_coeffs_lon;
-coeffs_to_keep_from_avl = [6 7 9]; % c_L_0, c_L_alpha, c_L_q
+coeffs_to_keep_from_avl = [6 7 9]; % c_L_0, c_L_alpha
 for i = coeffs_to_keep_from_avl
    initial_coeffs(i) = avl_coeffs_lon(i);
 end
+initial_coeffs(4) = 0;
 lon_model = NonlinearModel(initial_coeffs, zeros(6,3));
 
 maneuver_types = "pitch_211";

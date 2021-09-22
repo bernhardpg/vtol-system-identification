@@ -1,7 +1,7 @@
-function [] = create_bar_plot(model_metric, model_names, metric_name, variable_names)
+function [] = create_bar_plot(model_metric, model_names, metric_name, variable_names, variable_names_latex)
     figure
     X = categorical(variable_names);
-    X = reordercats(X,variable_names);
+    X = reordercats(X,string(X));
     Y = model_metric';
     b = bar(X, Y);
     legend(model_names, "Location", "SouthEast")
@@ -14,4 +14,6 @@ function [] = create_bar_plot(model_metric, model_names, metric_name, variable_n
         text(xtips,ytips,labels,'HorizontalAlignment','center',...
             'VerticalAlignment','bottom')
     end
+    
+    set(gca,'xtick',X,'XTickLabel',variable_names_latex,'TickLabelInterpreter','latex');
 end

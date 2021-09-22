@@ -18,16 +18,18 @@ eq_error_lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 load("model_identification/output_error/results/output_error_coeffs_lon.mat");
 output_error_lon_model = NonlinearModel(output_error_coeffs_lon, zeros(6,3));
 
-load("model_identification/output_error/results/output_error_coeffs_lon_all_free.mat");
-output_error_lon_model_all_params = NonlinearModel(output_error_coeffs_lon_all_free, zeros(6,3));
+load("model_identification/output_error/results/output_error_coeffs_lon_all_params.mat");
+output_error_lon_model_all_params = NonlinearModel(output_error_coeffs_lon_all_params, zeros(6,3));
 
 % Longitudinal System
 % State = [u w q theta]
 % Input = [delta_e delta_t]
 
 maneuver_types = "pitch_211";
-test_avl_models = true;
+test_avl_models = false;
 test_nonlin_models = true;
+show_maneuver_plots = false;
+show_error_metric_plots = false;
 
 % Simulate maneuvers with different models
 
@@ -56,7 +58,9 @@ for maneuver_type = maneuver_types
             % Compare with real flight data
             model_names = ["Real data" "State Space (AVL)" "Nonlinear (AVL)"];
             plot_styles = ["-" "-" "-"];
-            maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
+            if show_maneuver_plots
+                maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
+            end
         end
         if test_nonlin_models
             [y_eq_error, error_calculations] = evaluate_model(maneuver, eq_error_lon_model);
@@ -74,28 +78,80 @@ for maneuver_type = maneuver_types
             % Compare with real flight data
             model_names = ["Real data" "Equation-Error" "Output-Error" "Output-Error (all params)"];
             plot_styles = ["-" "-" "-" "-"];
-            maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
+            if show_maneuver_plots
+                maneuver.show_plot_longitudinal_validation(t_sim, y_all_models, model_names, plot_styles);
+            end
         end
     end
 end
 
-if test_avl_models
-    [gof_avl_ss, tic_avl_ss, an_avl_ss] = evaluate_error_metrics(error_metrics.avl_ss);
-    [gof_avl_nonlin, tic_avl_non_li, an_avl_ss] = evaluate_error_metrics(error_metrics.avl_nonlin);
+if show_error_metric_plots
+    if test_avl_models
+        [gof_avl_ss, tic_avl_ss, an_avl_ss] = evaluate_error_metrics(error_metrics.avl_ss);
+        [gof_avl_nonlin, tic_avl_nonlin, an_avl_nonlin] = evaluate_error_metrics(error_metrics.avl_nonlin);
 
-    model_names = ["Equation-Error", "Output-Error", "Output-Error (all free)"];
-    create_bar_plot([gof_eq_error; gof_output_error; gof_output_error_all_free], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
-    create_bar_plot([tic_eq_error; tic_output_error; tic_output_error_all_free], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
-    create_bar_plot([an_eq_error; an_output_error; an_output_error_all_free], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
+        model_names = ["State-Space (AVL)", "Nonlinear (AVL)"];
+        create_bar_plot([gof_avl_ss; gof_avl_nonlin], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
+        create_bar_plot([tic_avl_ss; tic_avl_nonlin], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
+        create_bar_plot([an_avl_ss; an_avl_nonlin], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
+    end
+
+    if test_nonlin_models
+        [gof_eq_error, tic_eq_error, an_eq_error] = evaluate_error_metrics(error_metrics.eq_error);
+        [gof_output_error, tic_output_error, an_output_error] = evaluate_error_metrics(error_metrics.output_error);
+        [gof_output_error_all_free, tic_output_error_all_free, an_output_error_all_free] = evaluate_error_metrics(error_metrics.y_output_error_all_params);
+
+        model_names = ["Equation-Error", "Output-Error", "Output-Error (all free)"];
+        create_bar_plot([gof_eq_error; gof_output_error; gof_output_error_all_free], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
+        create_bar_plot([tic_eq_error; tic_output_error; tic_output_error_all_free], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
+        create_bar_plot([an_eq_error; an_output_error; an_output_error_all_free], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
+    end
 end
 
-if test_nonlin_models
-    [gof_eq_error, tic_eq_error, an_eq_error] = evaluate_error_metrics(error_metrics.eq_error);
-    [gof_output_error, tic_output_error, an_output_error] = evaluate_error_metrics(error_metrics.output_error);
-    [gof_output_error_all_free, tic_output_error_all_free, an_output_error_all_free] = evaluate_error_metrics(error_metrics.y_output_error_all_params);
+%%
+load("model_identification/output_error/results/output_error_lon_variances.mat");
+load("model_identification/output_error/results/output_error_lon_all_params_variances.mat");
 
-    model_names = ["Equation-Error", "Output-Error", "Output-Error (all free)"];
-    create_bar_plot([gof_eq_error; gof_output_error; gof_output_error_all_free], model_names, "Goodness-of-Fit (GOF)", {'u','w','q','\theta'});
-    create_bar_plot([tic_eq_error; tic_output_error; tic_output_error_all_free], model_names, "Theils-Inequality-Coefficient (TIC)", {'u','w','q','\theta'});
-    create_bar_plot([an_eq_error; an_output_error; an_output_error_all_free], model_names, "Average-Normalized Error Measures", {'ANMAE','ANRMSE'});
+%model_params = {avl_coeffs_lon equation_error_coeffs_lon output_error_coeffs_lon output_error_coeffs_lon_all_params};
+%model_variances = {zeros(15,1) zeros(15,1) output_error_lon_variances output_error_lon_all_params_variances};
+
+model_params = {output_error_coeffs_lon output_error_coeffs_lon_all_params};
+model_variances = {output_error_lon_variances output_error_lon_all_params_variances};
+
+output_error_cr_bounds = sqrt(output_error_lon_variances)*2./output_error_coeffs_lon';
+
+param_names = {'c_{D 0}' 'c_{D \alpha}' 'c_{D \alpha^2}' 'c_{D q}' 'c_{D {\delta_e}}'...
+    'c_{L 0}' 'c_{L \alpha}' 'c_{L \alpha^2}' 'c_{L q}' 'c_{L {\delta_e}}'...
+    'c_{m 0}' 'c_{m \alpha}' 'c_{m \alpha^2}' 'c_{m q}' 'c_{m {\delta_e}}'};
+
+create_bar_plot([; sqrt(output_error_lon_all_params_variances)*2./output_error_coeffs_lon_all_params'], ["Output-Error" "Output-Error (all_params)"], "2CR %", param_names);
+
+%%
+num_models = numel(model_params);
+figure
+for param_i = 1:15
+    for model_i = 1:num_models
+        subplot(3,5,param_i);
+        param = model_params{model_i}(param_i);
+        covar = model_variances{model_i}(param_i);
+        stddev = 2 * sqrt(covar); % Approximation taken from Tischler, see (29) in Dorobantu2013
+        cr_percentage = abs(stddev / param) * 100;
+        errorbar(model_i,param,stddev,'-s','MarkerSize',10); hold on
+        xlim([0 num_models+1])
+        set(gca,'xticklabel',{[]})
+        title(param_names(param_i))
+    end
 end
+legend(["AVL" "Equation-Error" "Output-Error" "Output-Error (all params)"],'Location','SouthEast')
+
+
+% param_i = 1;
+% subplot(3,6,param_i)
+% errorbar(0,x_1(param_i),x_1_mads(param_i),'-s','MarkerSize',10,...
+%     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
+% errorbar(1,x_2(param_i),x_2_mads(param_i),'-s','MarkerSize',10,...
+%     'MarkerEdgeColor','red','MarkerFaceColor','red'); hold on
+% title("c_{Y0}");
+% xlim([-1 3])
+% set(gca,'xticklabel',{[]})
+% ylim(calc_bounds(x_1(param_i), plot_height));

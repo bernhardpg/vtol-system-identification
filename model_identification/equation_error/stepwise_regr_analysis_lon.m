@@ -20,7 +20,7 @@ dt = fpr_data_lon.training.pitch_211(1).Dt;
 dependent_variable_names = ["C_L" "C_D" "C_m"];
 independent_variable_names = ["Alpha" "AngQHat" "DeltaE"];
 regr_names = ["alpha" "q_hat" "delta_e"];
-nonlin_regr_names = ["alpha_sq"];
+nonlin_regr_names = ["alpha_sq" "alpha_q_hat" "alpha_delta_e"];
 
 %%%
 % Load training data
@@ -36,7 +36,7 @@ for data_type = independent_variable_names
     regr = [regr collect_data_from_multiple_maneuvers(fpr_data_lon.training, maneuver_types, data_type)];
 end
 
-nonlin_regr = [regr(:,1) .^ 2];
+nonlin_regr = [regr(:,1).^2 regr(:,1).*regr(:,2) regr(:,1).*regr(:,3)];
 
 %%%
 % Load validation data
@@ -51,7 +51,7 @@ for data_type = independent_variable_names
     regr_val = [regr_val collect_data_from_multiple_maneuvers(fpr_data_lon.validation, maneuver_types, data_type)];
 end
 
-nonlin_regr_val = [regr_val(:,1) .^ 2];
+nonlin_regr_val = [regr_val(:,1).^2 regr_val(:,1).*regr_val(:,2) regr_val(:,1).*regr_val(:,3)];
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
@@ -64,7 +64,7 @@ std_regr_order_lon = ["bias" "alpha" "alpha_sq" "q_hat" "delta_e"];
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
-min_r_sq_change = 1.5; % Demand at least X% improvement to add a regressor
+min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
 
 z = zs.C_D;
 z_val = zs_val.C_D;

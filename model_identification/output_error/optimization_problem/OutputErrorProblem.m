@@ -190,7 +190,7 @@ classdef OutputErrorProblem
             convergence_reason = "Not converged";
             
             abs_noise_covar_change = abs(diag(R_hat_old - R_hat_new) ./ (diag(R_hat_old)));
-            if all((abs_noise_covar_change) < 0.05)
+            if all((abs_noise_covar_change) < 0.01)
                 has_converged = true;
                 convergence_reason = "All covariances smaller than specified treshold";
                 disp("Converged: " + convergence_reason);
@@ -204,20 +204,20 @@ classdef OutputErrorProblem
             eucl_params_change = norm(reshape((params_new - params_old),[numel(params_old) 1]),2);
             eucl_prev_params = norm(reshape((params_old),[numel(params_old) 1]),2);
             param_change_ratio = eucl_params_change / eucl_prev_params;
-            if param_change_ratio < 0.01
+            if param_change_ratio < 0.001
                has_converged = true;
                convergence_reason = "Parameter change smaller than specified threshold";
                disp("Converged: " + convergence_reason);
             end
 
             abs_cost_change = abs((cost_new - cost_old) / cost_old);
-            if abs_cost_change < 0.01
+            if abs_cost_change < 0.001
                has_converged = true;
                convergence_reason = "Cost change smaller than specified threshold";
                disp("Converged: " + convergence_reason);
             end
 
-            if all(abs(cost_gradient) < 0.1)
+            if all(abs(cost_gradient) < 0.01)
                has_converged = true;
                convergence_reason = "All gradients smaller than specificed treshold";
                disp("Converged: " + convergence_reason);
@@ -287,7 +287,28 @@ classdef OutputErrorProblem
         function [params_update, information_matrix, cost_gradient] = calc_params_update(obj, params_to_update, R_hat, residuals, params, f_calc_y)            
             [N, n_outputs] = size(residuals);
             n_params = numel(params_to_update);
-
+            
+            sensitivity_matrices = obj.calc_sensitivity_matrices(N, n_outputs, n_params, params_to_update, params, f_calc_y);
+            
+            % Calculate information matrix
+            information_matrix_terms = zeros(n_params, n_params, N);
+            for timestep_i = 1:N
+                information_matrix_terms(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ sensitivity_matrices(:,:,timestep_i));    
+            end
+            information_matrix = sum(information_matrix_terms,3);
+            
+            % Calculate cost_gradient
+            cost_gradient_all_i = zeros(n_params, 1, N);
+            for timestep_i = 1:N
+                cost_gradient_all_i(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ residuals(timestep_i,:)');    
+            end
+            cost_gradient = -sum(cost_gradient_all_i,3);
+            
+            % Compute param_update
+            params_update = - information_matrix \ cost_gradient;
+        end
+        
+        function sensitivity_matrices = calc_sensitivity_matrices(obj, N, n_outputs, n_params, params_to_update, params, f_calc_y)
             % Compute a sensitivity matrix (dy_dtheta) for each timestep
             sensitivity_matrices = zeros(N, n_outputs, n_params);
             for j = 1:n_params                
@@ -308,23 +329,6 @@ classdef OutputErrorProblem
                 sensitivity_matrices(:,:,j) = dy_dtheta_j;
             end
             sensitivity_matrices = permute(sensitivity_matrices,[2 3 1]); % Get S in the correct dimensions: (n_outputs, n_params, n_timesteps)
-            
-            % Calculate information matrix
-            information_matrix_terms = zeros(n_params, n_params, N);
-            for timestep_i = 1:N
-                information_matrix_terms(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ sensitivity_matrices(:,:,timestep_i));    
-            end
-            information_matrix = sum(information_matrix_terms,3);
-            
-            % Calculate cost_gradient
-            cost_gradient_all_i = zeros(n_params, 1, N);
-            for timestep_i = 1:N
-                cost_gradient_all_i(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ residuals(timestep_i,:)');    
-            end
-            cost_gradient = -sum(cost_gradient_all_i,3);
-            
-            % Compute param_update
-            params_update = - information_matrix \ cost_gradient;
         end
         
         function y_pred = sim_model_lat(obj, lat_params, lon_params, maneuver_i)
