@@ -20,20 +20,20 @@ time_resolution = 0.02; % 50 Hz
 knot_points_for_spline_derivation_dt = 0.1;
 
 % Plot settings
-save_raw_plots = false;
-save_kinematic_consistency_plots = false;
-save_lateral_signal_plots = false;
+save_raw_plots = true;
+save_kinematic_consistency_plots = true;
+save_lateral_signal_plots = true;
 save_longitudinal_signal_plots = false;
 
-%model_type = "lateral_directional";
-model_type = "longitudinal";
+model_type = "lateral_directional";
+%model_type = "longitudinal";
 
 % Maneuver settings
 maneuver_types = [
-    %"roll_211",...
-    %"yaw_211",...
-    "pitch_211",...
-    "freehand"
+    "roll_211",...
+    "yaw_211",...
+    %"pitch_211",...
+    %"freehand"
     ];
 
 % These maneuvers are skipped either because they contain dropouts or
@@ -41,8 +41,8 @@ maneuver_types = [
 % The entire data loading scheme would benefit from being reconsidered, but
 % there is not time for this.
 maneuvers_to_skip = {};
-maneuvers_to_skip.("roll_211") = [2 3 4 6 8 9 11 12 14 15 16 17 19 20];
-maneuvers_to_skip.("yaw_211") = [1:5 7 8:11 13 14 16 17 18 23 24 25 26 27 30 32 34 35 36 38 39 40 41];
+maneuvers_to_skip.("roll_211") = [6 11 12 14 20];
+maneuvers_to_skip.("yaw_211") = [1:11 18 22:27 30 35:39 41];
 maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 19 21 24 25 32 35];
 maneuvers_to_skip.("freehand") = [];
 
@@ -122,10 +122,21 @@ end
 
 if strcmp(model_type, "lateral_directional")
     fpr_data_lat = {};
-    fpr_data_lat.validation.roll_211 = fpr_data.roll_211([3 4]);
-    fpr_data_lat.training.roll_211 = fpr_data.roll_211([1 2 5 6]);
-    fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211([6 8 9 10]);
-    fpr_data_lat.training.yaw_211 = fpr_data.yaw_211([1:5 7 11 12]);
+    % Roll maneuvers
+    num_roll_maneuvers = length(fpr_data.roll_211);
+    random_indices = randperm(num_roll_maneuvers);
+    num_training_maneuvers = floor(0.8 * num_roll_maneuvers);
+    
+    fpr_data_lat.training.roll_211 = fpr_data.roll_211(random_indices(1:num_training_maneuvers));
+    fpr_data_lat.validation.roll_211 = fpr_data.roll_211(random_indices(num_training_maneuvers + 1:end));
+    
+    % Yaw maneuvers
+    num_yaw_maneuvers = length(fpr_data.yaw_211);
+    random_indices = randperm(num_yaw_maneuvers);
+    num_training_maneuvers = floor(0.8 * num_yaw_maneuvers);
+    
+    fpr_data_lat.training.yaw_211 = fpr_data.yaw_211(random_indices(1:num_training_maneuvers));
+    fpr_data_lat.validation.yaw_211 = fpr_data.yaw_211(random_indices(num_training_maneuvers + 1:end));
 
     % Save FPR data to file
     save("data/flight_data/selected_data/fpr_data_lat.mat", "fpr_data_lat");
@@ -137,7 +148,6 @@ elseif strcmp(model_type, "longitudinal")
     fpr_data_lon = {};
     fpr_data_lon.training.pitch_211 = fpr_data.pitch_211(random_indices(1:num_training_maneuvers));
     fpr_data_lon.validation.pitch_211 = fpr_data.pitch_211(random_indices(num_training_maneuvers + 1:end));
-    fpr_data_lon.validation.freehand = fpr_data.freehand(5);
     
     % Save FPR data to file
     save("data/flight_data/selected_data/fpr_data_lon.mat", "fpr_data_lon");

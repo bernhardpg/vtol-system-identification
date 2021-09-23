@@ -19,9 +19,9 @@ maneuver_types = [
 dt = fpr_data_lat.training.roll_211(1).Dt;
 
 dependent_variable_names = ["C_Y" "C_l" "C_n"];
-independent_variable_names = ["AngPHat" "AngRHat" "VelVHat" "DeltaA" "DeltaR"];
-regr_names = ["p_hat" "r_hat" "v_hat" "delta_a" "delta_r"];
-nonlin_regr_names = ["v_sq"];
+independent_variable_names = ["Beta" "AngPHat" "AngRHat" "DeltaA" "DeltaR"];
+regr_names = ["beta" "p_hat" "r_hat" "delta_a" "delta_r"];
+nonlin_regr_names = ["beta_sq"];
 
 %%%
 % Load training data
@@ -37,7 +37,7 @@ for data_type = independent_variable_names
     regr = [regr collect_data_from_multiple_maneuvers(fpr_data_lat.training, maneuver_types, data_type)];
 end
 
-nonlin_regr = [regr(:,3) .^ 2];
+nonlin_regr = [regr(:,1).^2];
 
 %%%
 % Load validation data
@@ -52,12 +52,12 @@ for data_type = independent_variable_names
     regr_val = [regr_val collect_data_from_multiple_maneuvers(fpr_data_lat.validation, maneuver_types, data_type)];
 end
 
-nonlin_regr_val = [regr_val(:,3) .^ 2];
+nonlin_regr_val = [regr_val(:,3).^2];
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
 % For coefficient storage
-std_regr_order_lat = ["bias" "v_hat" "p_hat" "r_hat" "delta_a" "delta_r"];
+std_regr_order_lat = ["bias" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%

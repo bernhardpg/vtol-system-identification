@@ -5,6 +5,8 @@ import numpy as np
 # A helper script that generates metadata for the processing the obtained logs.
 # The metadata is used by data_handler.m to know where to look for what data.
 
+# This script is mostly hard-coded and not very readable. Only experiment 2 and 3 are used. The maneuver number to those in the folder plots_from_exp_2_exp_3.
+
 
 def create_maneuver_dict(maneuver_type="not_set", maneuver_start=-1, maneuver_end=-1):
     d = {
@@ -152,16 +154,30 @@ roll_211_nt_maneuver_indices = np.arange(57, 100)
 
 # Correct roll maneuver times
 roll_211_maneuver_times = {
-    37: [1347.5, 1363],  # Take 1,2,3,4 in one go
-    41: [1375, 1379.2],  # Take 5 by itself
-    43: [1386, 1397],  # Take 7, 8, 9 in one go
+    37: [1347, 1351], # 1
+    38: [1352, 1355.5],
+    39: [1356, 1360],
+    40: [1359, 1362.8], # 4
+    41: [1375, 1379.2], # 5
+    # Skip 6
+    43: [1385.5, 1390.5], # 7
+    44: [1389.5, 1394], # 8
+    45: [1393, 1397], # 9
     46: [1425, 1429.5],  # Clip away dropout on 10
-    49: [-1, 1480.5],  # 13, 14, 15, 16, 17 in one go
-    54: [1491, 1502.5],  # 18, 19 in one go
+    # Skip 11
+    # Skip 12
+    49: [1455.5, 1460.5], # 13
+    #50: [1460.5, 1465], # Skip 14
+    51: [1465.5, 1470.5], # 15
+    52: [1470.5, 1476.5],  # 16
+    53: [1476, 1480.5],  # 17
+    54: [1491, 1497.5], # 18
+    55: [1496.5, 1502.5], # 19
 }
 
 set_maneuver_times(exp3, roll_211_maneuver_indices, roll_211_maneuver_times, "roll_211")
 
+# No throttle maneuvers are not used
 roll_211_nt_maneuver_times = {
     57: [-1, 1551],  # 57 and 58
     61: [-1, 1595],  # 61 and 62
@@ -181,17 +197,41 @@ yaw_211_maneuver_indices = np.hstack((np.arange(100, 113), np.arange(149, 177)))
 yaw_211_nt_maneuver_indices = np.arange(113, 149)
 
 yaw_211_maneuver_times = {
-    105: [2261, 2272],  # 6,7
-    111: [-1, 2342],  # 12, 13, next maneuver (14) start at index 149
-    114: [3073,-1], # 15
-    118: [3157,-1], # 15
-    161: [-1, 3256],  # 26
+    # Skip 1,2,3,4,5
+    #105: [2261, 2272],  # skip 6,7
+    # Skip 8,9 dropout
+    # Skip 10 disturbance
+    # Skip 11 disturbance
+    111: [-1, 2335.5],  # 12
+    112: [-1, -1],  # 13
+    149: [-1, 3071.3],  # 14 starts at index 149!
+    150: [3073,3081], # 15
+    151: [-1,-1], # 16 Small disturbance but I think this is okay
+    152: [-1,3140], # 17
+    #153: [-1,3147], # 18 Skip 18
+    154: [3157,-1], # 19
+    155: [-1,-1], # 20
+    156: [3195,-1], # 21
+    #157: [3195,-1], # Skip 22
+    #158: [-1,-1], # Skip 23
+    #159: [-1,-1], # Skip 24
+    #160: [-1,-1], # Skip 25, dropout
+    #161: [-1, 3256],  # 26 Skip 26
+    #162: [-1, -1],  # Skip 27
     163: [3273, -1],  # 28
-    164: [3282, -1],  # 29
-    166: [3324.5, 3333],  # 31
-    168: [3350, 3364],  # 33, 34
-    172: [3391.5, 3404],  # 37, 38
-    # 40 41 can be included if I need more data
+    #164: [3282, -1],  # Skip 29
+    #165: [-1, -1],  # Skip 30
+    166: [3325, 3332],  # 31
+    167: [3343, 3349.5],  # 32
+    168: [3350, 3357],  # 33
+    169: [3356, 3364],  # 34
+    #170: [-1, -1],  # 35 Dropout
+    #171: [-1, -1],  # 36 Disturbance
+    #172: [3391.5, -1],  # 37
+    #173: [01, 3404],  # 38
+    #174: [-1, -1],  # 39
+    175: [3409.5, 3415.5],  # 40
+    #176: [3414.5, -1],  # 41
 }
 
 set_maneuver_times(exp3, yaw_211_maneuver_indices, yaw_211_maneuver_times, "yaw_211")
@@ -233,7 +273,6 @@ for key, value in exp3_freehand_times.items():
 ##############
 
 # Create metadata object
-breakpoint()
 metadata = {"Experiments": [exp2, exp3]}
 
 with open("../data/flight_data/metadata.json", "w") as outfile:
