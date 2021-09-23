@@ -24,6 +24,7 @@ output_error_lon_model_all_free = NonlinearModel(output_error_lon_all_free_coeff
 load("model_identification/output_error/results/output_error_coeffs_lon_final_coeffs.mat");
 output_error_lon_model_final = NonlinearModel(output_error_coeffs_lon_final_coeffs, zeros(6,3));
 
+%%
 % Longitudinal System
 % State = [u w q theta]
 % Input = [delta_e delta_t]
@@ -117,21 +118,24 @@ end
 
 load("model_identification/output_error/results/output_error_lon_cr_bounds.mat");
 load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
-load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
+%load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
 
 % model_params = {output_error_coeffs_lon output_error_lon_all_free_coeffs output_error_coeffs_lon_final_coeffs};
 % model_variances = {output_error_lon_cr_bounds output_error_lon_all_free_cr_bounds output_error_coeffs_lon_final_cr_bounds};
 
-output_error_cr_bounds = calc_percentage_cr_bound(output_error_lon_coeffs, output_error_lon_cr_bounds);
-output_error_all_free_cr_bounds = calc_percentage_cr_bound(output_error_lon_all_free_coeffs, output_error_lon_all_free_cr_bounds);
-output_error_final_cr_bounds = calc_percentage_cr_bound(output_error_coeffs_lon_final_coeffs, output_error_coeffs_lon_final_cr_bounds);
+output_error_cr_bounds_percentage = calc_percentage_cr_bound(output_error_lon_coeffs, output_error_lon_cr_bounds);
+output_error_all_free_cr_bounds_percentage = calc_percentage_cr_bound(output_error_lon_all_free_coeffs, output_error_lon_all_free_cr_bounds);
+output_error_final_cr_bounds_percentage = calc_percentage_cr_bound(output_error_coeffs_lon_final_coeffs, output_error_coeffs_lon_final_cr_bounds);
 
 param_names = ["cD0" "cDa" "cDa2" "cDq" "cDde" "cL0" "cLa" "cLa2" "cLq" "cLde" "cm0" "cma" "cma2" "cmq" "cmde"];
 param_names_latex = ["$c_{D 0}$" "$c_{D \alpha}$" "$c_{D \alpha^2}$" "$c_{D q}$" "$c_{D {\delta_e}}$"...
     "$c_{L 0}$" "$c_{L \alpha}$" "$c_{L \alpha^2}$" "$c_{L q}$" "$c_{L {\delta_e}}$"...
     "$c_{m 0}$" "$c_{m \alpha}$" "$c_{m \alpha^2}$" "$c_{m q}$" "$c_{m {\delta_e}}$"];
 
-create_bar_plot([output_error_cr_bounds output_error_all_free_cr_bounds output_error_final_cr_bounds], ["Output-Error" "Output-Error (all params)" "Output-Error (specific params)"], "2CR %", param_names, param_names_latex);
+create_bar_plot([output_error_cr_bounds_percentage output_error_all_free_cr_bounds_percentage output_error_final_cr_bounds_percentage], ["Output-Error" "Output-Error (all params)" "Output-Error (specific params)"], "2CR %", param_names, param_names_latex);
+
+cr_bounds_means = [mean(fillmissing(output_error_cr_bounds_percentage,'constant',0)) mean(fillmissing(output_error_all_free_cr_bounds_percentage, 'constant',0)) mean(fillmissing(output_error_final_cr_bounds_percentage, 'constant',0))];
+create_bar_plot(cr_bounds_means, ["Output-Error" "Output-Error (all params)" "Output-Error (specific params)"], "2CR %", "Average CR Bound", param_names_latex);
 
 %%
 model_params = {avl_coeffs_lon equation_error_coeffs_lon output_error_coeffs_lon output_error_coeffs_lon_all_params output_error_coeffs_lon_specific_params};
