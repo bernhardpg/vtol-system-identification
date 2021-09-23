@@ -17,6 +17,8 @@ classdef NonlinearModel
             obj.Params.V_nom = V_nom;
             obj.Params.alpha_nom = alpha_nom;
             obj.Params.delta_e_nom = delta_e_nom;
+            obj.Params.delta_a_nom = delta_a_nom;
+            obj.Params.delta_r_nom = delta_r_nom;
             obj.Params.gam_1 = gam(1);
             obj.Params.gam_2 = gam(2);
             obj.Params.gam_3 = gam(3);
@@ -140,15 +142,20 @@ classdef NonlinearModel
             lon_state_at_t = num2cell(lon_state_at_t);
             [u, w, q, theta] = lon_state_at_t{:};
             
+            % Calculate sideslip angle
+            V = sqrt(u^2 + v^2 + w^2);
+            alpha = atan2(w,u) - obj.Params.alpha_nom;
+            beta = asin(v/V);
+            
             % Calculate forces and moments
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
-            explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
+            explanatory_vars_lat = [1 beta p_hat r_hat delta_a delta_r];
             explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
             
             [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
-            [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure);
+            [X, Y, Z] = calc_forces(obj, c_X, c_Y, c_Z, dyn_pressure, alpha);
             [l, m, n] = calc_moments(obj, c_l, c_m, c_n, dyn_pressure);
             
             % Dynamics

@@ -51,6 +51,8 @@ c_Q_top = 0;
 V_nom = 21; % Nominal airspeed, m/s
 alpha_nom = 3 / 180 * pi;
 delta_e_nom = -0.0985;
+delta_a_nom = 0.0529;
+delta_r_nom = 0;
 
 % Load control surface properties
 control_surface_constants;
