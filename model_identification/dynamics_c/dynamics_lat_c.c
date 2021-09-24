@@ -74,8 +74,8 @@ void compute_dx(
     */
 
     // Extract parameters
-    double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom,
-        gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy;
+    double rho, mass_kg, g, wingspan_m, mean_aerodynamic_chord_m, planform_sqm, V_nom, alpha_nom, delta_e_nom,
+        gam_1, gam_2, gam_3, gam_4, gam_5, gam_6, gam_7, gam_8, J_yy, prop_diam_pusher, c_T_pusher;
 
     rho = p[0];
     mass_kg = p[1];
@@ -84,40 +84,44 @@ void compute_dx(
     mean_aerodynamic_chord_m = p[4];
     planform_sqm = p[5];
     V_nom = p[6];
-    gam_1 = p[7];
-    gam_2 = p[8];
-    gam_3 = p[9];
-    gam_4 = p[10];
-    gam_5 = p[11];
-    gam_6 = p[12];
-    gam_7 = p[13];
-    gam_8 = p[14];
-    J_yy = p[15];
+    alpha_nom = p[7];
+    delta_e_nom = p[8];
+    gam_1 = p[9];
+    gam_2 = p[10];
+    gam_3 = p[11];
+    gam_4 = p[12];
+    gam_5 = p[13];
+    gam_6 = p[14];
+    gam_7 = p[15];
+    gam_8 = p[16];
+    J_yy = p[17];
+    prop_diam_pusher = p[18];
+    c_T_pusher = p[19];
 
-    double c_Y_0, c_Y_v, c_Y_p, c_Y_r, c_Y_delta_a, c_Y_delta_r,
-           c_l_0, c_l_v, c_l_p, c_l_r, c_l_delta_a, c_l_delta_r,
-           c_n_0, c_n_v, c_n_p, c_n_r, c_n_delta_a, c_n_delta_r;
+    double c_Y_0, c_Y_beta, c_Y_p, c_Y_r, c_Y_delta_a, c_Y_delta_r,
+           c_l_0, c_l_beta, c_l_p, c_l_r, c_l_delta_a, c_l_delta_r,
+           c_n_0, c_n_beta, c_n_p, c_n_r, c_n_delta_a, c_n_delta_r;
 
-    c_Y_0 = p[16];
-    c_Y_v = p[17];
-    c_Y_p = p[18];
-    c_Y_r = p[19];
-    c_Y_delta_a = p[20];
-    c_Y_delta_r = p[21];
+    c_Y_0 = p[20];
+    c_Y_beta = p[21];
+    c_Y_p = p[22];
+    c_Y_r = p[23];
+    c_Y_delta_a = p[24];
+    c_Y_delta_r = p[25];
 
-    c_l_0 = p[22];
-    c_l_v = p[23];
-    c_l_p = p[24];
-    c_l_r = p[25];
-    c_l_delta_a = p[26];
-    c_l_delta_r = p[27];
+    c_l_0 = p[26];
+    c_l_beta = p[27];
+    c_l_p = p[28];
+    c_l_r = p[29];
+    c_l_delta_a = p[30];
+    c_l_delta_r = p[31];
 
-    c_n_0 = p[28];
-    c_n_v = p[29];
-    c_n_p = p[30];
-    c_n_r = p[31];
-    c_n_delta_a = p[32];
-    c_n_delta_r = p[33];
+    c_n_0 = p[32];
+    c_n_beta = p[33];
+    c_n_p = p[34];
+    c_n_r = p[35];
+    c_n_delta_a = p[36];
+    c_n_delta_r = p[37];
 
     // Extract state
     double phi, ang_p, ang_r, vel_v;
@@ -142,6 +146,7 @@ void compute_dx(
 
     // Calculate forces and moments
     double V = sqrt(pow(vel_u, 2) + pow(vel_v, 2) + pow(vel_w, 2));
+    double beta = asin(vel_v / V);
     double dyn_pressure = 0.5 * rho * pow(V, 2);
 
     // Compute normalized states
@@ -152,9 +157,9 @@ void compute_dx(
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
     double r_hat = ang_r * (wingspan_m / (2 * V_nom));
 
-    double c_Y = c_Y_0 + c_Y_v * v_hat + c_Y_p * p_hat + c_Y_r * r_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
-    double c_l = c_l_0 + c_l_v * v_hat + c_l_p * p_hat + c_l_r * r_hat + c_l_delta_a * delta_a + c_l_delta_r * delta_r;
-    double c_n = c_n_0 + c_n_v * v_hat + c_n_p * p_hat + c_n_r * r_hat + c_n_delta_a * delta_a + c_n_delta_r * delta_r;
+    double c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p * p_hat + c_Y_r * r_hat + c_Y_delta_a * delta_a + c_Y_delta_r * delta_r;
+    double c_l = c_l_0 + c_l_beta * beta + c_l_p * p_hat + c_l_r * r_hat + c_l_delta_a * delta_a + c_l_delta_r * delta_r;
+    double c_n = c_n_0 + c_n_beta * beta + c_n_p * p_hat + c_n_r * r_hat + c_n_delta_a * delta_a + c_n_delta_r * delta_r;
 
     double Y = c_Y * dyn_pressure * planform_sqm;
     double l = c_l * dyn_pressure * planform_sqm * wingspan_m;
@@ -167,11 +172,6 @@ void compute_dx(
     double v_dot = ang_p * vel_w - ang_r * vel_u + (1 / mass_kg) * (Y + mass_kg * g * cos(theta) * sin(phi));
 
     // NOTE: Actuator dynamics are not included here for computational efficiency. The actuators is an isolated system, and is therefore simulated a-priori.
-
-//    dx[0] = c_Y;
-//    dx[1] = c_l;
-//    dx[2] = c_n;
-//    dx[3] = 0;
 
     dx[0] = v_dot;
     dx[1] = p_dot;

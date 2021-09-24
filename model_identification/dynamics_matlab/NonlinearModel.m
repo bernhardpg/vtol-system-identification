@@ -49,17 +49,23 @@ classdef NonlinearModel
             % u = [delta_a delta_r]
             % lon_states = [u w q theta]
             %   lon states are taken as measured, and not simulated
-            input_seq = [t_data_seq input_seq lon_state_seq];
+            input_seq_for_c_file = [t_data_seq input_seq lon_state_seq];
             params = [obj.StaticParams;
                       reshape(obj.CoeffsLat, [numel(obj.CoeffsLat),1])];
-            dy_dt = dynamics_lat_c(t, y, input_seq, params);
+            dy_dt = dynamics_lat_c(t, y, input_seq_for_c_file, params);
+        end
+        
+        function dy_dt = dynamics_lon_model_c(obj, t, y, t_data_seq, lon_input_seq, lat_state_seq)
+            input_seq_for_c_file = [t_data_seq lon_input_seq lat_state_seq];
+            params_vector = [obj.StaticParams;
+                      reshape(obj.CoeffsLon, [numel(obj.CoeffsLon),1])];
+            dy_dt = dynamics_lon_c(t, y, input_seq_for_c_file, params_vector);
         end
         
         function dy_dt = dynamics_lon_model(obj, t, y, t_data_seq, input_seq, lat_state_seq)
             % Extract states
             y = num2cell(y);
             [u, w, q, theta] = y{:};
-            alpha = atan2(w,u) - obj.Params.alpha_nom;
            
             % Roll index forward until we get to approx where we should get
             % inputs from. This basically implements zeroth-order hold for
@@ -84,10 +90,13 @@ classdef NonlinearModel
             lat_state_at_t = num2cell(lat_state_at_t);
             [v, p, r, phi] = lat_state_at_t{:};
             
+            % Calc aerodynamic angles and airspeed
+            [alpha, beta, V] = obj.calc_aerodynamic_quantities(u, v, w);
+            
             % Calculate forces and moments
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
-            explanatory_vars_lat = [1 v_hat p_hat r_hat delta_a delta_r];
+            explanatory_vars_lat = [1 beta p_hat r_hat delta_a delta_r];
             explanatory_vars_lon = [1 alpha alpha.^2 q_hat delta_e];
             
             [c_D, c_Y, c_L, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
@@ -102,13 +111,6 @@ classdef NonlinearModel
             [u_dot, ~, w_dot] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [u_dot w_dot q_dot theta_dot]';
-        end
-        
-        function dy_dt = dynamics_lon_model_c(obj, t, y, t_data_seq, lon_input_seq, lat_state_seq)
-            input_seq_for_c_file = [t_data_seq lon_input_seq lat_state_seq];
-            params_vector = [obj.StaticParams;
-                      reshape(obj.CoeffsLon, [numel(obj.CoeffsLon),1])];
-            dy_dt = dynamics_lon_c(t, y, input_seq_for_c_file, params_vector);
         end
         
         function T = calc_thrust_pusher(obj, delta_t)
@@ -142,16 +144,14 @@ classdef NonlinearModel
             lon_state_at_t = num2cell(lon_state_at_t);
             [u, w, q, theta] = lon_state_at_t{:};
             
-            % Calculate sideslip angle
-            V = sqrt(u^2 + v^2 + w^2);
-            alpha = atan2(w,u) - obj.Params.alpha_nom;
-            beta = asin(v/V);
+            % Calc aerodynamic angles and airspeed
+            [alpha, beta, V] = obj.calc_aerodynamic_quantities(u, v, w);
             
             % Calculate forces and moments
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
             explanatory_vars_lat = [1 beta p_hat r_hat delta_a delta_r];
-            explanatory_vars_lon = [1 u_hat w_hat q_hat delta_e];
+            explanatory_vars_lon = [1 alpha alpha.^2 q_hat delta_e];
             
             [c_X, c_Y, c_Z, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);
@@ -164,6 +164,12 @@ classdef NonlinearModel
             [~, v_dot, ~] = obj.vel_body_dynamics(phi, theta, p, q, r, u, v, w, X, Y, Z, T);
    
             dy_dt = [v_dot p_dot r_dot phi_dot]';
+        end
+        
+        function [alpha, beta, airspeed] = calc_aerodynamic_quantities(obj, u, v, w)
+            airspeed = sqrt(u^2 + v^2 + w^2);
+            alpha = atan2(w,u) - obj.Params.alpha_nom;
+            beta = asin(v/airspeed); 
         end
         
         function obj = set_params(obj, lat_params, lon_params)

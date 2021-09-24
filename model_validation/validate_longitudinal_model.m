@@ -1,14 +1,16 @@
 clear all; close all; clc;
 
 % Load FPR data which contains training data and validation data
-load("data/flight_data/selected_data/fpr_data_lon.mat");
+%load("data/flight_data/selected_data/fpr_data_lon.mat");
+load("data/flight_data/selected_data/fpr_data_lat.mat");
+fpr_data_lon = fpr_data_lat;
 
 % Import ss model from AVL
 avl_state_space_model;
 
 % Import coeffs from AVL
 load("avl_model/avl_results/avl_coeffs_lon.mat");
-avl_nonlin_lon_model = NonlinearModel(avl_coeffs_lon, zeros(6,3));
+%avl_nonlin_lon_model = NonlinearModel(avl_coeffs_lon, zeros(6,3));
 
 % Load equation_error coefficients
 load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
@@ -30,9 +32,10 @@ output_error_lon_model_final = NonlinearModel(output_error_coeffs_lon_final_coef
 
 model_type = "longitudinal";
 maneuver_types = ["pitch_211"];
+%maneuver_types = ["roll_211" "yaw_211"];
 test_avl_models = false;
 test_nonlin_models = true;
-show_maneuver_plots = false;
+show_maneuver_plots = true;
 show_error_metric_plots = true;
 
 % Simulate maneuvers with different models
@@ -118,7 +121,7 @@ end
 
 load("model_identification/output_error/results/output_error_lon_cr_bounds.mat");
 load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
-%load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
+load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
 
 % model_params = {output_error_coeffs_lon output_error_lon_all_free_coeffs output_error_coeffs_lon_final_coeffs};
 % model_variances = {output_error_lon_cr_bounds output_error_lon_all_free_cr_bounds output_error_coeffs_lon_final_cr_bounds};

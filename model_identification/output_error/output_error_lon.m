@@ -5,18 +5,15 @@ set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegend
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lon.mat");
 
-% Load equation_error parameters which will be used as initial guesses
-load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
-
-% Load some parameters from AVL
-load("avl_model/avl_results/avl_coeffs_lon.mat");
-
 maneuver_types = "pitch_211";
 %%
 %%%%%%%%%%%
 % MODEL 1
 % Model from equation-error with Equation-Error as initial guess
 %%%%%%%%%%%
+
+% Load equation_error parameters which will be used as initial guesses
+load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
 
 lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 params_to_update = [1:5 6 7 10 11 12 14 15];
@@ -37,6 +34,9 @@ save("model_identification/output_error/results/output_error_lon_cr_bounds.mat",
 % free
 %%%%%%%%%%%
 
+% Load equation_error parameters which will be used as initial guesses
+load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
+
 lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 params_to_update = 1:15;
 opt_problem = OutputErrorProblem("longitudinal", fpr_data_lon, lon_model, maneuver_types, params_to_update);
@@ -55,6 +55,12 @@ save("model_identification/output_error/results/output_error_lon_all_free_cr_bou
 % Model with selective parameters from equation-error and AVL, and some
 % allowed to vary
 %%%%%%%%%%%
+
+% Load equation_error parameters which will be used as initial guesses
+load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
+
+% Load some parameters from AVL
+load("avl_model/avl_results/avl_coeffs_lon.mat");
 
 % Keep some coeffs from AVL
 initial_coeffs = equation_error_coeffs_lon;

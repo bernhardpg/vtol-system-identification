@@ -14,9 +14,9 @@ load("data/flight_data/selected_data/fpr_data_lat.mat");
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
 eq_error_lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 
-% % Load output-error parameters
-% load("model_identification/output_error/results/output_error_coeffs_lat.mat");
-% output_error_lat_model = NonlinearModel(zeros(5,3), output_error_coeffs_lat);
+% Load output-error parameters
+load("model_identification/output_error/results/output_error_lat_coeffs.mat");
+output_error_lat_model = NonlinearModel(zeros(5,3), output_error_lat_coeffs);
 
 % Lateral system
 % State = [v p r phi]
@@ -66,8 +66,8 @@ for maneuver_type = maneuver_types
             [y_eq_error, error_calculations] = evaluate_model(maneuver, eq_error_lat_model, model_type);
             error_metrics.eq_error{maneuver_i} = error_calculations;
             
-%             [y_output_error, error_calculations] = evaluate_model(maneuver, output_error_lon_model);
-%             error_metrics.output_error{maneuver_i} = error_calculations;
+            [y_output_error, error_calculations] = evaluate_model(maneuver, output_error_lat_model, model_type);
+            error_metrics.output_error{maneuver_i} = error_calculations;
 %             
 %             [y_output_error_all_params, error_calculations] = evaluate_model(maneuver, output_error_lon_model_all_free);
 %             error_metrics.y_output_error_all_params{maneuver_i} = error_calculations;
@@ -76,11 +76,11 @@ for maneuver_type = maneuver_types
 %             error_metrics.y_output_error_specific_params{maneuver_i} = error_calculations;
 %             
             % Collect all simulations
-            y_all_models = {y_eq_error};%; y_output_error y_output_error_all_params y_output_error_specific_params};
+            y_all_models = {y_eq_error y_output_error}; %y_output_error_all_params y_output_error_specific_params};
 
             % Compare with real flight data
-            model_names = ["Real data" "Equation-Error"];% "Output-Error" "Output-Error (all params)" "Output-Error (some params)"];
-            plot_styles = ["--" "-"]; %":" ":" "-"];
+            model_names = ["Real data" "Equation-Error" "Output-Error"]; %"Output-Error (all params)" "Output-Error (some params)"];
+            plot_styles = ["--" "-" "-"];% ":" "-"];
             if show_maneuver_plots
                 maneuver.show_plot_lateral_validation(t_sim, y_all_models, model_names, plot_styles);
             end
@@ -88,45 +88,60 @@ for maneuver_type = maneuver_types
     end
 end
 
-%% OLD
-% Simulate maneuvers with different models
-for maneuver_type = maneuver_types
-    for maneuver_i = 1:length(fpr_data_lat.validation.(maneuver_type))
-        maneuver = fpr_data_lat.validation.(maneuver_type)(maneuver_i);
-        input_sequence = maneuver.get_lat_input_sequence();
-        t_data_seq = maneuver.Time;
-        y_0 = maneuver.get_lat_state_initial();
-        tspan = [maneuver.Time(1) maneuver.Time(end)];
-        lon_state_seq = maneuver.get_lon_state_sequence();
+if show_error_metric_plots
+    if test_nonlin_models
+        [gof_eq_error, tic_eq_error, an_eq_error] = evaluate_error_metrics(error_metrics.eq_error);
+        [gof_output_error, tic_output_error, an_output_error] = evaluate_error_metrics(error_metrics.output_error);
         
-        % Simulate state space model
-        delta_u = detrend(input_sequence,0); % state space model assumes perturbation quantities
-        [y_avl_ss_model, t_avl_ss_model] = lsim(lat_sys, delta_u, t_data_seq, y_0);
-        
-        % Simulate nonlinear AVL model
-        [t_avl_nonlin_model, y_avl_nonlin_model] = ode45(@(t,y) avl_nonlin_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
-        
-        % Simulate equation-error model
-        [t_eq_error_model, y_eq_error_model] = ode45(@(t,y) eq_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
-        
-        % Simulate output-error model
-        [t_output_error_model, y_output_error_model] = ode45(@(t,y) output_error_lat_model.dynamics_lat_model_c(t, y, t_data_seq, delta_u, lon_state_seq), tspan, y_0);
-        
-        % Collect all simulations
-        y_all_models = {y_avl_ss_model, y_avl_nonlin_model};
-        t_all_models = {t_avl_ss_model, t_avl_nonlin_model};
-        
-        % Compare with real flight data
-        model_names = ["Real data" "AVL SS" "AVL Nonlinear Model"];
-        plot_styles = ["-" "--" "--"];
-
-%         % Collect all simulations
-%         y_all_models = {y_eq_error_model, y_output_error_model};
-%         t_all_models = {t_eq_error_model, t_output_error_model};
-%         
-%         % Compare with real flight data
-%         model_names = ["Real data" "Equation-Error" "Output-error"];
-%         plot_styles = ["-" "-" "-"];
-        maneuver.show_plot_lateral_validation(t_all_models, y_all_models, model_names, plot_styles);    
+        model_names = ["Equation-Error", "Output-Error"];
+        create_bar_plot([gof_eq_error; gof_output_error], model_names, "Goodness-of-Fit (GOF)", ["v","p","r","\phi"], ["$v$","$p$","$r$","$\phi$"]);
+        create_bar_plot([tic_eq_error; tic_output_error], model_names, "Theils-Inequality-Coefficient (TIC)", ["v","p","r","\phi"], ["$v$","$p$","$r$","$\phi$"]);
+        create_bar_plot([an_eq_error; an_output_error], model_names, "Average-Normalized Error Measures", ["ANMAE","ANRMSE"], ["ANMAE","ANRMSE"]);
     end
 end
+
+
+load("model_identification/output_error/results/output_error_lat_cr_bounds.mat");
+%load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
+%load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
+
+% model_params = {output_error_coeffs_lon output_error_lon_all_free_coeffs output_error_coeffs_lon_final_coeffs};
+% model_variances = {output_error_lon_cr_bounds output_error_lon_all_free_cr_bounds output_error_coeffs_lon_final_cr_bounds};
+
+output_error_cr_bounds_percentage = calc_percentage_cr_bound(output_error_lat_coeffs, output_error_lat_cr_bounds);
+%output_error_all_free_cr_bounds_percentage = calc_percentage_cr_bound(output_error_lon_all_free_coeffs, output_error_lon_all_free_cr_bounds);
+%output_error_final_cr_bounds_percentage = calc_percentage_cr_bound(output_error_coeffs_lon_final_coeffs, output_error_coeffs_lon_final_cr_bounds);
+
+param_names = ["cY0" "cYb" "cYp" "cYr" "cYda" "cYdr"...
+    "cl0" "clb" "clp" "clr" "clda" "cldr"...
+    "cn0" "cnb" "cnp" "cnr" "cnda" "cndr"];
+param_names_latex = ["$c_{Y 0}$" "$c_{Y \beta}$" "$c_{Y p}$" "$c_{Y r}$" "$c_{Y {\delta_a}}$" "$c_{Y {\delta_r}}$"...
+    "$c_{l 0}$" "$c_{l \beta}$" "$c_{l p}$" "$c_{l r}$" "$c_{l {\delta_a}}$" "$c_{l {\delta_r}}$"...
+    "$c_{n 0}$" "$c_{n \beta}$" "$c_{n p}$" "$c_{n r}$" "$c_{n {\delta_a}}$" "$c_{n {\delta_r}}$"];
+
+create_bar_plot([output_error_cr_bounds_percentage], ["Output-Error"], "2CR %", param_names, param_names_latex);
+
+cr_bounds_means = [mean(fillmissing(output_error_cr_bounds_percentage,'constant',0))];
+create_bar_plot(cr_bounds_means, ["Output-Error"], "2CR %", "Average CR Bound", param_names_latex);
+
+
+%%
+model_params = {avl_coeffs_lat equation_error_coeffs_lat output_error_lat_coeffs};
+model_cr_bounds = {zeros(15,1) zeros(15,1) output_error_lat_cr_bounds};
+
+num_models = numel(model_params);
+figure
+for param_i = 1:15
+    for model_i = 1:num_models
+        subplot(3,5,param_i);
+        param = model_params{model_i}(param_i);
+        covar = model_cr_bounds{model_i}(param_i);
+        stddev = 2 * sqrt(covar); % Approximation taken from Tischler, see (29) in Dorobantu2013
+        cr_percentage = abs(stddev / param) * 100;
+        errorbar(model_i,param,stddev,'-s','MarkerSize',10); hold on
+        xlim([0 num_models+1])
+        set(gca,'xticklabel',{[]})
+        title(param_names_latex(param_i))
+    end
+end
+legend(["AVL" "Equation-Error" "Output-Error"],'Location','SouthEast')
