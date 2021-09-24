@@ -601,7 +601,7 @@ classdef FlightPathData
             ylim([-28 28])
             title("Rudder")
 
-            sgtitle("Model validation on " + obj.ManeuverType);
+            sgtitle("Model validation on " + obj.ManeuverType + ", Id: " + obj.Id);
             
             if save_plot
                 saveas(fig, plot_location + filename, 'epsc')
@@ -683,7 +683,7 @@ classdef FlightPathData
             ylim([0 150])
             title("Throttle")
 
-            sgtitle("Model validation on " + obj.ManeuverType);
+            sgtitle("Model validation on " + obj.ManeuverType + ", Id: " + obj.Id);
             
             if save_plot
                 saveas(fig, plot_location + filename, 'epsc')

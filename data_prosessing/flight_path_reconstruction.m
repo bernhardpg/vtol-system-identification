@@ -42,8 +42,8 @@ maneuver_types = [
 % there is not time for this.
 maneuvers_to_skip = {};
 maneuvers_to_skip.("roll_211") = [6 11 12 14 20];
-maneuvers_to_skip.("yaw_211") = [1:11 18 22:27 30 35:39 41];
-maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 19 21 24 25 32 35];
+maneuvers_to_skip.("yaw_211") = [1:11 18 22:27 29 30 35:39 41];
+maneuvers_to_skip.("pitch_211") = [2 3 7 8 9 11 14 17 18 19 20 21 24 25 32 35 40];
 maneuvers_to_skip.("freehand") = [];
 
 % Save raw maneuver data

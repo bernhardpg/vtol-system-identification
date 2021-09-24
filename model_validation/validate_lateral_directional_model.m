@@ -18,7 +18,16 @@ eq_error_lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
 load("model_identification/output_error/results/output_error_lat_coeffs.mat");
 output_error_lat_model = NonlinearModel(zeros(5,3), output_error_lat_coeffs);
 
-coeffs = {equation_error_coeffs_lat, output_error_lat_coeffs};
+% Load output-error parameters
+load("model_identification/output_error/results/output_error_lat_coeffs_all_free.mat");
+output_error_lat_model_all_free = NonlinearModel(zeros(5,3), output_error_lat_coeffs_all_free);
+
+% Load output-error parameters
+load("model_identification/output_error/results/output_error_lat_coeffs_final.mat");
+output_error_lat_model_final = NonlinearModel(zeros(5,3), output_error_lat_coeffs_final);
+
+
+coeffs = {equation_error_coeffs_lat, output_error_lat_coeffs, output_error_lat_coeffs_all_free, output_error_lat_coeffs_final};
 
 % Lateral system
 % State = [v p r phi]
@@ -27,12 +36,12 @@ coeffs = {equation_error_coeffs_lat, output_error_lat_coeffs};
 model_type = "lateral-directional";
 maneuver_types = [
     "roll_211",...
-    "yaw_211",...
+    %"yaw_211",...
     ];
 
 test_avl_models = false;
 test_nonlin_models = true;
-show_maneuver_plots = false;
+show_maneuver_plots = true;
 show_error_metric_plots = true;
 show_cr_bounds_plots = true;
 show_param_map_plot = true;
@@ -56,9 +65,9 @@ for maneuver_type = maneuver_types
             model_names = ["NonlinearAvl" "StateSpaceAvl"];
         end
         if test_nonlin_models
-            models = {eq_error_lat_model, output_error_lat_model};
-            model_names = ["EquationError" "OutputError"];
-            model_plot_styles = ["-" "-"];
+            models = {eq_error_lat_model, output_error_lat_model, output_error_lat_model_all_free, output_error_lat_model_final};
+            model_names = ["EquationError" "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
+            model_plot_styles = ["-" "-" "-" "-"];
             [predicted_outputs, error_metrics_for_maneuver] = evaluate_models_on_maneuver(maneuver, models, model_names, model_type);
         end
         if show_maneuver_plots
@@ -70,7 +79,7 @@ end
 
 if show_error_metric_plots
     if test_nonlin_models
-        model_names = ["EquationError" "OutputError"];
+        model_names = ["EquationError" "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
         signals_names = ["v","p","r","\phi"];
         signals_names_latex = ["$v$","$p$","$r$","$\phi$"];
         
@@ -89,7 +98,9 @@ end
 
 if show_cr_bounds_plots
     load("model_identification/output_error/results/output_error_lat_cr_bounds.mat");
-    cr_bounds = {zeros(size(output_error_lat_cr_bounds)) output_error_lat_cr_bounds};
+    load("model_identification/output_error/results/output_error_lat_all_free_cr_bounds.mat");
+    load("model_identification/output_error/results/output_error_lat_final_cr_bounds.mat");
+    cr_bounds = {zeros(size(output_error_lat_cr_bounds)) output_error_lat_cr_bounds output_error_lat_all_free_cr_bounds output_error_lat_final_cr_bounds};
 
     param_names = ["cY0" "cYb" "cYp" "cYr" "cYda" "cYdr"...
         "cl0" "clb" "clp" "clr" "clda" "cldr"...

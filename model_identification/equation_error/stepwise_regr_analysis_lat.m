@@ -21,7 +21,7 @@ dt = fpr_data_lat.training.roll_211(1).Dt;
 dependent_variable_names = ["C_Y" "C_l" "C_n"];
 independent_variable_names = ["Beta" "AngPHat" "AngRHat" "DeltaA" "DeltaR"];
 regr_names = ["beta" "p_hat" "r_hat" "delta_a" "delta_r"];
-nonlin_regr_names = ["beta_sq"];
+nonlin_regr_names = ["beta_sq" "beta_p" "beta_r" "beta_delta_a" "beta_delta_r"];
 
 %%%
 % Load training data
@@ -37,7 +37,7 @@ for data_type = independent_variable_names
     regr = [regr collect_data_from_multiple_maneuvers(fpr_data_lat.training, maneuver_types, data_type)];
 end
 
-nonlin_regr = [regr(:,1).^2];
+nonlin_regr = create_nonlin_regressors_lat(regr);
 
 %%%
 % Load validation data
@@ -52,7 +52,7 @@ for data_type = independent_variable_names
     regr_val = [regr_val collect_data_from_multiple_maneuvers(fpr_data_lat.validation, maneuver_types, data_type)];
 end
 
-nonlin_regr_val = [regr_val(:,3).^2];
+nonlin_regr_val = create_nonlin_regressors_lat(regr_val);
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
@@ -64,7 +64,7 @@ std_regr_order_lat = ["bias" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
-min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
+min_r_sq_change = 1.5; % Demand at least X% improvement to add a regressor
 
 z = zs.C_Y;
 z_val = zs_val.C_Y;
@@ -115,3 +115,7 @@ saveas(fig, plot_location + filename, 'epsc')
 equation_error_coeffs_lat = [c_Y c_l c_n];
 
 save("model_identification/equation_error/results/equation_error_coeffs_lat.mat", "equation_error_coeffs_lat");
+
+function [nonlin_regr] = create_nonlin_regressors_lat(regr)
+    nonlin_regr = [regr(:,1).^2 regr(:,1).*regr(:,2) regr(:,1).*regr(:,3) regr(:,1).*regr(:,4) regr(:,1).*regr(:,5)];
+end
