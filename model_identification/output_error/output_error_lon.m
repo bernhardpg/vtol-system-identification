@@ -6,7 +6,7 @@ set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegend
 load("data/flight_data/selected_data/fpr_data_lon.mat");
 
 maneuver_types = "pitch_211";
-%%
+
 %%%%%%%%%%%
 % MODEL 1
 % Model from equation-error with Equation-Error as initial guess
@@ -27,7 +27,7 @@ for i = 1:length(params_to_update)
     output_error_lon_cr_bounds(params_to_update(i)) = opt_problem.OptData.CramerRaoLowerBound(i);
 end
 save("model_identification/output_error/results/output_error_lon_cr_bounds.mat", "output_error_lon_cr_bounds");
-%%
+
 %%%%%%%%%%%
 % MODEL 2
 % Model with initial guess from Equation-Error but with model structure
@@ -49,7 +49,7 @@ for i = 1:length(params_to_update)
     output_error_lon_all_free_cr_bounds(params_to_update(i)) = opt_problem.OptData.CramerRaoLowerBound(i);
 end
 save("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat", "output_error_lon_all_free_cr_bounds");
-%%
+
 %%%%%%%%%%%
 % MODEL 3
 % Model with selective parameters from equation-error and AVL, and some
