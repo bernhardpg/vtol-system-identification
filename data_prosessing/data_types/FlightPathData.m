@@ -548,6 +548,8 @@ classdef FlightPathData
             fig.Position = [100 100 1500 1000];
             num_plots_rows = 4;
             
+            plot_style_recorded_data =  "--";
+            
             num_models = numel(model_names);
 
             subplot(num_plots_rows,2,1)

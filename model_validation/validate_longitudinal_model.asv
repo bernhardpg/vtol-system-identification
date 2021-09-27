@@ -21,8 +21,6 @@ show_param_map_plot = false;
 model_type = "longitudinal";
 maneuver_types = ["pitch_211"];
 
-plot_title = "Longitudinal VLM Model";
-
 state_names = ["u","w","q","\theta"];
 state_names_latex = ["$u$","$w$","$q$","$\theta$"];
 param_names = ["cD0" "cDa" "cDa2" "cDq" "cDde" "cL0" "cLa" "cLa2" "cLq" "cLde" "cm0" "cma" "cma2" "cmq" "cmde"];
@@ -38,6 +36,8 @@ param_names_latex = ["$c_{D 0}$" "$c_{D \alpha}$" "$c_{D \alpha^2}$" "$c_{D q}$"
 load("data/flight_data/selected_data/fpr_data_lon.mat");
 fpr_data = fpr_data_lon;
 
+% Import ss model from AVL
+%avl_state_space_model;
 
 % Load coefficients
 load("avl_model/avl_results/avl_coeffs_lon.mat");
@@ -50,7 +50,7 @@ model_coeffs = {equation_error_coeffs_lon, output_error_lon_coeffs, output_error
 model_names = ["EquationError" "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
 models_avl = create_models_from_coeffs({avl_coeffs_lon}, model_type);
 model_names_avl = ["NonlinearVLM"];
-model_names_avl_to_display = ["Nonlinear VLM Model"];
+model_names_avl_to_display = ["Nonlinear VLM"];
 models = create_models_from_coeffs(model_coeffs, model_type);
 
 % Load Cramer-Rao lower bounds
@@ -61,10 +61,9 @@ cr_bounds = {zeros(size(output_error_lon_cr_bounds)) output_error_lon_cr_bounds 
 
 % Call validation function
 validate_models(...
-    plot_title,...
     model_type, test_avl_models, test_nonlin_models, show_maneuver_plots,...
     state_names, state_names_latex, param_names, param_names_latex,...
     show_error_metric_plots, show_cr_bounds_plots, show_param_map_plot,...
     maneuver_types, models, models_avl, model_coeffs, model_names, model_names_avl, cr_bounds, fpr_data,...
-    model_names_avl_to_display...
+    model_names_avl_to_display
     );

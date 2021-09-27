@@ -42,6 +42,6 @@ lat_sys = ss(A_lat, B_lat, eye(4),0,...
 
 % % Plot impulse responses
 % figure
-% impulse(lon_sys,10)
+%impulse(lon_sys,10)
 % figure
 % impulse(lat_sys,10)
