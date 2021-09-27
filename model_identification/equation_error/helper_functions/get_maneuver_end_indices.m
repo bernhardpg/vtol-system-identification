@@ -1,5 +1,5 @@
 function [maneuver_end_indices] = get_maneuver_end_indices(fpr_data, maneuver_types)
-    maneuver_lengths = [];
+    maneuver_lengths = [0];
     for maneuver_type = maneuver_types
         for maneuver_i = 1:length(fpr_data.(maneuver_type))
             maneuver = fpr_data.(maneuver_type)(maneuver_i);
@@ -7,5 +7,5 @@ function [maneuver_end_indices] = get_maneuver_end_indices(fpr_data, maneuver_ty
         end
     end
     maneuver_end_indices = cumsum(maneuver_lengths);
-    maneuver_end_indices = maneuver_end_indices(1:end-1);
+    maneuver_end_indices = maneuver_end_indices(1:end);
 end

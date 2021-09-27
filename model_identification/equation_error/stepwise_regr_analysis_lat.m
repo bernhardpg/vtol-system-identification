@@ -58,10 +58,12 @@ nonlin_regr_val = create_nonlin_regressors_lat(regr_val);
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
-% Get data for plotting
+% Set data for plotting
 maneuver_end_indices = get_maneuver_end_indices(fpr_data_lat.validation, maneuver_types);
-num_maneuvers_to_plot = 3;
-t_plot = 0:dt:(maneuver_end_indices(num_maneuvers_to_plot))*dt-dt;
+first_maneuver_index = 4;
+last_maneuver_index = 6;
+total_maneuvers_length = (maneuver_end_indices(last_maneuver_index+1) - maneuver_end_indices(first_maneuver_index));
+t_plot = 0:dt:total_maneuvers_length*dt-dt;
 
 % For coefficient storage
 std_regr_order_lat = ["bias" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
@@ -104,8 +106,8 @@ save("model_identification/equation_error/results/equation_error_coeffs_lat.mat"
 coeff_names = ["$c_Y$" "$c_l$" "$c_n$"];
 recorded_values = [zs_val.C_Y zs_val.C_l zs_val.C_n];
 predicted_values = [c_Y_hat c_l_hat c_n_hat];
-plot_coeffs(t_plot, predicted_values, recorded_values, num_maneuvers_to_plot, ...
-    maneuver_end_indices, coeff_names,"One-Step Coefficient Prediction (Lateral-Directional Model)",...
+plot_coeffs(t_plot, predicted_values, recorded_values, first_maneuver_index, last_maneuver_index, ...
+    maneuver_end_indices, coeff_names,"Lateral-Directional Equation-Error One-Step Coefficient Prediction (Aileron Deflection)",...
     "longitudinal")
 
 function [nonlin_regr] = create_nonlin_regressors_lat(regr)
