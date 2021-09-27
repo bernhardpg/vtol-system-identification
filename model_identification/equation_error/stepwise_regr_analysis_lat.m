@@ -8,6 +8,8 @@ clc; close all; clear all;
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 
+min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
+
 % Collect data from multiple experiments into one long dataset
 % Note: Ordering does not matter for equation error
 
@@ -56,6 +58,11 @@ nonlin_regr_val = create_nonlin_regressors_lat(regr_val);
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
+% Get data for plotting
+maneuver_end_indices = get_maneuver_end_indices(fpr_data_lat.validation, maneuver_types);
+num_maneuvers_to_plot = 3;
+t_plot = 0:dt:(maneuver_end_indices(num_maneuvers_to_plot))*dt-dt;
+
 % For coefficient storage
 std_regr_order_lat = ["bias" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
 
@@ -64,57 +71,42 @@ std_regr_order_lat = ["bias" "beta" "p_hat" "r_hat" "delta_a" "delta_r"];
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
 
-min_r_sq_change = 1.5; % Demand at least X% improvement to add a regressor
-
 z = zs.C_Y;
 z_val = zs_val.C_Y;
-[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
+[th_hat, th_names, c_Y_hat, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_Y", th_hat, th_names);
 
 % Store coeff values
 c_Y = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
-fig = figure;
-subplot(3,1,1)
-plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
-legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_Y: " + "R^2 = " + R_sq_val + "%" + ", vars: " + join(th_names))
-
 z = zs.C_l;
 z_val = zs_val.C_l;
-[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
+[th_hat, th_names, c_l_hat, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_l", th_hat, th_names);
 
 % Store coeff values
 c_l = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
-subplot(3,1,2)
-plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
-legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_l: " + "R^2 = " + R_sq_val + "%" + ", vars: "  + join(th_names))
-
 z = zs.C_n;
 z_val = zs_val.C_n;
-[th_hat, th_names, y_hat_val, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
+[th_hat, th_names, c_n_hat, R_sq_val] = stepwise_regression(z, z_val, regr, regr_val, regr_names, nonlin_regr, nonlin_regr_val, nonlin_regr_names, min_r_sq_change);
 print_eq_error_params("c_n", th_hat, th_names);
 
 % Store coeff values
 c_n = create_coeff_vector(std_regr_order_lat, th_hat, th_names);
 
-subplot(3,1,3)
-plot(t_plot_val, z_val, t_plot_val, y_hat_val); hold on
-legend("$z$", "$\hat{z}$", 'Interpreter','latex')
-title("c_n: " + "R^2 = " + R_sq_val + "%" + ", vars: "  + join(th_names))
-
-plot_location = 'data/flight_data/selected_data/lateral_directional_data/equation_error_fit/';
-sgtitle("Stepwise-Regression Equation-Error Lateral model")
-filename = "equation_error_fit";
-saveas(fig, plot_location + filename, 'epsc')
-
 % Save coeffs to file
 equation_error_coeffs_lat = [c_Y c_l c_n];
 
 save("model_identification/equation_error/results/equation_error_coeffs_lat.mat", "equation_error_coeffs_lat");
+
+% Plot coefficients
+coeff_names = ["$c_Y$" "$c_l$" "$c_n$"];
+recorded_values = [zs_val.C_Y zs_val.C_l zs_val.C_n];
+predicted_values = [c_Y_hat c_l_hat c_n_hat];
+plot_coeffs(t_plot, predicted_values, recorded_values, num_maneuvers_to_plot, ...
+    maneuver_end_indices, coeff_names,"One-Step Coefficient Prediction (Lateral-Directional Model)",...
+    "longitudinal")
 
 function [nonlin_regr] = create_nonlin_regressors_lat(regr)
     nonlin_regr = [regr(:,1).^2 regr(:,1).*regr(:,2) regr(:,1).*regr(:,3) regr(:,1).*regr(:,4) regr(:,1).*regr(:,5)];

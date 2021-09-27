@@ -28,19 +28,12 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
     N = length(rec_data);
     time = 0:dt:N*dt-dt;
     
-    % Plot parameters
-    font_size_large = 20;
-    font_size = 16;
-    font_size_small = 14;
-    line_width = 1.5;
-    plot_style_recorded_data =  "--";
-    target_color = [0, 0, 0, 0.65];
-    lon_color = [0, 0.4470, 0.7410];
-    lat_color = [0.4660, 0.6740, 0.1880];
-    num_models = numel(model_names);
-    
+    % import plot settings
+    plot_settings;
     fig = figure;
     fig.Position = [100 100 1000 800];
+    
+    num_models = numel(model_names);
     
     if strcmp(model_type, "longitudinal")
         num_plots_rows = 5;

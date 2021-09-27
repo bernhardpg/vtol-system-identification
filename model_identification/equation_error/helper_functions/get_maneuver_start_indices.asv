@@ -1,0 +1,9 @@
+function [maneuver_start_indices] = get_maneuver_start_indices(fpr_data, maneuver_types)
+    maneuver_start_indices = [0];
+    for maneuver_type = maneuver_types
+        for maneuver_i = 1:length(fpr_data.(maneuver_type))
+            maneuver = fpr_data.(maneuver_type)(maneuver_i);
+            maneuver_start_indices = [maneuver_start_indices length(maneuver.(data_type))];
+        end
+    
+        endend
