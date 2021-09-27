@@ -4,30 +4,30 @@ function [] = validate_models(...
     state_names,state_names_latex, param_names, param_names_latex,...
     show_error_metric_plots, show_cr_bounds_plots, show_param_map_plot,...
     maneuver_types, models, models_avl, model_coeffs, model_names, model_names_avl, cr_bounds, fpr_data,...
-    model_names_avl_to_display...
+    model_names_avl_to_display, model_names_to_display...
     )
     % Maneuver prediction
+    
+    num_maneuvers_to_plot = 3;
     
     simulation_data = {};
     for maneuver_type = maneuver_types
         num_maneuvers = length(fpr_data.validation.(maneuver_type));
         error_metrics = {};
-        error_metrics_avl = {};
+        error_metrics = {};
         for maneuver_i = 1:num_maneuvers
             maneuver = fpr_data.validation.(maneuver_type)(maneuver_i);
             t_sim = maneuver.Time;
             
             simulation_data_curr_maneuver = {};
-
+            simulation_data_curr_maneuver.Time = maneuver.Time;
+            
             if test_avl_models
                 plot_styles = ["-" "-"];
-                [predicted_outputs_avl, error_metrics_for_maneuver_avl] = evaluate_models_on_maneuver(maneuver, models_avl, model_names_avl, model_type);
-                simulation_data_curr_maneuver.Time = maneuver.Time;
-                simulation_data_curr_maneuver.Models = predicted_outputs_avl;
+                [predicted_outputs, error_metrics_for_maneuver] = evaluate_models_on_maneuver(maneuver, models_avl, model_names_avl, model_type);
                 model_names = model_names_avl;
                 model_names_to_display = model_names_avl_to_display;
                 
-%                 
 %                 % Add AVL state space model
 %                 % Import ss model from AVL
 %                 avl_state_space_model;
@@ -38,35 +38,31 @@ function [] = validate_models(...
 %                 
 %                 model_names = [model_names_avl "StateSpaceAvl"];
 %                 model_names_to_display = [model_names_avl_to_display "State-Space VLM"];
-                
-                % Store simulation data
-                if strcmp(model_type, "lateral-directional")
-                    maneuver.show_plot_lateral_validation(t_sim, predicted_outputs_avl, model_names_avl, plot_styles);
-                elseif strcmp(model_type, "longitudinal")
-                    simulation_data_curr_maneuver.RecordedData = [maneuver.VelU maneuver.VelW maneuver.AngQ maneuver.EulTheta];
-                    simulation_data_curr_maneuver.Input = [maneuver.DeltaE maneuver.DeltaT];
-                end
-                error_metrics_avl{maneuver_i} = error_metrics_for_maneuver_avl;
             end
 
             if test_nonlin_models
                 plot_styles = ["-" "-" "-" "-"];
                 [predicted_outputs, error_metrics_for_maneuver] = evaluate_models_on_maneuver(maneuver, models, model_names, model_type);
-                if show_maneuver_plots
-                    if strcmp(model_type, "lateral-directional")
-                        maneuver.show_plot_lateral_validation(t_sim, predicted_outputs, model_names, plot_styles);
-                    elseif strcmp(model_type, "longitudinal")
-                        maneuver.show_plot_longitudinal_validation(t_sim, predicted_outputs, model_names, plot_styles);
-                    end
-                end
                 error_metrics{maneuver_i} = error_metrics_for_maneuver;
             end
+
+            % Store simulation data
+            if strcmp(model_type, "lateral-directional")
+                simulation_data_curr_maneuver.RecordedData = [maneuver.VelV maneuver.AngP maneuver.AngR maneuver.EulPhi];
+                simulation_data_curr_maneuver.Input = [maneuver.DeltaA maneuver.DeltaR];
+            elseif strcmp(model_type, "longitudinal")
+                simulation_data_curr_maneuver.RecordedData = [maneuver.VelU maneuver.VelW maneuver.AngQ maneuver.EulTheta];
+                simulation_data_curr_maneuver.Input = [maneuver.DeltaE maneuver.DeltaT];
+            end
+            simulation_data_curr_maneuver.Models = predicted_outputs;
             simulation_data{maneuver_i} = simulation_data_curr_maneuver;
+            error_metrics{maneuver_i} = error_metrics_for_maneuver;
+            
         end
     end
     
     if show_maneuver_plots
-        plot_validation_maneuvers(plot_title, simulation_data, model_type, model_names, plot_styles, model_names_to_display);
+        plot_validation_maneuvers(plot_title, simulation_data, model_type, model_names, plot_styles, model_names_to_display, num_maneuvers_to_plot);
     end
 
     if show_error_metric_plots

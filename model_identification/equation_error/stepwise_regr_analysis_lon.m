@@ -11,6 +11,8 @@ load("data/flight_data/selected_data/fpr_data_lon.mat");
 % Collect data from multiple experiments into one long dataset
 % Note: Ordering does not matter for equation error
 
+min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
+
 maneuver_types = [
     "pitch_211",...
     ];
@@ -20,7 +22,7 @@ dt = fpr_data_lon.training.pitch_211(1).Dt;
 dependent_variable_names = ["C_L" "C_D" "C_m"];
 independent_variable_names = ["Alpha" "AngQHat" "DeltaE"];
 regr_names = ["alpha" "q_hat" "delta_e"];
-nonlin_regr_names = ["alpha_sq"];% "alpha_q_hat"];
+nonlin_regr_names = ["alpha_sq" "alpha_q_hat" "alpha_delta_e"];
 
 %%%
 % Load training data
@@ -56,15 +58,13 @@ end
 t_plot_val = 0:dt:N_val * dt - dt;
 
 % For coefficient storage
-std_regr_order_lon = ["bias" "alpha" "alpha_sq" "q_hat" "delta_e"];
+std_regr_order_lon = ["bias" "alpha" "alpha_sq" "q_hat" "delta_e" "alpha_delta_e"];
 
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%
 % Stepwise regression %
 %%%%%%%%%%%%%%%%%%%%%%%
-
-min_r_sq_change = 2; % Demand at least X% improvement to add a regressor
 
 z = zs.C_D;
 z_val = zs_val.C_D;
@@ -117,5 +117,5 @@ equation_error_coeffs_lon = [c_D c_L c_m];
 save("model_identification/equation_error/results/equation_error_coeffs_lon.mat", "equation_error_coeffs_lon");
 
 function [nonlin_regr] = create_nonlin_regressors_lon(regr)
-    nonlin_regr = [regr(:,1).^2];%regr(:,1).*regr(:,2) regr(:,1).*regr(:,3)];
+    nonlin_regr = [regr(:,1).^2 regr(:,1).*regr(:,2) regr(:,1).*regr(:,3)];
 end

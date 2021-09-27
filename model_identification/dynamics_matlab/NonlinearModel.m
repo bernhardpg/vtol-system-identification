@@ -97,7 +97,7 @@ classdef NonlinearModel
             [p_hat, q_hat, r_hat, u_hat, v_hat, w_hat] = obj.nondimensionalize_states(p, q, r, u, v, w);
             
             explanatory_vars_lat = [1 beta p_hat r_hat delta_a delta_r];
-            explanatory_vars_lon = [1 alpha alpha.^2 q_hat delta_e];
+            explanatory_vars_lon = [1 alpha alpha.^2 q_hat delta_e alpha*delta_e];
             
             [c_D, c_Y, c_L, c_l, c_m, c_n] = obj.calc_coeffs(explanatory_vars_lat, explanatory_vars_lon);
             dyn_pressure = obj.calc_dyn_pressure(u, v, w);

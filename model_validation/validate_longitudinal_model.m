@@ -11,8 +11,8 @@ clear all; close all; clc;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Plot options
-test_avl_models = true;
-test_nonlin_models = false;
+test_avl_models = false;
+test_nonlin_models = true;
 show_maneuver_plots = true;
 show_error_metric_plots = false;
 show_cr_bounds_plots = false;
@@ -21,7 +21,7 @@ show_param_map_plot = false;
 model_type = "longitudinal";
 maneuver_types = ["pitch_211"];
 
-plot_title = "Longitudinal VLM Model";
+plot_title = "Longitudinal Equation-Error Model (Elevator Maneuvers)";
 
 state_names = ["u","w","q","\theta"];
 state_names_latex = ["$u$","$w$","$q$","$\theta$"];
@@ -46,8 +46,9 @@ load("model_identification/output_error/results/output_error_lon_coeffs.mat");
 load("model_identification/output_error/results/output_error_lon_all_free_coeffs.mat");
 load("model_identification/output_error/results/output_error_coeffs_lon_final_coeffs.mat");
 
-model_coeffs = {equation_error_coeffs_lon, output_error_lon_coeffs, output_error_lon_all_free_coeffs, output_error_coeffs_lon_final_coeffs};
-model_names = ["EquationError" "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
+model_coeffs = {equation_error_coeffs_lon};%, output_error_lon_coeffs, output_error_lon_all_free_coeffs, output_error_coeffs_lon_final_coeffs};
+model_names = ["EquationError"];% "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
+model_names_to_display = ["Equation-Error Model"];
 models_avl = create_models_from_coeffs({avl_coeffs_lon}, model_type);
 model_names_avl = ["NonlinearVLM"];
 model_names_avl_to_display = ["Nonlinear VLM Model"];
@@ -66,5 +67,5 @@ validate_models(...
     state_names, state_names_latex, param_names, param_names_latex,...
     show_error_metric_plots, show_cr_bounds_plots, show_param_map_plot,...
     maneuver_types, models, models_avl, model_coeffs, model_names, model_names_avl, cr_bounds, fpr_data,...
-    model_names_avl_to_display...
+    model_names_avl_to_display, model_names_to_display...
     );
