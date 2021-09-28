@@ -98,25 +98,28 @@ void compute_dx(
     prop_diam_pusher = p[18];
     c_T_pusher = p[19];
 
-    double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_q_hat, c_D_delta_e,
-        c_L_0, c_L_alpha, c_L_alpha_sq, c_L_q_hat, c_L_delta_e,
-        c_m_0, c_m_alpha, c_m_alpha_sq, c_m_q_hat, c_m_delta_e;
+    double c_D_0, c_D_alpha, c_D_alpha_sq, c_D_q_hat, c_D_delta_e, c_D_delta_e_alpha,
+        c_L_0, c_L_alpha, c_L_alpha_sq, c_L_q_hat, c_L_delta_e, c_L_delta_e_alpha,
+        c_m_0, c_m_alpha, c_m_alpha_sq, c_m_q_hat, c_m_delta_e, c_m_delta_e_alpha;
 
     c_D_0 = p[20];
     c_D_alpha = p[21];
     c_D_alpha_sq = p[22];
     c_D_q_hat = p[23];
     c_D_delta_e = p[24];
-    c_L_0 = p[25];
-    c_L_alpha = p[26];
-    c_L_alpha_sq = p[27];
-    c_L_q_hat = p[28];
-    c_L_delta_e = p[29];
-    c_m_0 = p[30];
-    c_m_alpha = p[31];
-    c_m_alpha_sq = p[32];
-    c_m_q_hat = p[33];
-    c_m_delta_e = p[34];
+    c_D_delta_e_alpha = p[25];
+    c_L_0 = p[26];
+    c_L_alpha = p[27];
+    c_L_alpha_sq = p[28];
+    c_L_q_hat = p[29];
+    c_L_delta_e = p[30];
+    c_L_delta_e_alpha = p[31];
+    c_m_0 = p[32];
+    c_m_alpha = p[33];
+    c_m_alpha_sq = p[34];
+    c_m_q_hat = p[35];
+    c_m_delta_e = p[36];
+    c_m_delta_e_alpha = p[37];
 
     // Extract state
     double vel_u, vel_w, ang_q, theta;
@@ -147,9 +150,12 @@ void compute_dx(
     // Compute normalized states
     double q_hat = ang_q * (mean_aerodynamic_chord_m / (2 * V_nom));
 
-    double c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * pow(alpha,2) + c_D_q_hat * q_hat + c_D_delta_e * delta_e;
-    double c_L = c_L_0 + c_L_alpha * alpha + c_L_alpha_sq * pow(alpha,2) + c_L_q_hat * q_hat + c_L_delta_e * delta_e;
-    double c_m = c_m_0 + c_m_alpha * alpha + c_m_alpha_sq * pow(alpha,2) + c_m_q_hat * q_hat + c_m_delta_e * delta_e;
+    double c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * pow(alpha,2) + c_D_q_hat * q_hat
+        + c_D_delta_e * delta_e + c_D_delta_e_alpha * delta_e * alpha;
+    double c_L = c_L_0 + c_L_alpha * alpha + c_L_alpha_sq * pow(alpha,2) + c_L_q_hat * q_hat
+        + c_L_delta_e * delta_e + c_L_delta_e_alpha * delta_e * alpha;
+    double c_m = c_m_0 + c_m_alpha * alpha + c_m_alpha_sq * pow(alpha,2) + c_m_q_hat * q_hat
+        + c_m_delta_e * delta_e + c_m_delta_e_alpha * delta_e * alpha;
 
     double D = c_D * dyn_pressure * planform_sqm;
     double L = c_L * dyn_pressure * planform_sqm;

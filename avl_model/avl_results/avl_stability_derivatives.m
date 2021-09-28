@@ -146,19 +146,19 @@ c_L_0 = c_L_0_abs + alpha_trim * c_L_alpha; % c_L_0 as function of delta_alpha =
 c_L_alpha_sq = 0; % AVL only does first order expansion
 c_L_q_hat = 8.427601;
 c_L_delta_e = 0.006288 * 180 / pi;
-c_L = [c_L_0 c_L_alpha c_L_alpha_sq c_L_q_hat c_L_delta_e]';
+c_L = [c_L_0 c_L_alpha c_L_alpha_sq c_L_q_hat c_L_delta_e 0]';
 
 c_D_alpha = 0; % No drag estimate in AVL
 c_D_alpha_sq = 0; % AVL only does first order expansion
 c_D_q_hat = 0; % No drag estimate in AVL
 c_D_delta_e = -0.000519 * 180 / pi; % Trefftz drag
-c_D = [0 c_D_alpha c_D_alpha_sq c_D_q_hat c_D_delta_e]';
+c_D = [0 c_D_alpha c_D_alpha_sq c_D_q_hat c_D_delta_e 0]';
 
 c_m_alpha = -1.530320; % No drag estimate in AVL
 c_m_alpha_sq = 0; % AVL only does first order expansion
 c_m_q_hat = -13.289383;
 c_m_delta_e = -0.021385 * 180 / pi; % Trefftz drag
-c_m = [0 c_m_alpha c_m_alpha_sq c_m_q_hat c_m_delta_e]';
+c_m = [0 c_m_alpha c_m_alpha_sq c_m_q_hat c_m_delta_e 0]';
 
 avl_coeffs_lon = [c_D c_L c_m];
 
