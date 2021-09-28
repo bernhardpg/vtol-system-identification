@@ -88,6 +88,18 @@ title("Pitch Moment Coefficient",'FontSize',font_size_large, 'interpreter','late
 % 2D CONTOUR PLOTS %
 %%%%%%%%%%%%%%%%%%%%
 
+plot_settings; % import plot settings
+
+load("data/flight_data/selected_data/fpr_data_lon.mat");
+alpha_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitch_211", "AlphaAbsolute") * 180/pi;
+delta_e_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitch_211", "DeltaE") * 180/pi;
+c_L_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitch_211", "C_L");
+c_D_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitch_211", "C_D");
+c_m_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitch_211", "C_m");
+
+
+
+
 resolution = 0.5;
 alpha_min = -10;
 alpha_max = 15;
@@ -104,44 +116,86 @@ colors = [0 0.4470 0.7410;
           0.6350 0.0780 0.1840];
 
 % Drag curve
-figure
+fig = figure;
+fig.Position = [100 100 1000 400];
+t = tiledlayout(1,2);
+nexttile
 for delta_e = delta_es
     c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alphas, delta_e, alpha_nom, delta_e_nom);
-    plot(alphas, c_D); hold on;
+    plot(alphas, c_D,'LineWidth',line_width); hold on;
 end
-xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
-ylabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
-xline(alpha_nom,":")
+xline(alpha_nom,":"); hold on
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
 text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
-title("Drag contour lines",'FontSize',font_size_large, 'interpreter','latex')
+title("Predicted",'FontSize',font_size, 'interpreter','latex')
 
+nexttile
+scatter(alpha_recorded, c_D_recorded,[],delta_e_recorded,'filled','MarkerFaceAlpha',0.3);
+legend("Flight Data")
+c = colorbar; hold on
+c.Label.String = "$\delta_e$"; c.Label.Interpreter = 'latex'; c.Label.FontSize = font_size_large;
+title("Measured",'FontSize',font_size, 'interpreter','latex')
+
+xlabel(t,"$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel(t,"$c_D$",'interpreter','latex','FontSize',font_size_large)
+title(t,"Drag Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+%%
 % Lift curve
-figure
+fig = figure;
+fig.Position = [100 100 1000 400];
+t = tiledlayout(1,2);
+nexttile
 for delta_e = delta_es
     c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alphas, delta_e, alpha_nom, delta_e_nom);
     plot(alphas, c_L); hold on;
 end
-xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
-ylabel("$c_L$",'interpreter','latex','FontSize',font_size_large)
-xline(alpha_nom,":")
+xline(alpha_nom,":"); hold on
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
 text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
-title("Lift contour lines",'FontSize',font_size_large, 'interpreter','latex')
+title("Predicted",'FontSize',font_size, 'interpreter','latex')
 
-% Pitch moment curve
-figure
+nexttile
+scatter(alpha_recorded, c_L_recorded,[],delta_e_recorded,'filled','MarkerFaceAlpha',0.3);
+legend("Flight Data")
+c = colorbar; hold on
+c.Label.String = "$\delta_e$"; c.Label.Interpreter = 'latex'; c.Label.FontSize = font_size_large;
+title("Measured",'FontSize',font_size, 'interpreter','latex')
+
+xlabel(t,"$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel(t,"$c_L$",'interpreter','latex','FontSize',font_size_large)
+title(t,"Lift Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+
+
+%%
+% Pitch Moment curve
+fig = figure;
+fig.Position = [100 100 1000 400];
+t = tiledlayout(1,2);
+nexttile
 for i = 1:length(delta_es)
     delta_e = delta_es(i);
     c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alphas, delta_e, alpha_nom, delta_e_nom);
     plot(alphas, c_m+0.07); hold on;
 end
-xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
-ylabel("$c_m$",'interpreter','latex','FontSize',font_size_large)
-xline(alpha_nom,":")
+xline(alpha_nom,":"); hold on
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
 text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
-title("Pitch moment contour lines",'FontSize',font_size_large, 'interpreter','latex')
+title("Predicted",'FontSize',font_size, 'interpreter','latex')
+
+nexttile
+scatter(alpha_recorded, c_m_recorded,[],delta_e_recorded,'filled','MarkerFaceAlpha',0.3);
+legend("Flight Data")
+c = colorbar; hold on
+c.Label.String = "$\delta_e$"; c.Label.Interpreter = 'latex'; c.Label.FontSize = font_size_large;
+title("Measured",'FontSize',font_size, 'interpreter','latex')
+ylim([-0.5 0.5])
+
+xlabel(t,"$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel(t,"$c_m$",'interpreter','latex','FontSize',font_size_large)
+title(t,"Pitch Moment Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+
+
+
 
 function c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
     c_D = c_D_0 + c_D_alpha .* (alpha - alpha_nom) + c_D_alpha_sq .* (alpha - alpha_nom).^2 ...
