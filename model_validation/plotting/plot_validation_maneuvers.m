@@ -43,52 +43,49 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
         for i = 1:num_models
             plot(time, model_data.(model_names(i))(:,1),'Color',lon_color,'LineWidth',line_width); hold on
         end
-        grid on
-        grid minor
         plot(time, rec_data(:,1), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on;
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+        grid on
+        grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$u [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([0 28])
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
 
         nexttile
         for i = 1:num_models
             plot(time, model_data.(model_names(i))(:,2),'Color',lon_color, 'LineWidth',line_width); hold on
         end
-        grid on
-        grid minor
         plot(time, rec_data(:,2), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+        grid on
+        grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$w [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([-10 10])
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
 
         nexttile
         for i = 1:num_models
             plot(time, rad2deg(model_data.(model_names(i))(:,3)),'Color',lon_color, 'LineWidth',line_width); hold on
         end
-        grid on
-        grid minor
         plot(time, rad2deg(rec_data(:,3)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+        grid on
+        grid minor
         set(gca,'FontSize', font_size_small)
         ylim([-200 200]);
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
         ylabel("$q [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
 
         nexttile
         for i = 1:num_models
             plot(time, rad2deg(model_data.(model_names(i))(:,4)), 'Color',lon_color,'LineWidth',line_width); hold on
         end
-        grid on
-        grid minor
         plot(time, rad2deg(rec_data(:,4)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+        grid on
+        grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$\theta [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([-70 70])
@@ -98,9 +95,9 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
 
         nexttile
         plot(time, rad2deg(input(:,1)), 'black', 'LineWidth', line_width); hold on
+        plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         grid on
         grid minor
-        plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         set(gca,'FontSize', font_size_small)
         ylabel("$\delta_e [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([-32 32])
@@ -126,7 +123,6 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
         ylabel("$v [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([-13 13])
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
 
         nexttile
         for i = 1:num_models
@@ -140,7 +136,6 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
         ylabel("$p [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
         ylim([-3.5*180/pi 3.5*180/pi]);
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
 
         nexttile
         for i = 1:num_models
@@ -153,7 +148,6 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
         set(gca,'FontSize', font_size_small)
         ylim([-3.5*180/pi 3.5*180/pi]);
         xlim([0 time(end)]);
-        set(gca,'xtick',[])
         ylabel("$r [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
 
         nexttile

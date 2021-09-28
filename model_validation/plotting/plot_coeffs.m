@@ -20,18 +20,19 @@ function plot_coeffs(time, predicted_values, recorded_values, first_maneuver_ind
         end
         grid on
         grid minor
-        plot_maneuver_lines(maneuver_end_indices, last_maneuver_index, time)
+        plot_maneuver_lines(maneuver_end_indices, first_maneuver_index, last_maneuver_index, time);
         ylabel(coeff_names(coeff_i), 'interpreter', 'latex', 'FontSize', font_size_large)
         xlim([0 time(end)]);
     end
-    lgd = legend(["Recorded Data" "Equation-Error Model"], 'location', 'southeast', 'FontSize', font_size_small);
+    lgd = legend(["Recorded Data" "Equation-Error Model"], 'location', 'best', 'FontSize', font_size_small);
     title(t, plot_title, 'FontSize', font_size_large, 'interpreter', 'latex')
     xlabel(t, "Time $[s]$", 'interpreter', 'latex', 'FontSize', font_size)
 end
 
 
-function plot_maneuver_lines(maneuver_start_index, first_maneuver_index, last_maneuver_index, time)
+function plot_maneuver_lines(maneuver_end_indices, first_maneuver_index, last_maneuver_index, time)
+    maneuver_start_index = maneuver_end_indices(first_maneuver_index) - 1;
     for maneuver_i = first_maneuver_index:last_maneuver_index
-        xline(time(maneuver_start_index(maneuver_i)),"--"); hold on
+        xline(time(maneuver_end_indices(maneuver_i) - maneuver_start_index),"--"); hold on
     end
 end

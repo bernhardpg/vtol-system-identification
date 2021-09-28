@@ -1,0 +1,138 @@
+clc; close all; clear all;
+
+load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
+
+lon_coeffs = equation_error_coeffs_lon;
+
+airframe_static_properties; % get alpha_nom
+% Remember that model is around trim. Therefore, we must subtract alpha_nom
+% when calculating lift and drag coeffs
+alpha_nom = alpha_nom * 180 / pi;
+delta_e_nom = delta_e_nom * 180 / pi;
+
+c_D_0 = lon_coeffs(1);
+c_D_alpha = lon_coeffs(2) * pi / 180;
+c_D_alpha_sq = lon_coeffs(3) * pi / 180;
+c_D_delta_e = lon_coeffs(5) * pi / 180;
+c_D_alpha_delta_e = lon_coeffs(6) * (pi / 180)^2;
+
+c_L_0 = lon_coeffs(7);
+c_L_alpha = lon_coeffs(8) * pi / 180;
+c_L_delta_e = lon_coeffs(11) * pi / 180;
+
+c_m_0 = lon_coeffs(13);
+c_m_alpha = lon_coeffs(14) * pi / 180;
+c_m_delta_e = lon_coeffs(17) * pi / 180;
+
+%%%%%%%%%%%%%%%%%
+% SURFACE PLOTS %
+%%%%%%%%%%%%%%%%%
+
+resolution = 1.5;
+
+alpha_min = -7;
+alpha_max = 15;
+alpha = (alpha_min:resolution:alpha_max);
+
+delta_e_min = -20;
+delta_e_max = 20;
+delta_e = delta_e_min:resolution:delta_e_max;
+
+[alphas,delta_es] = meshgrid(alpha, delta_e);
+
+c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alphas, delta_es, alpha_nom, delta_e_nom);
+c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alphas, delta_es, alpha_nom, delta_e_nom);
+c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alphas, delta_es, alpha_nom, delta_e_nom);
+
+% Plot lift coefficient
+figure
+plot_settings; % import plot settings
+surf(alphas,delta_es,c_L); hold on
+[Y,Z] = meshgrid(delta_e, min(min(c_L))-0.5:0.1:max(max(c_L)));
+X = ones(size(Y)) * alpha_nom;
+surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
+text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
+zlabel("$c_L$",'interpreter','latex','FontSize',font_size_large)
+title("Lift Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+
+% Plot drag coefficient
+figure
+surf(alphas,delta_es,c_D); hold on
+[Y,Z] = meshgrid(delta_e, min(min(c_D))-0.5:0.1:max(max(c_D)));
+X = ones(size(Y)) * alpha_nom;
+surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
+text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
+zlabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
+title("Drag Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+
+% Plot moment coefficient
+figure
+surf(alphas,delta_es,c_m); hold on
+% Plot alpha_nom
+[Y,Z] = meshgrid(delta_e, min(min(c_m))-0.5:0.1:max(max(c_m)));
+X = ones(size(Y)) * alpha_nom;
+surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
+text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+% Plot delta_e_nom
+[X,Z] = meshgrid(alpha, min(min(c_m))-0.5:0.1:max(max(c_m)));
+Y = ones(size(X)) * delta_e_nom;
+surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
+text(-10, delta_e_nom + 0.2, -0.7, "$\delta_e^*$",'interpreter','latex', 'FontSize',font_size_large)
+xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
+zlabel("$c_m$",'interpreter','latex','FontSize',font_size_large)
+title("Pitch Moment Coefficient",'FontSize',font_size_large, 'interpreter','latex')
+
+%%
+%%%%%%%%%%%%%%%%%%%%
+% 2D CONTOUR PLOTS %
+%%%%%%%%%%%%%%%%%%%%
+
+resolution = 0.5;
+alpha_min = -7;
+alpha_max = 15;
+alphas = (alpha_min:resolution:alpha_max);
+
+
+delta_e_min = -20;
+delta_e_max = 20;
+delta_es = delta_e_min:20:delta_e_max;
+
+% Drag curve
+figure
+% Plot 2D curves for every delta_e
+for delta_e = delta_es
+    c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alphas, delta_e, alpha_nom, delta_e_nom);
+    plot(alphas, c_D); hold on;
+    xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+    ylabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
+end
+
+
+%c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alphas, delta_e, alpha_nom, delta_e_nom);
+
+
+
+
+function plot_contours(alphas, coeffs)
+    plot(alphas, coeffs); hold on;
+    xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+    ylabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
+end
+
+function c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
+    c_D = c_D_0 + c_D_alpha .* (alpha - alpha_nom) + c_D_alpha_sq .* (alpha - alpha_nom).^2 ...
+    + c_D_delta_e .* (delta_e - delta_e_nom) + c_D_alpha_delta_e .* (alpha - alpha_nom)  .* (delta_e - delta_e_nom);
+end
+
+function c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
+    c_L = c_L_0 + c_L_alpha .* (alpha - alpha_nom) + c_L_delta_e .* (delta_e - delta_e_nom);
+end
+
+function c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
+    c_m = c_m_0 + c_m_alpha .* (alpha - alpha_nom) + c_m_delta_e .* (delta_e - delta_e_nom);
+end

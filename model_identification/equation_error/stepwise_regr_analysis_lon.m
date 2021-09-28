@@ -55,9 +55,13 @@ end
 
 [nonlin_regr_val] = create_nonlin_regressors_lon(regr_val);
 
+%%%%%
+% Options for plotting
 maneuver_end_indices = get_maneuver_end_indices(fpr_data_lon.validation, maneuver_types);
-num_maneuvers_to_plot = 3;
-t_plot = 0:dt:(maneuver_end_indices(num_maneuvers_to_plot))*dt-dt;
+first_maneuver_index = 1;
+last_maneuver_index = 3;
+total_maneuvers_length = (maneuver_end_indices(last_maneuver_index+1) - maneuver_end_indices(first_maneuver_index));
+t_plot = 0:dt:total_maneuvers_length*dt-dt;
 
 % For coefficient storage
 std_regr_order_lon = ["bias" "alpha" "alpha_sq" "q_hat" "delta_e" "alpha_delta_e"];
@@ -101,8 +105,8 @@ save("model_identification/equation_error/results/equation_error_coeffs_lon.mat"
 coeff_names = ["$c_D$" "$c_L$" "$c_m$"];
 recorded_values = [zs_val.C_D zs_val.C_L zs_val.C_m];
 predicted_values = [c_D_hat c_L_hat c_m_hat];
-plot_coeffs(t_plot, predicted_values, recorded_values, num_maneuvers_to_plot, ...
-    maneuver_end_indices, coeff_names,"One-Step Coefficient Prediction (Longitudinal Model)",...
+plot_coeffs(t_plot, predicted_values, recorded_values, first_maneuver_index, last_maneuver_index, ...
+    maneuver_end_indices, coeff_names,"Longitudinal Equation-Error One-Step Coefficient Prediction (Elevator Deflections)",...
     "longitudinal")
 
 function [nonlin_regr] = create_nonlin_regressors_lon(regr)

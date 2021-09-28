@@ -58,9 +58,10 @@ nonlin_regr_val = create_nonlin_regressors_lat(regr_val);
 [N_val, ~] = size(regr_val);
 t_plot_val = 0:dt:N_val * dt - dt;
 
-% Set data for plotting
+%%%%%
+% Options for plotting
 maneuver_end_indices = get_maneuver_end_indices(fpr_data_lat.validation, maneuver_types);
-first_maneuver_index = 4;
+first_maneuver_index = 1;
 last_maneuver_index = 6;
 total_maneuvers_length = (maneuver_end_indices(last_maneuver_index+1) - maneuver_end_indices(first_maneuver_index));
 t_plot = 0:dt:total_maneuvers_length*dt-dt;
@@ -107,8 +108,8 @@ coeff_names = ["$c_Y$" "$c_l$" "$c_n$"];
 recorded_values = [zs_val.C_Y zs_val.C_l zs_val.C_n];
 predicted_values = [c_Y_hat c_l_hat c_n_hat];
 plot_coeffs(t_plot, predicted_values, recorded_values, first_maneuver_index, last_maneuver_index, ...
-    maneuver_end_indices, coeff_names,"Lateral-Directional Equation-Error One-Step Coefficient Prediction (Aileron Deflection)",...
-    "longitudinal")
+    maneuver_end_indices, coeff_names,"Lateral-Directional Equation-Error One-Step Coefficient Prediction (Rudder Deflection)",...
+    "lateral-directional")
 
 function [nonlin_regr] = create_nonlin_regressors_lat(regr)
     nonlin_regr = [regr(:,1).^2 regr(:,1).*regr(:,2) regr(:,1).*regr(:,3) regr(:,1).*regr(:,4) regr(:,1).*regr(:,5)];

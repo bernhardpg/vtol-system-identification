@@ -11,8 +11,8 @@ clear all; close all; clc;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Plot options
-test_avl_models = true;
-test_nonlin_models = false;
+test_avl_models = false;
+test_nonlin_models = true;
 show_maneuver_plots = true;
 show_error_metric_plots = false;
 show_cr_bounds_plots = false;
@@ -24,7 +24,7 @@ maneuver_types = [
     "yaw_211",...
     ];
 
-plot_title = "Lateral-Directional VLM Model (Rudder Maneuvers)";
+plot_title = "Lateral-Directional Equation-Error Model (Rudder Maneuvers)";
 
 state_names = ["v","p","r","\phi"];
 state_names_latex = ["$v$","$p$","$r$","$\phi$"];
@@ -56,8 +56,9 @@ load("model_identification/output_error/results/output_error_lat_coeffs.mat");
 load("model_identification/output_error/results/output_error_lat_coeffs_all_free.mat");
 load("model_identification/output_error/results/output_error_lat_coeffs_final.mat");
 
-model_coeffs = {equation_error_coeffs_lat, output_error_lat_coeffs, output_error_lat_coeffs_all_free, output_error_lat_coeffs_final};
-model_names = ["EquationError" "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
+model_coeffs = {equation_error_coeffs_lat};%, output_error_lat_coeffs, output_error_lat_coeffs_all_free, output_error_lat_coeffs_final};
+model_names = ["EquationError"];% "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
+model_names_to_display = ["Equation-Error Model"];
 models = create_models_from_coeffs(model_coeffs, model_type);
 models_avl = create_models_from_coeffs({avl_coeffs_lat}, model_type);
 model_names_avl = ["NonlinearVLM"];
@@ -77,5 +78,5 @@ validate_models(...
     state_names, state_names_latex, param_names, param_names_latex,...
     show_error_metric_plots, show_cr_bounds_plots, show_param_map_plot,...
     maneuver_types, models, models_avl, model_coeffs, model_names, model_names_avl, cr_bounds, fpr_data,...
-    model_names_avl_to_display...
+    model_names_avl_to_display, model_names_to_display...
     );
