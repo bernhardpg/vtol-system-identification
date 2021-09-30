@@ -15,7 +15,7 @@ classdef OutputErrorProblem
         LineSearchRes = 10
     end
     methods
-        function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update)
+        function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update, weight)
             obj.ModelType = model_type;
             obj.TrainingData = obj.collect_all_maneuvers_into_array(fpr_data.training);
             obj.ValidationData = obj.collect_all_maneuvers_into_array(fpr_data.validation);
@@ -259,6 +259,7 @@ classdef OutputErrorProblem
         end
         
         function draw_cost_function_history(obj, fig_axes, iteration_indices, costs, r_updated_indices)
+
             plot(fig_axes, iteration_indices, costs); hold on
             for i = r_updated_indices
                 xline(i, ":", "Updated $\hat{R}$",'interpreter','latex');    

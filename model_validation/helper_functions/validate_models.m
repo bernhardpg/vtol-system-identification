@@ -69,16 +69,19 @@ function [] = validate_models(...
 
     if show_error_metric_plots
         if test_nonlin_models
-            [gof_means, tic_means, an_means] = collect_mean_error_metrics_from_models(error_metrics, model_names);
+            [gof_means, tic_means, an_means, mae_mean, rmse_mean] = collect_mean_error_metrics_from_models(error_metrics, model_names, maneuver_types);
 
             [gof_means] = collect_structs_into_array(gof_means, model_names);
             create_bar_plot(gof_means, model_names, "Goodness-of-Fit (GOF)", state_names, state_names_latex);
 
             [tic_means] = collect_structs_into_array(tic_means, model_names);
             create_bar_plot(tic_means, model_names, "Theils-Inequality-Coefficient (TIC)", state_names, state_names_latex);
-
-            [an_means] = collect_structs_into_array(an_means, model_names);
-            create_bar_plot(an_means, model_names, "Average-Normalized Error Measures", ["ANMAE","ANRMSE"], ["ANMAE","ANRMSE"]);
+            
+            [mae_means] = collect_structs_into_array(mae_mean, model_names);
+            create_bar_plot(mae_means, model_names, "Mean Absolute Error (MAE)", state_names, state_names_latex);
+            
+            [rmse_means] = collect_structs_into_array(rmse_mean, model_names);
+            create_bar_plot(rmse_means, model_names, "Root Mean Squared Error (RMSE)", state_names, state_names_latex);
         end
     end
 

@@ -40,57 +40,57 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
         t = tiledlayout(num_plots_rows,1, 'Padding', 'compact', 'TileSpacing', 'compact'); 
 
         nexttile
-        for i = 1:num_models
-            plot(time, model_data.(model_names(i))(:,1),'LineWidth',line_width); hold on
-        end
         plot(time, rec_data(:,1), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on;
+        for i = 1:num_models
+            plot(time, model_data.(model_names(i))(:,1),'LineWidth',line_width, 'Color', lon_colors(i,:)); hold on
+        end
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         grid on
         grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$u [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
-        ylim([0 28])
+        ylim([10 25])
         xlim([0 time(end)]);
 
         nexttile
-        for i = 1:num_models
-            plot(time, model_data.(model_names(i))(:,2),'LineWidth',line_width); hold on
-        end
         plot(time, rec_data(:,2), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+        for i = 1:num_models
+            plot(time, model_data.(model_names(i))(:,2),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+        end
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         grid on
         grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$w [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
-        ylim([-10 10])
+        ylim([-6 6])
         xlim([0 time(end)]);
 
         nexttile
-        for i = 1:num_models
-            plot(time, rad2deg(model_data.(model_names(i))(:,3)),'LineWidth',line_width); hold on
-        end
         plot(time, rad2deg(rec_data(:,3)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+        for i = 1:num_models
+            plot(time, rad2deg(model_data.(model_names(i))(:,3)),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+        end
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         grid on
         grid minor
         set(gca,'FontSize', font_size_small)
-        ylim([-200 200]);
+        ylim([-100 100]);
         xlim([0 time(end)]);
         ylabel("$q [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
 
         nexttile
-        for i = 1:num_models
-            plot(time, rad2deg(model_data.(model_names(i))(:,4)),'LineWidth',line_width); hold on
-        end
         plot(time, rad2deg(rec_data(:,4)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+        for i = 1:num_models
+            plot(time, rad2deg(model_data.(model_names(i))(:,4)),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+        end
         plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
         grid on
         grid minor
         set(gca,'FontSize', font_size_small)
         ylabel("$\theta [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
-        ylim([-70 70])
+        ylim([-30 30])
         xlim([0 time(end)]);
-        lgd = legend([model_names_to_display "Recorded Data"], 'location', 'southeast', 'FontSize', font_size_small);
+        lgd = legend(["Recorded Data" model_names_to_display], 'location', 'southeast', 'FontSize', font_size_small);
         
 
         nexttile

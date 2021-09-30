@@ -21,7 +21,7 @@ show_param_map_plot = true;
 model_type = "longitudinal";
 maneuver_types = ["pitch_211"];
 
-plot_title = "Longitudinal Models Comparison (Elevator Maneuvers)";
+plot_title = "Longitudinal Equation-Error Model (Elevator Maneuvers)";
 
 state_names = ["u","w","q","\theta"];
 state_names_latex = ["$u$","$w$","$q$","$\theta$"];
@@ -48,7 +48,7 @@ load("model_identification/output_error/results/output_error_coeffs_lon_final_co
 
 model_coeffs = {equation_error_coeffs_lon output_error_lon_coeffs};
 model_names = ["EquationError" "OutputError"];
-model_names_to_display = ["Equation-Error Model" "Output-Error Model"];
+model_names_to_display = ["Equation-Error Model" "Temp Output-Error Model" "Output-Error Model"];
 models_avl = create_models_from_coeffs({avl_coeffs_lon}, model_type);
 model_names_avl = ["NonlinearVLM"];
 model_names_avl_to_display = ["Nonlinear VLM Model"];
@@ -58,7 +58,7 @@ models = create_models_from_coeffs(model_coeffs, model_type);
 load("model_identification/output_error/results/output_error_lon_cr_bounds.mat");
 load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
 load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
-cr_bounds = {zeros(size(output_error_lon_cr_bounds)) output_error_lon_cr_bounds};
+cr_bounds = {zeros(size(output_error_lon_cr_bounds)) output_error_lon_cr_bounds output_error_coeffs_lon_final_cr_bounds};
 
 % Call validation function
 validate_models(...

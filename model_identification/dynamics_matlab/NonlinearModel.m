@@ -56,7 +56,6 @@ classdef NonlinearModel
         end
         
         function dy_dt = dynamics_lon_model_c(obj, t, y, t_data_seq, lon_input_seq, lat_state_seq)
-            lon_input_seq(:,1) = detrend(lon_input_seq(:,1),0);
             input_seq_for_c_file = [t_data_seq lon_input_seq lat_state_seq];
             params_vector = [obj.StaticParams;
                       reshape(obj.CoeffsLon, [numel(obj.CoeffsLon),1])];
