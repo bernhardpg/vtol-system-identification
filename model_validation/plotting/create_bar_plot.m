@@ -4,7 +4,10 @@ function [] = create_bar_plot(model_metric, model_names, metric_name, variable_n
     num_variables = length(variable_names);
     Y = [model_metric';
          mean(model_metric,2)'];
-    b = bar(1:num_variables+1, Y); hold on
+    b = bar(1:num_variables+1, Y,'FaceColor','flat'); hold on
+    for k = 1:size(Y,2)
+        b(k).CData = lat_colors(k,:);
+    end
     ylim([0 max(max(Y))*1.25]);
     title(metric_name, 'interpreter', 'latex', 'FontSize',font_size_large)
     xline(num_variables + 0.5,"--"); % division line between mean and other values

@@ -8,7 +8,7 @@ function [] = validate_models(...
     )
     % Maneuver prediction
     
-    num_maneuvers_to_plot = 5;
+    num_maneuvers_to_plot = 3;
     
     simulation_data = {};
     error_metrics = {};
@@ -72,16 +72,16 @@ function [] = validate_models(...
             [gof_means, tic_means, an_means, mae_mean, rmse_mean] = collect_mean_error_metrics_from_models(error_metrics, model_names, maneuver_types);
 
             [gof_means] = collect_structs_into_array(gof_means, model_names);
-            create_bar_plot(gof_means, model_names, "Goodness-of-Fit (GOF)", state_names, state_names_latex);
+            create_bar_plot(gof_means, model_names_to_display, "Goodness-of-Fit (GOF)", state_names, state_names_latex);
 
             [tic_means] = collect_structs_into_array(tic_means, model_names);
-            create_bar_plot(tic_means, model_names, "Theils-Inequality-Coefficient (TIC)", state_names, state_names_latex);
+            create_bar_plot(tic_means, model_names_to_display, "Theils-Inequality-Coefficient (TIC)", state_names, state_names_latex);
             
             [mae_means] = collect_structs_into_array(mae_mean, model_names);
-            create_bar_plot(mae_means, model_names, "Mean Absolute Error (MAE)", state_names, state_names_latex);
+            create_bar_plot(mae_means, model_names_to_display, "Normalized Mean-Absolute-Errors (NMAE)", state_names, state_names_latex);
             
             [rmse_means] = collect_structs_into_array(rmse_mean, model_names);
-            create_bar_plot(rmse_means, model_names, "Root Mean Squared Error (RMSE)", state_names, state_names_latex);
+            create_bar_plot(rmse_means, model_names_to_display, "Normalized Root-Mean-Squared-Errors (NRMSE)", state_names, state_names_latex);
         end
     end
 
