@@ -14,13 +14,13 @@ clear all; close all; clc;
 test_avl_models = false;
 test_nonlin_models = true;
 show_maneuver_plots = true;
-show_error_metric_plots = false;
-show_cr_bounds_plots = false;
-show_param_map_plot = false;
+show_error_metric_plots = true;
+show_cr_bounds_plots = true;
+show_param_map_plot = true;
 
 model_type = "lateral-directional";
 maneuver_types = [
-%    "roll_211",...
+    "roll_211",...
     "yaw_211",...
     ];
 
@@ -56,9 +56,9 @@ load("model_identification/output_error/results/output_error_lat_coeffs.mat");
 load("model_identification/output_error/results/output_error_lat_coeffs_all_free.mat");
 load("model_identification/output_error/results/output_error_lat_coeffs_final.mat");
 
-model_coeffs = {equation_error_coeffs_lat};%, output_error_lat_coeffs, output_error_lat_coeffs_all_free, output_error_lat_coeffs_final};
-model_names = ["EquationError"];% "OutputError" "OutputErrorAllFree" "OutputErrorFinal"];
-model_names_to_display = ["Equation-Error Model"];
+model_coeffs = {equation_error_coeffs_lat output_error_lat_coeffs};
+model_names = ["EquationError" "OutputError"];
+model_names_to_display = ["Equation-Error Model" "Output-Error Model"];
 models = create_models_from_coeffs(model_coeffs, model_type);
 models_avl = create_models_from_coeffs({avl_coeffs_lat}, model_type);
 model_names_avl = ["NonlinearVLM"];
@@ -69,7 +69,7 @@ load("model_identification/output_error/results/output_error_lat_cr_bounds.mat")
 load("model_identification/output_error/results/output_error_lat_all_free_cr_bounds.mat");
 load("model_identification/output_error/results/output_error_lat_final_cr_bounds.mat");
 
-cr_bounds = {zeros(size(output_error_lat_cr_bounds)) output_error_lat_cr_bounds output_error_lat_all_free_cr_bounds output_error_lat_final_cr_bounds};
+cr_bounds = {zeros(size(output_error_lat_cr_bounds)) output_error_lat_cr_bounds};
 
 % Call validation function
 validate_models(...

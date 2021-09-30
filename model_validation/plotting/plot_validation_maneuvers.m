@@ -113,7 +113,7 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
 
         nexttile
         for i = 1:num_models
-            plot(time, model_data.(model_names(i))(:,1),'Color',lat_color, 'LineWidth',line_width); hold on
+            plot(time, model_data.(model_names(i))(:,1), 'LineWidth',line_width); hold on
         end
         grid on
         grid minor
@@ -126,7 +126,7 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
 
         nexttile
         for i = 1:num_models
-            plot(time, rad2deg(model_data.(model_names(i))(:,2)), 'Color',lat_color, 'LineWidth',line_width); hold on
+            plot(time, rad2deg(model_data.(model_names(i))(:,2)), 'LineWidth',line_width); hold on
         end
         grid on
         grid minor
@@ -139,7 +139,7 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
 
         nexttile
         for i = 1:num_models
-            plot(time, rad2deg(model_data.(model_names(i))(:,3)), 'Color',lat_color, 'LineWidth',line_width); hold on
+            plot(time, rad2deg(model_data.(model_names(i))(:,3)), 'LineWidth',line_width); hold on
         end
         grid on
         grid minor
@@ -152,7 +152,7 @@ function plot_validation_maneuvers(plot_title, simulation_data_for_plotting, mod
 
         nexttile
         for i = 1:num_models
-            plot(time, rad2deg(model_data.(model_names(i))(:,4)),'Color',lat_color,  'LineWidth',line_width); hold on
+            plot(time, rad2deg(model_data.(model_names(i))(:,4)),  'LineWidth',line_width); hold on
         end
         grid on
         grid minor

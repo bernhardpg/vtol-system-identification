@@ -11,10 +11,11 @@ function [] = validate_models(...
     num_maneuvers_to_plot = 3;
     
     simulation_data = {};
+    error_metrics = {};
     for maneuver_type = maneuver_types
+        simulation_data.(maneuver_type) = {};
+        error_metrics.(maneuver_type) = {};
         num_maneuvers = length(fpr_data.validation.(maneuver_type));
-        error_metrics = {};
-        error_metrics = {};
         for maneuver_i = 1:num_maneuvers
             maneuver = fpr_data.validation.(maneuver_type)(maneuver_i);
             t_sim = maneuver.Time;
@@ -43,7 +44,6 @@ function [] = validate_models(...
             if test_nonlin_models
                 plot_styles = ["-" "-" "-" "-"];
                 [predicted_outputs, error_metrics_for_maneuver] = evaluate_models_on_maneuver(maneuver, models, model_names, model_type);
-                error_metrics{maneuver_i} = error_metrics_for_maneuver;
             end
 
             % Store simulation data
@@ -55,14 +55,16 @@ function [] = validate_models(...
                 simulation_data_curr_maneuver.Input = [maneuver.DeltaE maneuver.DeltaT];
             end
             simulation_data_curr_maneuver.Models = predicted_outputs;
-            simulation_data{maneuver_i} = simulation_data_curr_maneuver;
-            error_metrics{maneuver_i} = error_metrics_for_maneuver;
+            simulation_data.(maneuver_type){maneuver_i} = simulation_data_curr_maneuver;
+            error_metrics.(maneuver_type){maneuver_i} = error_metrics_for_maneuver;
             
         end
     end
     
     if show_maneuver_plots
-        plot_validation_maneuvers(plot_title, simulation_data, model_type, model_names, plot_styles, model_names_to_display, num_maneuvers_to_plot);
+        for maneuver_type = maneuver_types 
+            plot_validation_maneuvers(plot_title, simulation_data.(maneuver_type), model_type, model_names, plot_styles, model_names_to_display, num_maneuvers_to_plot);
+        end
     end
 
     if show_error_metric_plots
