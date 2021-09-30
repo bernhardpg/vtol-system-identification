@@ -8,7 +8,7 @@ function [] = validate_models(...
     )
     % Maneuver prediction
     
-    num_maneuvers_to_plot = 3;
+    num_maneuvers_to_plot = 5;
     
     simulation_data = {};
     error_metrics = {};

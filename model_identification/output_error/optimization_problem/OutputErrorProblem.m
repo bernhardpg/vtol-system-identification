@@ -11,11 +11,13 @@ classdef OutputErrorProblem
         ManeuverData
         ManeuverSimulations
         ParametersToUpdate
-        ParamPerturbation = 0.01
+        ParamPerturbation = 0.001
         LineSearchRes = 10
+        Lambda
+        W
     end
     methods
-        function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update, weight)
+        function obj = OutputErrorProblem(model_type, fpr_data, dynamics_model, maneuver_types, params_to_update, regularization, weights)
             obj.ModelType = model_type;
             obj.TrainingData = obj.collect_all_maneuvers_into_array(fpr_data.training);
             obj.ValidationData = obj.collect_all_maneuvers_into_array(fpr_data.validation);
@@ -34,6 +36,8 @@ classdef OutputErrorProblem
             obj.OptData.error_covariance_converged = false;
             obj.ManeuverData = {};
             obj.ParametersToUpdate = params_to_update;
+            obj.Lambda = regularization;
+            obj.W = weights;
             
             % Collect simulation data for all maneuvers
             for maneuver_i = 1:length(obj.TrainingData)
@@ -44,12 +48,14 @@ classdef OutputErrorProblem
             
             % Create functions etc specific to current model type
             if obj.ModelType == "longitudinal"
+                obj.ModelSpecific.initial_params = obj.OptData.params.CoeffsLon;
                 obj.ModelSpecific.curr_params = obj.OptData.params.CoeffsLon;
                 obj.ModelSpecific.sim_model = @(lat_params, lon_params, maneuver_i) obj.sim_model_lon(lat_params, lon_params, maneuver_i);
                 obj.ModelSpecific.calc_residuals = @(maneuver, y_pred) obj.calc_residuals(maneuver.lon_z, y_pred);
                 obj.ModelSpecific.f_calc_y = @(params) obj.get_y_pred_for_maneuvers(obj.OptData.params.CoeffsLat, params, obj.TrainingData);
                 obj.ModelSpecific.simulate_maneuvers = @(params, fpr_data) obj.simulate_maneuvers(obj.OptData.params.CoeffsLat, params, fpr_data);
             elseif obj.ModelType == "lateral-directional"
+                obj.ModelSpecific.initial_params = obj.OptData.params.CoeffsLat;
                 obj.ModelSpecific.curr_params = obj.OptData.params.CoeffsLat;
                 obj.ModelSpecific.sim_model = @(lat_params, lon_params, maneuver_i) obj.sim_model_lat(lat_params, lon_params, maneuver_i);
                 obj.ModelSpecific.calc_residuals = @(maneuver, y_pred) obj.calc_residuals(maneuver.lat_z, y_pred);
@@ -72,7 +78,7 @@ classdef OutputErrorProblem
             % Evaluate initial parameters
             obj.ManeuverSimulations = obj.simulate_maneuvers(obj.InitialParams.CoeffsLat, obj.InitialParams.CoeffsLon, obj.TrainingData);
             [obj.OptData.cost, obj.OptData.residuals, obj.OptData.R_hat]...
-                = obj.calc_cost_for_maneuvers(obj.ManeuverSimulations);
+                = obj.calc_cost_for_maneuvers(obj.ManeuverSimulations, 0);
             obj.OptData.costs = obj.OptData.cost;
 
             % Plot cost history
@@ -115,8 +121,9 @@ classdef OutputErrorProblem
                     params_new = obj.ModelSpecific.curr_params + alpha * params_update_matrix;
 
                     % Evaluate new model performance
+                    sq_param_change = obj.calc_squared_param_change(obj.ModelSpecific.initial_params, params_new);
                     maneuver_simulations = obj.ModelSpecific.simulate_maneuvers(params_new, obj.TrainingData);
-                    [cost_new, residuals_new] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat);
+                    [cost_new, residuals_new] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat, sq_param_change);
                
                     % Check convergence
                     [obj.OptData.parameters_converged, obj.OptData.ConvergenceReason]...
@@ -190,7 +197,7 @@ classdef OutputErrorProblem
             convergence_reason = "Not converged";
             
             abs_noise_covar_change = abs(diag(R_hat_old - R_hat_new) ./ (diag(R_hat_old)));
-            if all((abs_noise_covar_change) < 0.01)
+            if all((abs_noise_covar_change) < 0.05)
                 has_converged = true;
                 convergence_reason = "All covariances smaller than specified treshold";
                 disp("Converged: " + convergence_reason);
@@ -217,7 +224,7 @@ classdef OutputErrorProblem
                disp("Converged: " + convergence_reason);
             end
 
-            if all(abs(cost_gradient) < 0.01)
+            if all(abs(cost_gradient) < 0.05)
                has_converged = true;
                convergence_reason = "All gradients smaller than specificed treshold";
                disp("Converged: " + convergence_reason);
@@ -230,8 +237,9 @@ classdef OutputErrorProblem
                 % Update parameters
                 theta_new = theta_0 + potential_alpha * delta_theta;
 
+                sq_param_change = obj.calc_squared_param_change(obj.ModelSpecific.initial_params, theta_new);
                 maneuver_simulations = obj.ModelSpecific.simulate_maneuvers(theta_new, obj.TrainingData);
-                [cost_new, ~] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat);
+                [cost_new, ~] = obj.calc_cost_for_maneuvers_with_const_noise_covar(maneuver_simulations, obj.OptData.R_hat, sq_param_change);
                 if cost_new < min_cost
                     min_cost = cost_new;
                     alpha = potential_alpha;
@@ -239,7 +247,7 @@ classdef OutputErrorProblem
             end
         end
         
-        function [cost, residuals, R_hat] = calc_cost_for_maneuvers(obj, maneuver_simulations)            
+        function [cost, residuals, R_hat] = calc_cost_for_maneuvers(obj, maneuver_simulations, sq_param_change)
             % Calculate all residuals
             residuals = obj.aggregate_residuals_from_all_maneuvers(maneuver_simulations);
             
@@ -247,15 +255,15 @@ classdef OutputErrorProblem
             R_hat = obj.est_noise_covariance(residuals, obj.OptData.N_total);
 
             % Calculate cost from all maneuvers
-            cost = obj.calc_cost(R_hat, residuals);
+            cost = obj.calc_cost(R_hat, residuals, sq_param_change);
         end
         
-        function [cost, residuals] = calc_cost_for_maneuvers_with_const_noise_covar(obj, maneuver_simulations, R_hat)            
+        function [cost, residuals] = calc_cost_for_maneuvers_with_const_noise_covar(obj, maneuver_simulations, R_hat, sq_param_change)      
             % Calculate all residuals
             residuals = obj.aggregate_residuals_from_all_maneuvers(maneuver_simulations);
 
             % Calculate cost from all maneuvers
-            cost = obj.calc_cost(R_hat, residuals);
+            cost = obj.calc_cost(R_hat, residuals, sq_param_change);
         end
         
         function draw_cost_function_history(obj, fig_axes, iteration_indices, costs, r_updated_indices)
@@ -294,16 +302,22 @@ classdef OutputErrorProblem
             % Calculate information matrix
             information_matrix_terms = zeros(n_params, n_params, N);
             for timestep_i = 1:N
-                information_matrix_terms(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ sensitivity_matrices(:,:,timestep_i));    
+                information_matrix_terms(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * obj.W^2 * (R_hat \ sensitivity_matrices(:,:,timestep_i));    
             end
             information_matrix = sum(information_matrix_terms,3);
+            
+            % Add regularization term
+            information_matrix = information_matrix + obj.Lambda * eye(n_params);
             
             % Calculate cost_gradient
             cost_gradient_all_i = zeros(n_params, 1, N);
             for timestep_i = 1:N
-                cost_gradient_all_i(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * (R_hat \ residuals(timestep_i,:)');    
+                cost_gradient_all_i(:,:,timestep_i) = sensitivity_matrices(:,:,timestep_i)' * obj.W^2 * (R_hat \ residuals(timestep_i,:)');    
             end
             cost_gradient = -sum(cost_gradient_all_i,3);
+            
+            % Add regularization
+            cost_gradient = cost_gradient + obj.Lambda * (params(params_to_update)' - obj.ModelSpecific.initial_params(params_to_update)');
             
             % Compute param_update
             params_update = - information_matrix \ cost_gradient;
@@ -362,9 +376,13 @@ classdef OutputErrorProblem
             v = z - y_pred; % residuals
         end
 
-        function cost = calc_cost(~, R_hat, residuals)
-            cost = 0.5 * sum(diag(residuals / R_hat * residuals'));
-        end        
+        function cost = calc_cost(obj, R_hat, residuals, sq_param_change)
+            cost = 0.5 * sum(diag(residuals * inv(R_hat) * obj.W^2 * residuals')) + obj.Lambda * sq_param_change;
+        end
+        
+        function sq_params_change = calc_squared_param_change(~, params_old, params_new)
+            sq_params_change = (params_old(:) - params_new(:))' * (params_old(:) - params_new(:));
+        end
         
         function R_hat = est_noise_covariance(~, residuals, N)
             R_hat = diag(diag(residuals' * residuals) / N); % Assumes cross-covariances to be zero ny neglecting nondiagonal terms
