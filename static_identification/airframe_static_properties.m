@@ -50,6 +50,8 @@ c_Q_top = 0;
 % Cruise conditions
 V_nom = 21; % Nominal airspeed, m/s
 alpha_nom = 3 / 180 * pi;
+u_nom = V_nom / (sqrt(1 + tan(alpha_nom)^2));
+w_nom = sqrt(V_nom^2 - u_nom^2);
 delta_e_nom = -0.0985;
 delta_a_nom = 0.0529;
 delta_r_nom = 0;

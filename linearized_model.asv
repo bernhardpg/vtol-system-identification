@@ -1,0 +1,44 @@
+clc; clear all; close all
+
+syms u v w p q r phi theta;
+
+phi_dot = p + tan(theta) * (q * sin(theta) + r * cos(phi));
+theta_dot = q * cos(phi) - r * sin(phi);
+
+airframe_static_properties;
+mass = mass_kg;
+
+
+g = 9.81;
+X = 0;
+Y = 0;
+Z = 0;
+T = 0;
+
+f_x = X + T - mass*g * sin(theta);
+f_y = Y + mass*g * sin(phi) * cos(theta);
+f_z = Z + mass*g * cos(phi) * cos(theta);
+
+u_dot = r*v - q*w + (1/mass) * (f_x);
+v_dot = p*w - r*u + (1/mass) * (f_y);
+w_dot = q*u - p*v + (1/mass) * (f_z);
+
+l = 0;
+m = 0;
+n = 0;
+
+p_dot = gam(1)*p*q - gam(2)*q*r + gam(3)*l + gam(4)*n;
+q_dot = gam(5)*p*r - gam(6)*(p^2 - r^2) + (1/J_yy) * m;
+r_dot = gam(7)*p*q - gam(1)*q*r + gam(4)*l + gam(8)*n;
+
+alpha = atan(w/u);
+
+syms delta_e
+
+alpha_pert = (alpha - alpha_nom);
+delta_e_pert = (delta_e - delta_e_nom);
+
+aerodynamic_coeffs;
+q_hat = 0;
+c_D = c_D_0 + c_D_alpha * alpha_pert * c_D_alpha_sq * alpha_pert^2 + c_D_q_hat * q_hat + c_D_delta_e * delta_e_pert + c_D_delta_e_alpha * alpha_pert * delta_e_pert;
+c_L = c_L_0 + c_L_alpha * alpha_pert + c_L_delta_e * delta_e_pertl;
