@@ -2,9 +2,9 @@ kINCH_TO_METER = 0.0254;
 prop_diam_pusher_in_inches = 15;
 prop_diam_pusher = prop_diam_pusher_in_inches * kINCH_TO_METER;
 
- % See motor_id.m for calculation off these
+ % See propeller_id.m for calculation off these
 c_T_pusher = 0.083977697623922;
-c_Q_pusher = -0.005072037909591; % Neglect this?
+c_Q_pusher = -0.005072037909591; % This is actually not used.
 
 % From PWM to RPS
 %pwm_to_rpm = -348.3499 + 0.38884 * pwm-6.6615e-05 * pwm^2

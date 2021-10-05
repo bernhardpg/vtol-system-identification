@@ -14,6 +14,7 @@ titles = [...
 
 fig = figure;
 fig.Position = [100 100 1200 300];
+plot_settings;
 
 for i = 1:length(experiment_names)
     % Read data
@@ -30,9 +31,10 @@ for i = 1:length(experiment_names)
     
     subplot(1,3,i)
     plot(t, angle_deg_abs, '-o'); hold on;
-    ylabel("angle [deg]");
-    xlabel("time [s]");
-    title(titles(i));
+    ylim([0,28])
+    ylabel("Deflection $[^\circ]$", 'interpreter','Latex', 'FontSize',font_size_small);
+    xlabel("Time $[s]$", 'interpreter','Latex', 'FontSize',font_size_small);
+    title(titles(i), 'interpreter','Latex', 'FontSize',font_size);
 end
 
 % Find time constant and rate limit heuristically
@@ -52,8 +54,10 @@ for i = 1:length(u_steps)
     plot(t,y); hold on;
 end
 
-legend("Experimental data", "Simulated model",'Location','southeast');
-sgtitle("Control surface step responses")
+legend("Experimental data", "Simulated model",'Location','southeast',...
+    'interpreter','Latex', 'FontSize',font_size);
+sgtitle("Control surface step responses", ...
+    'interpreter','Latex', 'FontSize',font_size_large)
 
 function delta_e_dot = f(t, delta_e, delta_e_sp, rate_lim, T)
     delta_e_dot = bound(-1/T * delta_e + 1/T * delta_e_sp, -rate_lim, rate_lim);

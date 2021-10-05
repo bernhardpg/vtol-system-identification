@@ -40,13 +40,6 @@ r_t2_B = r_t1_B_mm / 1e3;
 r_t3_B = r_t1_B_mm / 1e3;
 r_t4_B = r_t1_B_mm / 1e3;
 
-%%% Propellers and motors
-kINCH_TO_METER = 0.0254;
-prop_diam_top_in_inches = 16;
-prop_diam_top = prop_diam_top_in_inches * kINCH_TO_METER;
-c_T_top = 0;
-c_Q_top = 0;
-
 % Cruise conditions
 V_nom = 21; % Nominal airspeed, m/s
 alpha_nom = 3 / 180 * pi;
@@ -58,4 +51,5 @@ delta_r_nom = 0;
 
 % Load control surface properties
 control_surface_constants;
-pusher_motor_constants;
+fixedwing_propeller_constants;
+multirotor_propeller_constants;
