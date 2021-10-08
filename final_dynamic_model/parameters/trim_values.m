@@ -2,6 +2,7 @@
 V_trim = 21;
 delta_e_trim = -0.0985;
 delta_a_trim = 0.0529;
+delta_t_trim = 110^2;
 
 alpha_trim = 0.0524;
 theta_trim = alpha_trim;

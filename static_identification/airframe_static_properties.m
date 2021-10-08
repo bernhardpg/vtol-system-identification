@@ -40,14 +40,8 @@ r_t2_B = r_t1_B_mm / 1e3;
 r_t3_B = r_t1_B_mm / 1e3;
 r_t4_B = r_t1_B_mm / 1e3;
 
-% Cruise conditions
-V_nom = 21; % Nominal airspeed, m/s
-alpha_nom = 3 / 180 * pi;
-u_nom = V_nom / (sqrt(1 + tan(alpha_nom)^2));
-w_nom = sqrt(V_nom^2 - u_nom^2);
-delta_e_nom = -0.0985;
-delta_a_nom = 0.0529;
-delta_r_nom = 0;
+% Trim conditions
+trim;
 
 % Load control surface properties
 control_surface_constants;

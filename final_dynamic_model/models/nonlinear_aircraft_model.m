@@ -1,7 +1,7 @@
 function x_dot = nonlinear_aircraft_model(t, x, calc_input)
     % Import parameters
     aerodynamic_coeffs;
-    static_coeffs;
+    static_parameters;
     trim_values;
 
     % Unpack states
