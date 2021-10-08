@@ -47,8 +47,8 @@ y_0_lat = y_0(:,[2 4 6 7]);
 
 % Simulate linear model
 linear_model;
-y_lon_sim = lsim(ss_lon, u_lon, t_seq) + y_lon_trim;
-y_lat_sim = lsim(ss_lat, u_lat, t_seq);
+y_lon_sim = lsim(ss_lon, u_lon, t_seq, y_0_lon) + y_lon_trim;
+y_lat_sim = lsim(ss_lat, u_lat, t_seq, y_0_lat);
 
 y_sim = [y_lon_sim(:,1) y_lat_sim(:,1) y_lon_sim(:,2)...
          y_lat_sim(:,2) y_lon_sim(:,3) y_lat_sim(:,3)...
