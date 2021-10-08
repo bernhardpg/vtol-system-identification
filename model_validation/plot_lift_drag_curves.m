@@ -216,6 +216,10 @@ c_D_0 = c_D_0 - c_D_alpha * alpha_nom + c_D_alpha_sq * alpha_nom^2;
 c_D_alpha = c_D_alpha - 2 * c_D_alpha_sq * alpha_nom;
 c_D_alpha_sq = c_D_alpha_sq;
 
+c_m_0 = c_m_0 - c_m_alpha * alpha_nom; % Find absolute c_m_0
+c_m_alpha = c_m_alpha;
+
+
 
 % %Crude line search on e
 % e = 0.8:0.01:1.5;

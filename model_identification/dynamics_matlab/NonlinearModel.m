@@ -114,7 +114,7 @@ classdef NonlinearModel
         end
         
         function T = calc_thrust_pusher(obj, delta_t)
-            T = obj.Params.rho * obj.Params.prop_diam_pusher^4 * obj.Params.c_T_pusher * delta_t.^2;
+            T = obj.Params.rho * obj.Params.prop_diam_pusher^4 * obj.Params.c_T_pusher * delta_t;
         end
         
         function dy_dt = dynamics_lat_model(obj, t, y, t_data_seq, input_seq, lon_state_seq)

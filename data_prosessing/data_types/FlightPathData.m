@@ -548,5 +548,29 @@ classdef FlightPathData
             u_lon = [obj.DeltaE obj.DeltaT];
         end
         
+        function u = get_input_sp_sequence(obj)
+            u = [obj.DeltaASpAbsolute obj.DeltaESpAbsolute obj.DeltaRSp obj.DeltaT];
+        end
+        
+        function u = get_input_sequence(obj)
+            u = [obj.DeltaA obj.DeltaE obj.DeltaR obj.DeltaT];
+        end
+        
+        function x_0 = get_state_initial(obj)
+            x_0 = [obj.VelU(1) obj.VelV(1) obj.VelW(1) ...
+                   obj.AngP(1) obj.AngQ(1) obj.AngR(1) ...
+                   obj.EulPhi(1) obj.EulTheta(1)];
+        end
+        
+        function u_0 = get_input_initial(obj)
+            u_0 = [obj.DeltaASpAbsolute(1) obj.DeltaESpAbsolute(1) obj.DeltaRSp(1)];
+        end
+        
+        function x = get_state_sequence(obj)
+            x = [obj.VelU obj.VelV obj.VelW ...
+                 obj.AngP obj.AngQ obj.AngR ...
+                 obj.EulPhi obj.EulTheta];
+        end
+        
     end
 end

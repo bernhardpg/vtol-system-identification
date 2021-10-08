@@ -29,7 +29,6 @@ rudder_max_deg = 22;
 
 % Servo dynamics
 servo_rate_lim_rad_s = 3.4907;
-%servo_rate_lim_rad_s = 99;
 servo_time_const_s = 0.028;
 
 

@@ -9,7 +9,7 @@ clc; clear all; close all;
 set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
 
 %disp("Setting random seed to default to guarantee reproducability");
-%rng default % Always shuffle the maneuvers in the same way for reproducability
+rng default % Always shuffle the maneuvers in the same way for reproducability
 
 % Load metadata
 metadata_filename = "data/flight_data/metadata.json";

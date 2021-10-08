@@ -50,7 +50,8 @@ function maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_stat
         curr_maneuver.RawData.DeltaASp = u_fw_maneuver(:,1);
         curr_maneuver.RawData.DeltaESp = u_fw_maneuver(:,2);
         curr_maneuver.RawData.DeltaRSp = u_fw_maneuver(:,3);
-        curr_maneuver.RawData.DeltaT = u_fw_maneuver(:,4);
+        rps = u_fw_maneuver(:,4);
+        curr_maneuver.RawData.DeltaT = rps.^2; % We take the squared rps as input
         
         maneuvers = [maneuvers;
                      curr_maneuver];
