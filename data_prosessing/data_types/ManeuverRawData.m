@@ -10,6 +10,9 @@ classdef ManeuverRawData
         VelN
         VelE
         VelD
+        PosN
+        PosE
+        PosD
         VelBodyU
         VelBodyV
         VelBodyW

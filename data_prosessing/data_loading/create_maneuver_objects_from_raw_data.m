@@ -1,4 +1,4 @@
-function maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw)
+function maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, p_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw)
 
     num_maneuvers = length(maneuver_start_indices_state);
     maneuvers = [];
@@ -28,6 +28,11 @@ function maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_stat
         curr_maneuver.RawData.VelN = v_NED(:,1);
         curr_maneuver.RawData.VelE = v_NED(:,2);
         curr_maneuver.RawData.VelD = v_NED(:,3);
+        
+        p_NED = p_NED_all_maneuvers(maneuver_start_index_state:maneuver_end_index_state,:);
+        curr_maneuver.RawData.PosN = p_NED(:,1);
+        curr_maneuver.RawData.PosE = p_NED(:,2);
+        curr_maneuver.RawData.PosD = p_NED(:,3);
         
         [curr_maneuver.RawData.VelBodyU, curr_maneuver.RawData.VelBodyV, curr_maneuver.RawData.VelBodyW] = calc_body_vel(curr_maneuver.RawData.EulPhi, curr_maneuver.RawData.EulTheta, curr_maneuver.RawData.EulPsi, curr_maneuver.RawData.VelN, curr_maneuver.RawData.VelE, curr_maneuver.RawData.VelD);
         

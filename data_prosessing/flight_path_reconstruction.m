@@ -53,10 +53,10 @@ for maneuver_type = maneuver_types
     disp("Processing " + maneuver_type + " maneuvers.");
     
     % Read raw data recorded from logs
-    [t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw] ...
+    [t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, p_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw] ...
         = read_data_from_experiments(metadata, maneuver_type);
     
-    all_maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
+    all_maneuvers = create_maneuver_objects_from_raw_data(maneuver_type, t_state_all_maneuvers, q_NB_all_maneuvers, v_NED_all_maneuvers, p_NED_all_maneuvers, t_u_fw_all_maneuvers, u_fw_all_maneuvers, maneuver_start_indices_state, maneuver_start_indices_u_fw);
     
     % Pick only selected maneuvers to move on with
     selected_maneuvers = [];

@@ -1,4 +1,4 @@
-function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuver_start_indices_u_fw] = read_data_from_experiments(metadata, maneuver_type)
+function [t_state, q_NB, v_N, p_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuver_start_indices_u_fw] = read_data_from_experiments(metadata, maneuver_type)
     num_experiments = length(metadata.Experiments);
     experiment_data_path = "data/flight_data/raw_data/experiments/";
 
@@ -6,6 +6,7 @@ function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuv
     t_u_fw = [];
     q_NB = [];
     v_N = [];
+    p_N = [];
     u_mr = [];
     u_fw = [];
     maneuver_start_indices_state = [];
@@ -22,6 +23,7 @@ function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuv
         t_u_fw_exp = readmatrix(datapath + "t_u_fw.csv");
         q_NB_exp = readmatrix(datapath + "q_NB.csv");
         v_N_exp = readmatrix(datapath + "v_N.csv");
+        p_N_exp = readmatrix(datapath + "p_N.csv");
         u_mr_exp = readmatrix(datapath + "u_mr.csv");
         u_fw_exp = readmatrix(datapath + "u_fw.csv");
         maneuver_start_indices_state_exp = readmatrix(datapath + "maneuver_start_indices_state.csv");
@@ -36,6 +38,8 @@ function [t_state, q_NB, v_N, t_u_fw, u_fw, maneuver_start_indices_state, maneuv
                 q_NB_exp];
         v_N = [v_N;
                v_N_exp];
+        p_N = [p_N;
+               p_N_exp];
         u_mr = [u_mr;
                 u_mr_exp];
         u_fw = [u_fw;

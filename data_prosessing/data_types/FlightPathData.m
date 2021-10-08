@@ -14,6 +14,9 @@ classdef FlightPathData
         VelU
         VelV
         VelW
+        PosN
+        PosE
+        PosD
         AngP
         AngQ
         AngR
@@ -83,6 +86,12 @@ classdef FlightPathData
             v_dot = calc_spline_derivative(obj.RawData.Time, body_vel_smoothed(:,2), obj.Time, dt_knots, 1);
             obj.VelW = calc_spline_derivative(obj.RawData.Time, body_vel_smoothed(:,3), obj.Time, dt_knots, 0);
             w_dot = calc_spline_derivative(obj.RawData.Time, body_vel_smoothed(:,3), obj.Time, dt_knots, 1);
+            
+            % Smooth position
+            pos_NED_smoothed = smooth_signal([obj.RawData.PosN obj.RawData.PosE obj.RawData.PosD]);
+            obj.PosN = calc_spline_derivative(obj.RawData.Time, pos_NED_smoothed(:,1), obj.Time, dt_knots, 0);
+            obj.PosE = calc_spline_derivative(obj.RawData.Time, pos_NED_smoothed(:,2), obj.Time, dt_knots, 0);
+            obj.PosD = calc_spline_derivative(obj.RawData.Time, pos_NED_smoothed(:,3), obj.Time, dt_knots, 0);
             
             % Calc ang veloticies from kinematic relationships
             [obj.AngP, obj.AngQ, obj.AngR] = calc_ang_vel(obj.EulPhi, obj.EulTheta, phi_dot, theta_dot, psi_dot);
