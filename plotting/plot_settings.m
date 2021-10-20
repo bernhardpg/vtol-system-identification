@@ -11,4 +11,4 @@ lon_color = lon_colors(1,:);
                 
 lat_colors = [0.4660 0.6740 0.1880;
              0.3010 0.7450 0.9330];
-lat_color = lon_colors(1,:);
+lat_color = lat_colors(1,:);

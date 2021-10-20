@@ -1,6 +1,6 @@
 clc; close all; clear all;
 
-load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
+load("model_identification/output_error/results/output_error_coeffs_lon.mat");
 
 lon_coeffs = equation_error_coeffs_lon;
 
