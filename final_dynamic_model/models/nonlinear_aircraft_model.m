@@ -12,11 +12,15 @@ function x_dot = nonlinear_aircraft_model(t, x, calc_input)
     input = calc_input(t);
     input = num2cell(input);
     [delta_a_sp, delta_e_sp, delta_r_sp, delta_t] = input{:};
-    
+
     % Calculate control surfaces
     delta_a_dot = bound(-delta_a / T_servo + delta_a_sp / T_servo, -delta_rate_lim, delta_rate_lim);
     delta_e_dot = bound(-delta_e / T_servo + delta_e_sp / T_servo, -delta_rate_lim, delta_rate_lim);
     delta_r_dot = bound(-delta_r / T_servo + delta_r_sp / T_servo, -delta_rate_lim, delta_rate_lim);
+
+    % Model is around perturbation control surface deflections
+    delta_e_pert = (delta_e - delta_e_trim);
+    delta_a_pert = (delta_a - delta_a_trim);
 
     % Aerodynamics
     V = sqrt(u^2 + v^2 + w^2);
@@ -25,18 +29,14 @@ function x_dot = nonlinear_aircraft_model(t, x, calc_input)
     alpha = atan(w/u);
     beta = asin(v/V);
 
-    % Model is around perturbation quantities
-    delta_e_pert = (delta_e - delta_e_trim);
-    delta_a_pert = (delta_a - delta_a_trim);
-
     % Nondimensionalize rates
     p_hat = b * p / (2 * V_trim);
     q_hat = c_bar * q / (2 * V_trim);
     r_hat = b * r / (2 * V_trim);
 
     % Calculate aerodynamic coefficients
-    c_D = c_D_0 + c_D_alpha * alpha * c_D_alpha_sq * alpha^2 + c_D_q_hat * q_hat + c_D_delta_e * delta_e_pert + c_D_delta_e_alpha * alpha * delta_e_pert;
-    c_L = c_L_0 + c_L_alpha * alpha + c_L_delta_e * delta_e_pert;
+    c_D = c_D_0 + c_D_alpha * alpha + c_D_alpha_sq * alpha^2 + c_D_q_hat * q_hat + c_D_delta_e * delta_e_pert + c_D_delta_e_alpha * alpha * delta_e_pert;
+    c_L = c_L_0 + c_L_alpha * alpha + c_L_alpha_sq * alpha^2 + c_L_delta_e * delta_e_pert;
     c_m = c_m_0 + c_m_alpha * alpha + c_m_q_hat * q_hat + c_m_delta_e * delta_e_pert;
 
     c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p_hat * p_hat + c_Y_delta_a * delta_a_pert + c_Y_delta_r * delta_r;

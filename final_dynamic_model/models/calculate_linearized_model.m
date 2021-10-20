@@ -27,7 +27,7 @@ r_hat = b * r / (2 * V_trim);
 
 % Calculate aerodynamic coefficients
 c_D = c_D_0 + c_D_alpha * alpha * c_D_alpha_sq * alpha^2 + c_D_q_hat * q_hat + c_D_delta_e * delta_e_pert + c_D_delta_e_alpha * alpha * delta_e_pert;
-c_L = c_L_0 + c_L_alpha * alpha + c_L_delta_e * delta_e_pert;
+c_L = c_L_0 + c_L_alpha * alpha + c_L_alpha_sq * alpha^2 + c_L_delta_e * delta_e_pert;
 c_m = c_m_0 + c_m_alpha * alpha + c_m_q_hat * q_hat + c_m_delta_e * delta_e_pert;
 
 c_Y = c_Y_0 + c_Y_beta * beta + c_Y_p_hat * p_hat + c_Y_delta_a * delta_a_pert + c_Y_delta_r * delta_r;

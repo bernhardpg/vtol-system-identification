@@ -10,8 +10,8 @@ clc; clear all; close all;
 % Select some maneuver to test %
 load("data/flight_data/selected_data/fpr_data_lon.mat");
 load("data/flight_data/selected_data/fpr_data_lat.mat");
-fpr_data = fpr_data_lat;
-maneuver = fpr_data.validation.roll_211(1);
+fpr_data = fpr_data_lon;
+maneuver = fpr_data.validation.pitch_211(1);
 
 % Prepare recorded data %
 t_seq = maneuver.Time();
@@ -19,6 +19,8 @@ input_seq = maneuver.get_input_sp_sequence();
 y_0 = [maneuver.get_state_initial() maneuver.get_input_initial()];
 y_recorded = maneuver.get_state_sequence();
 tspan = [t_seq(1) t_seq(end)];
+
+alpha = y_recorded(
 
 % Simulate nonlinear model with real input setpoints %
 [t_sim, y_sim] = ode45(@(t,y) nonlinear_aircraft_model(t, y, @(t) calc_input_at_t(t, t_seq, input_seq)), tspan, y_0);
