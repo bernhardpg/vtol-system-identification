@@ -463,6 +463,16 @@ classdef FlightPathData
  
         end
         
+        function [t_sim, phi_sim, theta_sim, psi_sim, u_sim, v_sim, w_sim] = simulate_kinematic_consistency(obj)
+           [t_sim, y_sim] = simulate_kinematics(obj.Time, obj.EulPhi, obj.EulTheta, obj.EulPsi, obj.VelU, obj.VelV, obj.VelW, obj.AngP, obj.AngQ, obj.AngR, obj.AccX, obj.AccY, obj.AccZ);
+            phi_sim = y_sim(:,1);
+            theta_sim = y_sim(:,2);
+            psi_sim = y_sim(:,3);
+            u_sim = y_sim(:,4);
+            v_sim = y_sim(:,5);
+            w_sim = y_sim(:,6); 
+        end
+        
         function check_kinematic_consistency(obj, show_plot, save_plot, plot_location)
             [t_sim, y_sim] = simulate_kinematics(obj.Time, obj.EulPhi, obj.EulTheta, obj.EulPsi, obj.VelU, obj.VelV, obj.VelW, obj.AngP, obj.AngQ, obj.AngR, obj.AccX, obj.AccY, obj.AccZ);
             phi_sim = y_sim(:,1);
