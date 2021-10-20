@@ -71,24 +71,8 @@ function [] = validate_models(...
         if test_nonlin_models
             collected_simulated_outputs = collect_all_simulated_outputs(simulation_data, maneuver_types, model_names);
             collected_recorded_outputs = collect_all_recorded_outputs(simulation_data, maneuver_types);
-
-            collected_mae = {};
-            collected_gof = {};
-            collected_tic = {};
-            collected_nrmse = {};
-            collected_nmae = {};
-            collected_rmse = {};
-            
-            z = collected_recorded_outputs;
-            for model_name = model_names
-                y = collected_simulated_outputs.(model_name);
-                collected_mae.(model_name) = mean_absolute_error(y, z);
-                collected_gof.(model_name) = goodness_of_fit(y, z);
-                collected_tic.(model_name) = theils_ineq_coeff(y, z);
-                collected_nrmse.(model_name) = norm_rmse(y, z);
-                collected_nmae.(model_name) = norm_rmse(y, z);
-                collected_rmse.(model_name) = root_mean_square_error(y, z);
-            end
+            [collected_mae, collected_rmse, collected_nmae, collected_nrmse, collected_gof, collected_tic] ...
+                = calculate_error_metrics_for_models(model_names, collected_simulated_outputs, collected_recorded_outputs);
             
             %[gof_means, tic_means, an_means, mae_mean, rmse_mean] = collect_mean_error_metrics_from_models(error_metrics_for_each_maneuver, model_names, maneuver_types);
 
@@ -103,6 +87,12 @@ function [] = validate_models(...
             
             [collected_nrmse] = collect_structs_into_array(collected_nrmse, model_names);
             create_bar_plot(collected_nrmse, model_names_to_display, "Normalized Root-Mean-Squared-Errors (NRMSE)", state_names, state_names_latex);
+
+            disp("MAE: ")
+            print_metric_for_latex(collected_mae, model_type, model_names);
+
+            disp("RMSE: ")
+            print_metric_for_latex(collected_rmse, model_type, model_names);
         end
     end
 
@@ -158,5 +148,41 @@ function recorded_outputs = collect_all_recorded_outputs(simulation_data, maneuv
             recorded_outputs = [recorded_outputs;
                                 curr_simulation_data.RecordedData];
         end
+    end
+end
+
+function [collected_mae, collected_rmse, collected_nmae, collected_nrmse, collected_gof, collected_tic] ...
+    = calculate_error_metrics_for_models(model_names, collected_simulated_outputs, collected_recorded_outputs)
+    collected_mae = {};
+    collected_gof = {};
+    collected_tic = {};
+    collected_nrmse = {};
+    collected_nmae = {};
+    collected_rmse = {};
+
+    z = collected_recorded_outputs;
+    for model_name = model_names
+        y = collected_simulated_outputs.(model_name);
+        collected_mae.(model_name) = mean_absolute_error(y, z);
+        collected_gof.(model_name) = goodness_of_fit(y, z);
+        collected_tic.(model_name) = theils_ineq_coeff(y, z);
+        collected_nrmse.(model_name) = norm_rmse(y, z);
+        collected_nmae.(model_name) = norm_rmse(y, z);
+        collected_rmse.(model_name) = root_mean_square_error(y, z);
+    end
+end
+
+function print_metric_for_latex(metric, model_type, model_names)
+    n_decimals = 3;
+    for model_name = model_names
+        model_metric = metric.(model_name);
+        % Convert to degrees from radians
+        if strcmp(model_type,"lateral-directional")
+            model_metric = [model_metric(1) rad2deg(model_metric(2)) rad2deg(model_metric(3)) rad2deg(model_metric(4))];
+        elseif strcmp(model_type,"longitudinal")
+            model_metric = [model_metric(1) model_metric(2) rad2deg(model_metric(3)) rad2deg(model_metric(4))];
+        end
+        disp(model_name)
+        disp(sprintf('%4.3f %4.3f %4.3f %4.3f',round(model_metric,n_decimals)));
     end
 end
