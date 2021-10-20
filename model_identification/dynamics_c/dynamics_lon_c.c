@@ -163,7 +163,7 @@ void compute_dx(
 
     double X = -cos(alpha) * D + sin(alpha) * L;
     double Z = -sin(alpha) * D - cos(alpha) * L;
-    double T = rho * pow(prop_diam_pusher, 4) * c_T_pusher * pow(delta_t, 2);
+    double T = rho * pow(prop_diam_pusher, 4) * c_T_pusher * delta_t;
 
     // Dynamics
     double theta_dot = ang_q * cos(phi) - ang_r * sin(phi);

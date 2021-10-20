@@ -25,14 +25,14 @@ save_kinematic_consistency_plots = false;
 save_lateral_signal_plots = false;
 save_longitudinal_signal_plots = false;
 
-model_type = "lateral_directional";
-%model_type = "longitudinal";
+%model_type = "lateral_directional";
+model_type = "longitudinal";
 
 % Maneuver settings
 maneuver_types = [
-    "roll_211",...
-    "yaw_211",...
-    %"pitch_211",...
+    %"roll_211",...
+    %"yaw_211",...
+    "pitch_211",...
     %"freehand"
     ];
 
