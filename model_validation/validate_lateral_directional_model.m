@@ -21,7 +21,7 @@ show_param_map_plot = true;
 model_type = "lateral-directional";
 maneuver_types = [
     "roll_211",...
-    %"yaw_211",...
+    "yaw_211",...
     ];
 
 plot_title = "Lateral-Directional Equation-Error Model (Rudder Maneuvers)";
@@ -42,9 +42,6 @@ param_names_latex = ["$c_{Y 0}$" "$c_{Y \beta}$" "$c_{Y p}$" "$c_{Y r}$" "$c_{Y 
 % Load FPR data which contains training data and validation data
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 fpr_data = fpr_data_lat;
-
-
-% Load coeffients
 
 % Import ss model from AVL
 %avl_state_space_model;

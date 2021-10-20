@@ -69,40 +69,30 @@ function [] = validate_models(...
 
     if show_error_metric_plots
         if test_nonlin_models
-            collected_simulated_outputs = collect_all_simulated_outputs(simulation_data, maneuver_types, model_names);
-            collected_recorded_outputs = collect_all_recorded_outputs(simulation_data, maneuver_types);
+            
+            for maneuver_type = maneuver_types
+                for maneuver_i = 1:numel(simulation_data.(maneuver_type))
+                    curr_simulation_data = simulation_data.(maneuver_type){maneuver_i};
+                    for model_name = model_names
+                        
 
-            collected_mae = {};
-            collected_gof = {};
-            collected_tic = {};
-            collected_nrmse = {};
-            collected_nmae = {};
-            collected_rmse = {};
-            
-            z = collected_recorded_outputs;
-            for model_name = model_names
-                y = collected_simulated_outputs.(model_name);
-                collected_mae.(model_name) = mean_absolute_error(y, z);
-                collected_gof.(model_name) = goodness_of_fit(y, z);
-                collected_tic.(model_name) = theils_ineq_coeff(y, z);
-                collected_nrmse.(model_name) = norm_rmse(y, z);
-                collected_nmae.(model_name) = norm_rmse(y, z);
-                collected_rmse.(model_name) = root_mean_square_error(y, z);
+                    end
+                end
             end
-            
+
             %[gof_means, tic_means, an_means, mae_mean, rmse_mean] = collect_mean_error_metrics_from_models(error_metrics_for_each_maneuver, model_names, maneuver_types);
 
-            [collected_gof] = collect_structs_into_array(collected_gof, model_names);
-            create_bar_plot(collected_gof, model_names_to_display, "Goodness-of-Fit (GOF)", state_names, state_names_latex);
+            [gof_means] = collect_structs_into_array(gof_means, model_names);
+            create_bar_plot(gof_means, model_names_to_display, "Goodness-of-Fit (GOF)", state_names, state_names_latex);
 
-            [collected_tic] = collect_structs_into_array(collected_tic, model_names);
-            create_bar_plot(collected_tic, model_names_to_display, "Theils-Inequality-Coefficient (TIC)", state_names, state_names_latex);
+            [tic_means] = collect_structs_into_array(tic_means, model_names);
+            create_bar_plot(tic_means, model_names_to_display, "Theils-Inequality-Coefficient (TIC)", state_names, state_names_latex);
             
-            [collected_nmae] = collect_structs_into_array(collected_nmae, model_names);
-            create_bar_plot(collected_nmae, model_names_to_display, "Normalized Mean-Absolute-Errors (NMAE)", state_names, state_names_latex);
+            [mae_means] = collect_structs_into_array(mae_mean, model_names);
+            create_bar_plot(mae_means, model_names_to_display, "Normalized Mean-Absolute-Errors (NMAE)", state_names, state_names_latex);
             
-            [collected_nrmse] = collect_structs_into_array(collected_nrmse, model_names);
-            create_bar_plot(collected_nrmse, model_names_to_display, "Normalized Root-Mean-Squared-Errors (NRMSE)", state_names, state_names_latex);
+            [rmse_means] = collect_structs_into_array(rmse_mean, model_names);
+            create_bar_plot(rmse_means, model_names_to_display, "Normalized Root-Mean-Squared-Errors (NRMSE)", state_names, state_names_latex);
         end
     end
 
@@ -133,30 +123,5 @@ function [] = validate_models(...
             end
         end
         legend(model_names,'Location','SouthEast')
-    end
-end
-
-function simulated_outputs = collect_all_simulated_outputs(simulation_data, maneuver_types, model_names)
-    simulated_outputs = {};
-    for model_name = model_names
-        simulated_outputs.(model_name) = [];
-        for maneuver_type = maneuver_types
-            for maneuver_i = 1:numel(simulation_data.(maneuver_type))
-                curr_simulation_data = simulation_data.(maneuver_type){maneuver_i};
-                simulated_outputs.(model_name) = [simulated_outputs.(model_name);
-                                                  curr_simulation_data.Models.(model_name)];
-            end
-        end
-    end
-end
-
-function recorded_outputs = collect_all_recorded_outputs(simulation_data, maneuver_types)
-    recorded_outputs = [];
-    for maneuver_type = maneuver_types
-        for maneuver_i = 1:numel(simulation_data.(maneuver_type))
-            curr_simulation_data = simulation_data.(maneuver_type){maneuver_i};
-            recorded_outputs = [recorded_outputs;
-                                curr_simulation_data.RecordedData];
-        end
     end
 end
