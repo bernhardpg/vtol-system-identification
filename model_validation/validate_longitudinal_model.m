@@ -43,8 +43,6 @@ fpr_data = fpr_data_lon;
 load("avl_model/avl_results/avl_coeffs_lon.mat");
 load("model_identification/equation_error/results/equation_error_coeffs_lon.mat");
 load("model_identification/output_error/results/output_error_lon_coeffs.mat");
-load("model_identification/output_error/results/output_error_lon_all_free_coeffs.mat");
-load("model_identification/output_error/results/output_error_coeffs_lon_final_coeffs.mat");
 
 model_coeffs = {equation_error_coeffs_lon output_error_lon_coeffs};
 model_names = ["EquationError" "OutputError"];
@@ -56,8 +54,6 @@ models = create_models_from_coeffs(model_coeffs, model_type);
 
 % Load Cramer-Rao lower bounds
 load("model_identification/output_error/results/output_error_lon_cr_bounds.mat");
-load("model_identification/output_error/results/output_error_lon_all_free_cr_bounds.mat");
-load("model_identification/output_error/results/output_error_coeffs_lon_final_cr_bounds.mat");
 cr_bounds = {zeros(size(output_error_lon_cr_bounds)) output_error_lon_cr_bounds};
 
 % Call validation function

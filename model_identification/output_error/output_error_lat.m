@@ -26,7 +26,7 @@ maneuver_types = [
 load("model_identification/equation_error/results/equation_error_coeffs_lat.mat");
 
 lat_model = NonlinearModel(zeros(5,3), equation_error_coeffs_lat);
-params_to_update = [1:3 5:6 7:9 13:16 18];
+params_to_update = [1:3 5:6 7:11 13:16 18];
 
 lambda = 0;
 weights = eye(4);

@@ -20,7 +20,7 @@ lon_model = NonlinearModel(equation_error_coeffs_lon, zeros(6,3));
 regularization = 0;
 state_sizes = [21 4 1.2 0.4];
 weights = diag(state_sizes)^-1;
-params_to_update = [1:6 7:8 11 13 14 15 16];
+params_to_update = [1:6 7:9 11 13 14 16 17];
 opt_problem = OutputErrorProblem("longitudinal", fpr_data_lon, lon_model, maneuver_types, params_to_update, regularization, weights);
 opt_problem = opt_problem.solve();
 

@@ -167,7 +167,7 @@ function [collected_mae, collected_rmse, collected_nmae, collected_nrmse, collec
         collected_gof.(model_name) = goodness_of_fit(y, z);
         collected_tic.(model_name) = theils_ineq_coeff(y, z);
         collected_nrmse.(model_name) = norm_rmse(y, z);
-        collected_nmae.(model_name) = norm_rmse(y, z);
+        collected_nmae.(model_name) = norm_mae(y, z);
         collected_rmse.(model_name) = root_mean_square_error(y, z);
     end
 end
