@@ -1,4 +1,81 @@
-function x_dot = nonlinear_aircraft_model(t, x, calc_input)
+clc; clear all; close all;
+
+%%% Crude line search to find the optimal value for c_m_delta_r_sq, which
+%%% minimizes the squared error on the training data
+
+%%% NOTE: This script does not work when c_m_delta_r_sq is defined in
+%%% aerodynamic_coeffs.m
+
+load("data/flight_data/selected_data/fpr_data_lat.mat");
+fpr_data = fpr_data_lat;
+num_maneuvers = numel(fpr_data_lat.training.yaw_211);
+
+% Initial guess from OLS
+c_m_delta_r_sq_initial = -1.494508143521402;
+range = [-2 2];
+c_m_delta_r_sq_candidates = linspace(range(1), range(2), 20);
+
+costs = inf(length(c_m_delta_r_sq_candidates),1);
+for c_m_i = 1:length(c_m_delta_r_sq_candidates)
+    c_m_delta_r_sq = c_m_delta_r_sq_candidates(c_m_i);
+    disp("c_m_delta_r_sq = " + c_m_delta_r_sq)
+    y_sim_collected = [];
+    y_rec_collected = [];
+    for maneuver_i = 1:num_maneuvers
+        disp("   maneuver_i: " + maneuver_i)
+        maneuver = fpr_data.training.yaw_211(maneuver_i);
+
+        % Prepare recorded data %
+        t_seq = maneuver.Time();
+        input_seq = maneuver.get_input_sp_sequence();
+        y_0 = [maneuver.get_state_initial() maneuver.get_input_initial()];
+        y_recorded = maneuver.get_state_sequence();
+        tspan = [t_seq(1) t_seq(end)];
+
+        % Simulate nonlinear model with real input setpoints %
+        [t_sim, y_sim] = ode45(@(t,y) nonlinear_aircraft_model(t, y, @(t) calc_input_at_t(t, t_seq, input_seq), c_m_delta_r_sq), tspan, y_0);
+        y_sim = interp1(t_sim, y_sim, t_seq);
+        y_sim = y_sim(:,1:8); % do not use actuator dynamics
+
+        y_sim_collected = [y_sim_collected;
+                           y_sim];
+
+        y_rec_collected = [y_rec_collected;
+                           y_recorded];
+    end
+    
+    residuals = y_sim_collected - y_rec_collected;
+    cost = sum(diag(residuals'*residuals));
+    costs(c_m_i) = cost;
+end
+
+[c,i] = min(costs);
+c_m_delta_r_sq = c_m_delta_r_sq_candidates(i);
+
+plot_settings;
+plot(c_m_delta_r_sq_candidates, costs); hold on
+scatter(c_m_delta_r_sq, c);
+ylabel("Cost", 'interpreter','latex','FontSize',font_size)
+xlabel("$c_{m_{\delta_r}^2}$", 'interpreter', 'latex', 'FontSize', font_size)
+title("Line Search for Coupling Parameter", 'FontSize', font_size_large, 'interpreter', 'latex')
+
+% plot_maneuver(t_sim, y_sim, t_seq, y_recorded, input_seq);
+
+%% Helper functions
+function input_at_t = calc_input_at_t(t, t_seq, input_seq)
+    % Roll index forward until we get to approx where we should get
+    % inputs from. This basically implements zeroth-order hold for
+    % the input
+    curr_index_data_seq = 1;
+    while t_seq(curr_index_data_seq) < t
+       curr_index_data_seq = curr_index_data_seq + 1;
+    end
+    
+    % Get input at t
+    input_at_t = input_seq(curr_index_data_seq,:);
+end
+
+function x_dot = nonlinear_aircraft_model(t, x, calc_input, c_m_delta_r_sq)
     % Import parameters
     aerodynamic_coeffs;
     static_parameters;

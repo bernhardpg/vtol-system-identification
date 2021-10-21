@@ -24,7 +24,7 @@ maneuver_types = [
     "yaw_211",...
     ];
 
-plot_title = "Lateral-Directional Models Comparison (Rudder Maneuvers)";
+plot_title = "Lateral-Directional Models Comparison";
 
 state_names = ["v","p","r","\phi"];
 state_names_latex = ["$v$","$p$","$r$","$\phi$"];

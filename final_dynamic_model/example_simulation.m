@@ -11,7 +11,11 @@ clc; clear all; close all;
 load("data/flight_data/selected_data/fpr_data_lon.mat");
 load("data/flight_data/selected_data/fpr_data_lat.mat");
 fpr_data = fpr_data_lat;
-maneuver = fpr_data.validation.roll_211(1);
+maneuver = fpr_data.validation.yaw_211(1);
+
+% Pitch: validation 1
+% Roll: validation 1
+% Yaw: validation 1
 
 % Prepare recorded data %
 t_seq = maneuver.Time();
@@ -36,3 +40,160 @@ function input_at_t = calc_input_at_t(t, t_seq, input_seq)
     % Get input at t
     input_at_t = input_seq(curr_index_data_seq,:);
 end
+% 
+% function plot(rec_data)
+%     fig = figure;
+%     num_plots_rows = 5;
+%     t = tiledlayout(num_plots_rows,1, 'Padding', 'compact', 'TileSpacing', 'compact'); 
+% 
+%     nexttile
+%     plot(time, rec_data(:,1), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on;
+%     for i = 1:num_models
+%         plot(time, model_data.(model_names(i))(:,1),'LineWidth',line_width, 'Color', lon_colors(i,:)); hold on
+%     end
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     grid on
+%     grid minor
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$u [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([10 25])
+%     xlim([0 time(end)]);
+% 
+%     nexttile
+%     plot(time, rec_data(:,2), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, model_data.(model_names(i))(:,2),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+%     end
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     grid on
+%     grid minor
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$w [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-6 6])
+%     xlim([0 time(end)]);
+% 
+%     nexttile
+%     plot(time, rad2deg(rec_data(:,3)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, rad2deg(model_data.(model_names(i))(:,3)),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+%     end
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     grid on
+%     grid minor
+%     set(gca,'FontSize', font_size_small)
+%     ylim([-100 100]);
+%     xlim([0 time(end)]);
+%     ylabel("$q [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+% 
+%     nexttile
+%     plot(time, rad2deg(rec_data(:,4)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, rad2deg(model_data.(model_names(i))(:,4)),'LineWidth',line_width,'Color', lon_colors(i,:)); hold on
+%     end
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     grid on
+%     grid minor
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$\theta [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-30 30])
+%     xlim([0 time(end)]);
+%     lgd = legend(["Recorded Data" model_names_to_display], 'location', 'southeast', 'FontSize', font_size_small);
+% 
+% 
+%     nexttile
+%     plot(time, rad2deg(input(:,1)), 'black', 'LineWidth', line_width); hold on
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     grid on
+%     grid minor
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$\delta_e [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-32 32])
+%     xlim([0 time(end)]);
+%     lgd = legend("Input", 'location', 'best', 'FontSize', font_size_small);
+% 
+%     title(t, plot_title, 'FontSize', font_size_large, 'interpreter', 'latex')
+%     xlabel(t, "Time $[s]$", 'interpreter', 'latex', 'FontSize', font_size)
+%               
+%     
+%     fig = figure;
+%     num_plots_rows = 6;
+%     t = tiledlayout(num_plots_rows,1, 'Padding', 'compact', 'TileSpacing', 'compact'); 
+% 
+%     nexttile
+%     plot(time, rec_data(:,1), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on;
+%     for i = 1:num_models
+%         plot(time, model_data.(model_names(i))(:,1), 'LineWidth',line_width,'Color', lat_colors(i,:)); hold on
+%     end
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$v [m/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-13 13])
+%     xlim([0 time(end)]);
+% 
+%     nexttile
+%     plot(time, rad2deg(rec_data(:,2)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, rad2deg(model_data.(model_names(i))(:,2)), 'LineWidth',line_width, 'Color', lat_colors(i,:)); hold on
+%     end
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$p [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-160 160]);
+%     xlim([0 time(end)]);
+% 
+%     nexttile
+%     plot(time, rad2deg(rec_data(:,3)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, rad2deg(model_data.(model_names(i))(:,3)), 'LineWidth',line_width, 'Color', lat_colors(i,:)); hold on
+%     end
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylim([-120 120]);
+%     xlim([0 time(end)]);
+%     ylabel("$r [^\circ/s]$", 'interpreter', 'latex', 'FontSize', font_size)
+% 
+%     nexttile
+%     plot(time, rad2deg(rec_data(:,4)), plot_style_recorded_data, 'LineWidth',line_width, 'Color', target_color); hold on
+%     for i = 1:num_models
+%         plot(time, rad2deg(model_data.(model_names(i))(:,4)),  'LineWidth',line_width, 'Color', lat_colors(i,:)); hold on
+%     end
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$\phi [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-90 90])
+%     xlim([0 time(end)]);
+%     lgd = legend(["Recorded Data" model_names_to_display], 'location', 'southeast', 'FontSize', font_size_small);
+% 
+% 
+%     nexttile
+%     plot(time, rad2deg(input(:,1)), 'black', 'LineWidth', line_width); hold on
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$\delta_a [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-32 32])
+%     xlim([0 time(end)]);
+% 
+%     nexttile
+%     plot(time, rad2deg(input(:,2)), 'black', 'LineWidth', line_width); hold on
+%     grid on
+%     grid minor
+%     plot_maneuver_lines(maneuver_start_index, num_maneuvers_to_plot, time)
+%     set(gca,'FontSize', font_size_small)
+%     ylabel("$\delta_r [^\circ]$", 'interpreter', 'latex', 'FontSize', font_size)
+%     ylim([-32 32])
+%     xlim([0 time(end)]);
+%     lgd = legend("Input", 'location', 'best', 'FontSize', font_size_small);
+% 
+%     title(t, plot_title, 'FontSize', font_size_large, 'interpreter', 'latex')
+%     xlabel(t, "Time $[s]$", 'interpreter', 'latex', 'FontSize', font_size)
+% end

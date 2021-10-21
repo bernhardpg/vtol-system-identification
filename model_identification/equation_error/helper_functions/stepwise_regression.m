@@ -286,6 +286,12 @@ function s_sq = calc_s_sq(y_hat, z)
     s_sq = (v' * v) / (N - np);
 end
 
+function [top_corr_index] = pick_next_regressor_i(X_pool, z)
+    r = calc_corr_coeff(X_pool, z);
+    %fprintf(['Correlations: ' repmat('%2.2f ',1,length(r)) '\n'], r);
+    [~, top_corr_index] = max(abs(r));
+end
+
 function [r] = calc_corr_coeff(X, z)
     X_bar = mean(X);
     z_bar = mean(z);
@@ -311,12 +317,6 @@ function [cross_terms] = create_cross_terms(X)
             count = count + 1;
         end
     end
-end
-
-function [top_corr_index] = pick_next_regressor_i(X_pool, z)
-    r = calc_corr_coeff(X_pool, z);
-    %fprintf(['Correlations: ' repmat('%2.2f ',1,length(r)) '\n'], r);
-    [~, top_corr_index] = max(abs(r));
 end
 
 function [cross_terms_names] = create_cross_terms_names(regr_names)

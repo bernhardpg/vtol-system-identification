@@ -1,29 +1,26 @@
 clc; close all; clear all;
 
-load("model_identification/output_error/results/output_error_coeffs_lon.mat");
+trim_values; % get alpha_nom
+aerodynamic_coeffs; % import model coefficients
 
-lon_coeffs = equation_error_coeffs_lon;
+% Work with angles instead of radians
+delta_e_trim = delta_e_trim * 180 / pi;
+alpha_trim = alpha_trim * 180 / pi;
 
-airframe_static_properties; % get alpha_nom
-% Remember that model is around trim. Therefore, we must subtract alpha_nom
-% when calculating lift and drag coeffs
-alpha_nom = alpha_nom * 180 / pi;
-delta_e_nom = delta_e_nom * 180 / pi;
+c_D_0 = c_D_0;
+c_D_alpha = c_D_alpha * pi / 180;
+c_D_alpha_sq = c_D_alpha_sq * (pi / 180)^2;
+c_D_delta_e = c_D_delta_e * pi / 180;
+c_D_delta_e_alpha = c_D_delta_e_alpha * (pi / 180)^2;
 
-c_D_0 = lon_coeffs(1);
-c_D_alpha = lon_coeffs(2) * pi / 180;
-c_D_alpha_sq = lon_coeffs(3) * (pi / 180)^2;
-c_D_delta_e = lon_coeffs(5) * pi / 180;
-c_D_alpha_delta_e = lon_coeffs(6) * (pi / 180)^2;
+c_L_0 = c_L_0;
+c_L_alpha = c_L_alpha * pi / 180;
+c_L_alpha_sq = c_L_alpha_sq * (pi / 180)^2;
+c_L_delta_e = c_L_delta_e * pi / 180;
 
-c_L_0 = lon_coeffs(7);
-c_L_alpha = lon_coeffs(8) * pi / 180;
-c_L_delta_e = lon_coeffs(11) * pi / 180;
-
-c_m_0 = lon_coeffs(13);
-c_m_alpha = lon_coeffs(14) * pi / 180;
-c_m_delta_e = lon_coeffs(17) * pi / 180;
-
+c_m_0 = c_m_0;
+c_m_alpha = c_m_alpha * pi / 180;
+c_m_delta_e = c_m_delta_e * pi / 180;
 
 
 
@@ -46,18 +43,18 @@ delta_e = delta_e_min:resolution:delta_e_max;
 
 [alpha,delta_es] = meshgrid(alpha, delta_e);
 
-c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alpha, delta_es, alpha_nom, delta_e_nom);
-c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_es, alpha_nom, delta_e_nom);
-c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_es, alpha_nom, delta_e_nom);
+c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_alpha_sq, c_L_delta_e, alpha, delta_es, delta_e_trim);
+c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_delta_e_alpha, alpha, delta_es, delta_e_trim);
+c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_es, delta_e_trim);
 
 % Plot lift coefficient
 figure
 plot_settings; % import plot settings
 surf(alpha,delta_es,c_L); hold on
 [Y,Z] = meshgrid(delta_e, min(min(c_L))-0.5:0.1:max(max(c_L)));
-X = ones(size(Y)) * alpha_nom;
+X = ones(size(Y)) * alpha_trim;
 surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
-text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+text(alpha_trim+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
 xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
 ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
 zlabel("$c_L$",'interpreter','latex','FontSize',font_size_large)
@@ -67,9 +64,9 @@ title("Lift Coefficient",'FontSize',font_size_large, 'interpreter','latex')
 figure
 surf(alpha,delta_es,c_D); hold on
 [Y,Z] = meshgrid(delta_e, min(min(c_D))-0.5:0.1:max(max(c_D)));
-X = ones(size(Y)) * alpha_nom;
+X = ones(size(Y)) * alpha_trim;
 surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
-text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+text(alpha_trim+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
 xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
 ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
 zlabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
@@ -80,9 +77,9 @@ figure
 surf(alpha,delta_es,c_m); hold on
 % Plot alpha_nom
 [Y,Z] = meshgrid(delta_e, min(min(c_m))-0.5:0.1:max(max(c_m)));
-X = ones(size(Y)) * alpha_nom;
+X = ones(size(Y)) * alpha_trim;
 surf(X,Y,Z,'FaceColor','b','FaceAlpha',0.3,'EdgeColor','None'); hold on
-text(alpha_nom+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
+text(alpha_trim+0.2, -20, -0.7, "$\alpha^*$",'interpreter','latex', 'FontSize',font_size_large)
 
 xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
 ylabel("$\delta_e [^\circ]$",'interpreter','latex','FontSize',font_size)
@@ -107,11 +104,11 @@ c_m_recorded = collect_data_from_multiple_maneuvers(fpr_data_lon.training, "pitc
 
 
 resolution = 0.5;
-alpha_min = -10;
-alpha_max = 15;
+alpha_min = -15;
+alpha_max = 20;
 alpha = (alpha_min:resolution:alpha_max);
 
-delta_es = [-15 delta_e_nom, 0, 5, 15];
+delta_es = [-15 delta_e_trim, 0, 5, 15];
 delta_e_texts = "$\delta_e =" + ["-15^\circ$" "\delta_e^*$" "0^\circ$" "5^\circ$" "15^\circ$"];
 colors = [0 0.4470 0.7410;
           0.8500 0.3250 0.0980;
@@ -127,12 +124,13 @@ fig.Position = [100 100 1000 400];
 t = tiledlayout(1,2);
 nexttile
 for delta_e = delta_es
-    c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_e, alpha_nom, delta_e_nom);
-    plot(alpha, c_D,'LineWidth',line_width); hold on;
+    c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_delta_e_alpha, alpha, delta_e, delta_e_trim);
+    plot(alpha, c_D, 'LineWidth',line_width); hold on;
 end
-xline(alpha_nom,":"); hold on
+ylim([-0.05 0.45])
+xline(alpha_trim,":"); hold on
+text(alpha_trim+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
-text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
 title("Predicted",'FontSize',font_size, 'interpreter','latex')
 
 nexttile
@@ -152,12 +150,13 @@ fig.Position = [100 100 1000 400];
 t = tiledlayout(1,2);
 nexttile
 for delta_e = delta_es
-    c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alpha, delta_e, alpha_nom, delta_e_nom);
-    plot(alpha, c_L); hold on;
+    c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_alpha_sq, c_L_delta_e, alpha, delta_e, delta_e_trim);
+    plot(alpha, c_L, 'LineWidth',line_width); hold on;
 end
-xline(alpha_nom,":"); hold on
+ylim([-1 2])
+xline(alpha_trim,":"); hold on
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
-text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
+text(alpha_trim+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
 title("Predicted",'FontSize',font_size, 'interpreter','latex')
 
 nexttile
@@ -180,12 +179,13 @@ t = tiledlayout(1,2);
 nexttile
 for i = 1:length(delta_es)
     delta_e = delta_es(i);
-    c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_e, alpha_nom, delta_e_nom);
-    plot(alpha, c_m+0.07); hold on;
+    c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_e, delta_e_trim);
+    plot(alpha, c_m, 'LineWidth',line_width); hold on;
 end
-xline(alpha_nom,":"); hold on
+ylim([-0.5 0.5])
+xline(alpha_trim,":"); hold on
 legend(delta_e_texts,'interpreter','latex','Fontsize',font_size,'location','best')
-text(alpha_nom+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
+text(alpha_trim+0.1,-0.3,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
 title("Predicted",'FontSize',font_size, 'interpreter','latex')
 
 nexttile
@@ -209,18 +209,30 @@ AR = aspect_ratio;
 c_L_alpha_approx = pi * AR / (1 + sqrt(1 + (AR / 2)^2))
 c_L_alpha * 180 / pi
 
-c_L_0 = c_L_0 - c_L_alpha * alpha_nom; % Find absolute c_L_0
-c_L_alpha = c_L_alpha;
+resolution = 0.5;
+alpha_min = -15;
+alpha_max = 20;
+alpha = (alpha_min:resolution:alpha_max);
+delta_e = 0;
+c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_alpha_sq, c_L_delta_e, alpha, delta_e, delta_e_trim);
+c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_delta_e_alpha, alpha, delta_e, delta_e_trim);
 
-c_D_0 = c_D_0 - c_D_alpha * alpha_nom + c_D_alpha_sq * alpha_nom^2;
-c_D_alpha = c_D_alpha - 2 * c_D_alpha_sq * alpha_nom;
-c_D_alpha_sq = c_D_alpha_sq;
+e = 0.8;
+c_D_theoretical = c_D_0 + (c_L.^2) ./ (pi * e * AR);
+figure
+plot_settings
+plot(alpha, c_D, alpha, c_D_theoretical); hold on
+xline(alpha_trim,":");
+text(alpha_trim+0.1,0.05,"$\alpha^*$",'interpreter','latex','Fontsize',font_size)
+legend(["Model drag" "Theoretical drag"], 'interpreter', 'latex', 'FontSize', font_size_small)
+set(gca,'FontSize', font_size_small)
+xlabel("$\alpha [^\circ]$",'interpreter','latex','FontSize',font_size)
+ylabel("$c_D$",'interpreter','latex','FontSize',font_size_large)
+title("Comparing Model Drag with Theoretial Drag",'FontSize',font_size_large, 'interpreter','latex')
+ylim([0 0.7])
 
-c_m_0 = c_m_0 - c_m_alpha * alpha_nom; % Find absolute c_m_0
-c_m_alpha = c_m_alpha;
 
-
-
+%% OLD STUFF FROM LINEAR LIFT MODEL
 % %Crude line search on e
 % e = 0.8:0.01:1.5;
 % c_D_0_theoretical = c_D_0 + c_L_0 ^ 2 ./ (pi * e * AR);
@@ -234,6 +246,8 @@ c_m_alpha = c_m_alpha;
 
 % Choose e = 1 as this gives lowest cost
 e = 0.8;
+
+
 c_D_0_theoretical = c_D_0 + c_L_0 ^ 2 ./ (pi * e * AR);
 c_D_alpha_theoretical = 2 * c_L_0 * c_L_alpha ./ (pi * e * AR);
 c_D_alpha_sq_theoretical = c_L_alpha^2 ./ (pi * e * AR);
@@ -267,15 +281,15 @@ ylim([0 0.7])
 %%
 
 
-function c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
-    c_D = c_D_0 + c_D_alpha .* (alpha - alpha_nom) + c_D_alpha_sq .* (alpha - alpha_nom).^2 ...
-    + c_D_delta_e .* (delta_e - delta_e_nom) + c_D_alpha_delta_e .* (alpha - alpha_nom)  .* (delta_e - delta_e_nom);
+function c_D = calc_drag_coeff(c_D_0, c_D_alpha, c_D_alpha_sq, c_D_delta_e, c_D_alpha_delta_e, alpha, delta_e, delta_e_nom)
+    c_D = c_D_0 + c_D_alpha .* (alpha) + c_D_alpha_sq .* (alpha).^2 ...
+    + c_D_delta_e .* (delta_e - delta_e_nom) + c_D_alpha_delta_e .* (alpha)  .* (delta_e - delta_e_nom);
 end
 
-function c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
-    c_L = c_L_0 + c_L_alpha .* (alpha - alpha_nom) + c_L_delta_e .* (delta_e - delta_e_nom);
+function c_L = calc_lift_coeff(c_L_0, c_L_alpha, c_L_alpha_sq, c_L_delta_e, alpha, delta_e, delta_e_nom)
+    c_L = c_L_0 + c_L_alpha .* (alpha) + c_L_alpha_sq.*alpha.^2 + c_L_delta_e .* (delta_e - delta_e_nom);
 end
 
-function c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_e, alpha_nom, delta_e_nom)
-    c_m = c_m_0 + c_m_alpha .* (alpha - alpha_nom) + c_m_delta_e .* (delta_e - delta_e_nom);
+function c_m = calc_moment_coeff(c_m_0, c_m_alpha, c_m_delta_e, alpha, delta_e, delta_e_nom)
+    c_m = c_m_0 + c_m_alpha .* (alpha) + c_m_delta_e .* (delta_e - delta_e_nom);
 end

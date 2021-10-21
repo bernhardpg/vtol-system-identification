@@ -33,3 +33,7 @@ c_n_beta = 0.075888061894250;
 c_n_p_hat = -0.082343715008180;
 c_n_r_hat = -0.075229235170663;
 c_n_delta_r = -0.053717237446543;
+
+% Final coupling parameter
+c_m_delta_r_sq = -0.736842105263158;
+
