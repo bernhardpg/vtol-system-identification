@@ -6,3 +6,6 @@
 **If you are looking for the Babyshark 260 VTOL UAV model, it is implemented here**: [Dynamic Model of the Foxtech Babyshark 260 VTOL UAV](https://github.com/bernhardpg/babyshark_vtol_model)
 
 This repo is made publically available for future reference for work on system identification or further modelling of the Babyshark VTOL. This repo is not written to be used as a library in itself, although it does provide implementations of all the methods used in the system identification of the Babyshark VTOL UAV.
+
+## License
+Everything in this repo, including the code, flight data, AVL model and 3D model, is released under the [MIT License](LICENSE).
